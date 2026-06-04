@@ -1009,6 +1009,8 @@ function SettingsModal({ user, onClose, slackChannel }) {
 
   function handleConnectSlack() {
     const token = getToken();
+    // Store token in sessionStorage so it survives the OAuth redirect
+    sessionStorage.setItem("dealiq_pre_oauth_token", token);
     window.location.href = `${API.replace("/api", "")}/api/auth/slack?token=${token}`;
   }
 
@@ -1387,11 +1389,25 @@ export default function App() {
       window.history.replaceState({}, "", window.location.pathname);
     }
 
+    // Restore token after OAuth redirect if needed
+    const preOAuthToken = sessionStorage.getItem("dealiq_pre_oauth_token");
+    if (preOAuthToken && slack) {
+      setToken(preOAuthToken);
+      sessionStorage.removeItem("dealiq_pre_oauth_token");
+    }
+
     const token = getToken();
     if (!token) { setChecking(false); return; }
     api("/auth/me")
       .then(({ user }) => setUser(user))
-      .catch(() => clearToken())
+      .catch((err) => {
+        // Only clear token on explicit auth failures, not network errors
+        const msg = err?.message || "";
+        if (msg.includes("expired") || msg.includes("Invalid") || msg.includes("Authentication")) {
+          clearToken();
+        }
+        // On network errors (e.g. after OAuth redirect), keep token and show login
+      })
       .finally(() => setChecking(false));
   }, []);
 
