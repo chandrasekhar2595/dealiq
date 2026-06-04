@@ -8,14 +8,14 @@ router.post("/signup", async (req, res) => {
   const { email, password, name, company } = req.body;
   if (!email || !password) return res.status(400).json({ error: "Email and password required" });
 
-  const { data, error } = await supabase.auth.admin.createUser({
+  const { data, error } = await supabase.auth.signUp({
     email,
     password,
-    user_metadata: { name, company },
-    email_confirm: true,
+    options: { data: { name, company } },
   });
 
   if (error) return res.status(400).json({ error: error.message });
+  if (!data.user) return res.status(400).json({ error: "Signup failed. Try again." });
 
   // Create user profile
   await supabase.from("users").insert({
