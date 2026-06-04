@@ -22,7 +22,7 @@ app.use(express.json());
 app.use("/api/auth", authRouter);
 
 app.get("/api/health", (req, res) => {
-  res.json({ status: "ok", version: "1.0.0", service: "DealIQ API" });
+  res.json({ status: "ok", version: "1.1.0", service: "DealIQ API" });
 });
 
 // ── PROTECTED ROUTES ─────────────────────────────────────────
