@@ -1049,12 +1049,12 @@ function GmailSection({ user, justConnected, gmailEmail }) {
   }
 
   const GmailM = () => (
-    <svg width="20" height="20" viewBox="0 0 48 48" xmlns="http://www.w3.org/2000/svg">
-      <path fill="#4caf50" d="M45 16.2l-5 2.75-5 4.75V40h7a3 3 0 003-3V16.2z"/>
-      <path fill="#1e88e5" d="M3 16.2l3.5 2.75L11 23.7V40H4a3 3 0 01-3-3V16.2z"/>
-      <polygon fill="#e53935" points="35,11.2 24,19.45 13,11.2 12,17 13,17 24,25.25 35,17 36,17"/>
-      <path fill="#c62828" d="M3 12.298V16.2l10 7.5V11.2L9.2 9.4C7.5 8.2 5 8.7 4 9.5l-1 2.8z"/>
-      <path fill="#fbc02d" d="M45 12.298V16.2l-10 7.5V11.2l3.8-1.8c1.7-1.2 4.2-.7 5.2.1l1 2.8z"/>
+    <svg width="20" height="20" viewBox="52 42 88 66" xmlns="http://www.w3.org/2000/svg">
+      <path fill="#4285f4" d="M58 108h14V74L52 59v43c0 3.32 2.69 6 6 6z"/>
+      <path fill="#34a853" d="M114 108h14c3.32 0 6-2.69 6-6V59l-20 15v34z"/>
+      <path fill="#fbbc04" d="M114 48v26l20-15v-8c0-7.42-8.49-11.65-14.4-7.2l-5.6 4.2z"/>
+      <path fill="#ea4335" d="M72 74V48l21 16 21-16v26L93 90 72 74z"/>
+      <path fill="#c5221f" d="M52 51v8l20 15V48l-5.6-4.2C60.49 39.35 52 43.58 52 51z"/>
     </svg>
   );
 
