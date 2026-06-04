@@ -1002,8 +1002,8 @@ function Section({ label, content, last = false }) {
 }
 
 // ── SETTINGS MODAL ───────────────────────────────────────────
-function SettingsModal({ user, onClose, slackChannel }) {
-  const isConnected = !!user?.slack_webhook_url;
+function SettingsModal({ user, onClose, slackChannel, justConnected }) {
+  const isConnected = justConnected || !!user?.slack_webhook_url;
   const channel     = slackChannel || user?.slack_channel || "";
   const [disconnecting, setDisconnecting] = useState(false);
 
@@ -1367,6 +1367,7 @@ function Dashboard({ user, onLogout, openSettings = false, slackChannel = "" }) 
         <SettingsModal
           user={user}
           slackChannel={slackChannel}
+          justConnected={slackChannel !== ""}
           onClose={() => setShowSettings(false)}
         />
       )}
@@ -1399,14 +1400,20 @@ export default function App() {
     const token = getToken();
     if (!token) { setChecking(false); return; }
     api("/auth/me")
-      .then(({ user }) => setUser(user))
+      .then(({ user }) => {
+        setUser(user);
+        // If returning from Slack OAuth, refresh again to get updated slack_webhook_url
+        if (slack === "connected") {
+          setTimeout(() => {
+            api("/auth/me").then(({ user }) => setUser(user)).catch(() => {});
+          }, 500);
+        }
+      })
       .catch((err) => {
-        // Only clear token on explicit auth failures, not network errors
         const msg = err?.message || "";
         if (msg.includes("expired") || msg.includes("Invalid") || msg.includes("Authentication")) {
           clearToken();
         }
-        // On network errors (e.g. after OAuth redirect), keep token and show login
       })
       .finally(() => setChecking(false));
   }, []);
