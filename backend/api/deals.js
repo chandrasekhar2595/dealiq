@@ -1,7 +1,7 @@
 // backend/api/deals.js
 const express = require("express");
 const router = express.Router();
-const { supabase } = require("../lib/supabase");
+const { supabaseAdmin: supabase } = require("../lib/supabase");
 const { analyzeDeal } = require("../services/analyzer");
 
 // GET /api/deals — list all deals for user

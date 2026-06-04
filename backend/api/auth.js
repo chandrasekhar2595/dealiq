@@ -1,7 +1,7 @@
 // backend/api/auth.js
 const express = require("express");
 const router = express.Router();
-const { supabase } = require("../lib/supabase");
+const { supabase, supabaseAdmin } = require("../lib/supabase");
 
 // POST /api/auth/signup
 router.post("/signup", async (req, res) => {
@@ -17,13 +17,7 @@ router.post("/signup", async (req, res) => {
   if (error) return res.status(400).json({ error: error.message });
   if (!data.user) return res.status(400).json({ error: "Signup failed. Try again." });
 
-  // Create user profile
-  await supabase.from("users").insert({
-    id: data.user.id,
-    email,
-    name,
-    company,
-  });
+  await supabaseAdmin.from("users").insert({ id: data.user.id, email, name, company });
 
   res.status(201).json({ message: "Account created. Please sign in." });
 });
@@ -51,11 +45,11 @@ router.post("/login", async (req, res) => {
 // POST /api/auth/logout
 router.post("/logout", async (req, res) => {
   const token = req.headers.authorization?.replace("Bearer ", "");
-  if (token) await supabase.auth.admin.signOut(token);
+  if (token) await supabaseAdmin.auth.admin.signOut(token);
   res.json({ success: true });
 });
 
-// GET /api/auth/me — get current user
+// GET /api/auth/me
 router.get("/me", async (req, res) => {
   const token = req.headers.authorization?.replace("Bearer ", "");
   if (!token) return res.status(401).json({ error: "No token" });
@@ -63,7 +57,7 @@ router.get("/me", async (req, res) => {
   const { data: { user }, error } = await supabase.auth.getUser(token);
   if (error || !user) return res.status(401).json({ error: "Invalid token" });
 
-  const { data: profile } = await supabase.from("users").select("*").eq("id", user.id).single();
+  const { data: profile } = await supabaseAdmin.from("users").select("*").eq("id", user.id).single();
 
   res.json({ user: { ...user, ...profile } });
 });
@@ -71,7 +65,6 @@ router.get("/me", async (req, res) => {
 module.exports = router;
 
 // ── AUTH MIDDLEWARE ──────────────────────────────────────────
-// Use this in server.js to protect routes
 async function requireAuth(req, res, next) {
   const token = req.headers.authorization?.replace("Bearer ", "");
   if (!token) return res.status(401).json({ error: "Authentication required" });
