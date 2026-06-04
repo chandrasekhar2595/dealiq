@@ -2,9 +2,7 @@
   "name": "dealiq",
   "private": true,
   "scripts": {
-    "deploy:backend":  "vercel --prod",
-    "deploy:frontend": "cd frontend && vercel --prod",
-    "deploy": "npm run deploy:backend && npm run deploy:frontend",
+    "deploy":       "bash deploy.sh",
     "dev:backend":  "cd backend && npm run dev",
     "dev:frontend": "cd frontend && npm run dev"
   }
