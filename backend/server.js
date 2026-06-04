@@ -34,8 +34,9 @@ app.use((err, req, res, next) => {
 });
 
 const PORT = process.env.PORT || 4000;
-app.listen(PORT, () => {
-  console.log(`
+if (require.main === module) {
+  app.listen(PORT, () => {
+    console.log(`
   ╔══════════════════════════════════════╗
   ║     DealIQ API — Running on ${PORT}    ║
   ╠══════════════════════════════════════╣
@@ -45,7 +46,8 @@ app.listen(PORT, () => {
   ║  POST /api/deals/:id/analyze         ║
   ║  GET  /api/health                    ║
   ╚══════════════════════════════════════╝
-  `);
-});
+    `);
+  });
+}
 
 module.exports = app;
