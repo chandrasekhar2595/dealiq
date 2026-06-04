@@ -119,8 +119,8 @@ function LoginPage({ onLogin }) {
         <div style={{ textAlign: "center", marginBottom: 36 }}>
           <div style={{ display: "inline-block", marginBottom: 20 }}>
             <img src="/logo.png" alt="DealIQ"
-              style={{ height: 140, borderRadius: 20,
-                boxShadow: "0 8px 40px rgba(0,0,0,0.5), 0 0 60px rgba(245,166,35,0.12)",
+              style={{ height: 150, borderRadius: 28,
+                boxShadow: "0 12px 48px rgba(0,0,0,0.6), 0 0 0 1px rgba(245,166,35,0.15), 0 0 60px rgba(245,166,35,0.1)",
                 display: "block" }} />
           </div>
           <div style={{ fontSize: 15, fontWeight: 500, color: "var(--text-2)", marginBottom: 16 }}>
@@ -542,7 +542,6 @@ function DealDetail({ dealId, onBack, onUpdate, onDelete }) {
   const [loading, setLoading]     = useState(true);
   const [showEdit, setShowEdit]   = useState(false);
   const [showConfirm, setShowConfirm] = useState(false);
-  const [deleting, setDeleting]   = useState(false);
 
   useEffect(() => {
     setLoading(true);
@@ -562,14 +561,13 @@ function DealDetail({ dealId, onBack, onUpdate, onDelete }) {
   }
 
   async function handleDelete() {
-    setDeleting(true);
     try {
       await api(`/deals/${dealId}`, { method: "DELETE" });
       onDelete(dealId);
       onBack();
     } catch (err) {
       alert(friendlyError(err.message));
-    } finally { setDeleting(false); setShowConfirm(false); }
+    } finally { setShowConfirm(false); }
   }
 
   if (loading) return (

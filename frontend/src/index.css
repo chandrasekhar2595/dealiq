@@ -182,6 +182,16 @@ body {
 }
 .field-input::placeholder { color: var(--text-3); }
 
+/* Override browser autofill background */
+.field-input:-webkit-autofill,
+.field-input:-webkit-autofill:hover,
+.field-input:-webkit-autofill:focus {
+  -webkit-box-shadow: 0 0 0 1000px #020b18 inset !important;
+  -webkit-text-fill-color: var(--text-1) !important;
+  border-color: var(--border) !important;
+  caret-color: var(--text-1);
+}
+
 /* ── TABS ──────────────────────────────────────────────────── */
 .tab-btn {
   background: none;
