@@ -62,6 +62,27 @@ router.get("/me", async (req, res) => {
   res.json({ user: { ...user, ...profile } });
 });
 
+// PUT /api/auth/settings — update user profile settings
+router.put("/settings", async (req, res) => {
+  const token = req.headers.authorization?.replace("Bearer ", "");
+  if (!token) return res.status(401).json({ error: "No token" });
+
+  const { data: { user }, error } = await supabase.auth.getUser(token);
+  if (error || !user) return res.status(401).json({ error: "Invalid token" });
+
+  const { slack_webhook_url } = req.body;
+
+  const { data, error: updateError } = await supabaseAdmin
+    .from("users")
+    .update({ slack_webhook_url: slack_webhook_url || null })
+    .eq("id", user.id)
+    .select()
+    .single();
+
+  if (updateError) return res.status(500).json({ error: updateError.message });
+  res.json({ user: data });
+});
+
 module.exports = router;
 
 // ── AUTH MIDDLEWARE ──────────────────────────────────────────

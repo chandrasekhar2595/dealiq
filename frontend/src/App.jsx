@@ -1001,11 +1001,116 @@ function Section({ label, content, last = false }) {
   );
 }
 
+// ── SETTINGS MODAL ───────────────────────────────────────────
+function SettingsModal({ user, onClose }) {
+  const [webhook, setWebhook] = useState(user?.slack_webhook_url || "");
+  const [saving, setSaving]   = useState(false);
+  const [saved, setSaved]     = useState(false);
+  const [error, setError]     = useState("");
+
+  async function handleSave(e) {
+    e.preventDefault();
+    setSaving(true); setError(""); setSaved(false);
+    try {
+      await api("/auth/settings", { method: "PUT", body: { slack_webhook_url: webhook } });
+      setSaved(true);
+      setTimeout(() => setSaved(false), 3000);
+    } catch (err) {
+      setError(friendlyError(err.message));
+    } finally { setSaving(false); }
+  }
+
+  return (
+    <div style={{ position: "fixed", inset: 0, background: "rgba(0,0,0,0.75)",
+      display: "flex", alignItems: "center", justifyContent: "center",
+      zIndex: 100, backdropFilter: "blur(4px)", padding: 20 }}>
+      <div style={{ width: "100%", maxWidth: 480, background: "var(--bg-card)",
+        border: "1px solid var(--border)", borderRadius: 14, padding: 32,
+        boxShadow: "0 24px 64px rgba(0,0,0,0.6)" }}>
+
+        <div style={{ display: "flex", justifyContent: "space-between",
+          alignItems: "center", marginBottom: 28 }}>
+          <div>
+            <div style={{ fontSize: 16, fontWeight: 600, color: "var(--text-1)" }}>Settings</div>
+            <div style={{ fontSize: 12, color: "var(--text-3)", marginTop: 2 }}>{user?.email}</div>
+          </div>
+          <button onClick={onClose} className="btn-sm btn-ghost"
+            style={{ width: 32, height: 32, padding: 0, fontSize: 16,
+              display: "flex", alignItems: "center", justifyContent: "center" }}>✕</button>
+        </div>
+
+        {/* Slack section */}
+        <div style={{ background: "rgba(255,255,255,0.02)", border: "1px solid var(--border)",
+          borderRadius: 10, padding: "20px 20px", marginBottom: 20 }}>
+          <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 14 }}>
+            <div style={{ width: 32, height: 32, background: "#4A154B",
+              borderRadius: 8, display: "flex", alignItems: "center",
+              justifyContent: "center", fontSize: 16, flexShrink: 0 }}>
+              #
+            </div>
+            <div>
+              <div style={{ fontSize: 13, fontWeight: 600, color: "var(--text-1)" }}>Slack Alerts</div>
+              <div style={{ fontSize: 11, color: "var(--text-3)" }}>
+                Get notified in Slack when deals go high risk or stale
+              </div>
+            </div>
+          </div>
+
+          <form onSubmit={handleSave}>
+            <div style={{ fontFamily: "var(--font-mono)", fontSize: 10,
+              color: "var(--text-3)", letterSpacing: "0.08em",
+              textTransform: "uppercase", marginBottom: 6 }}>
+              Webhook URL
+            </div>
+            <input className="field-input"
+              placeholder="https://hooks.slack.com/services/..."
+              value={webhook}
+              onChange={e => setWebhook(e.target.value)}
+              style={{ marginBottom: 8, fontFamily: "var(--font-mono)", fontSize: 12 }} />
+
+            <div style={{ fontSize: 11, color: "var(--text-muted)", marginBottom: 14, lineHeight: 1.5 }}>
+              Create an Incoming Webhook at{" "}
+              <span style={{ color: "var(--blue-light)" }}>api.slack.com/apps</span>
+              {" "}→ Incoming Webhooks → Add New Webhook to Workspace.
+            </div>
+
+            {error && (
+              <div style={{ fontSize: 12, color: "var(--risk-high)", marginBottom: 10 }}>⚠ {error}</div>
+            )}
+
+            <div style={{ display: "flex", gap: 10, alignItems: "center" }}>
+              <button type="submit" disabled={saving} className="btn-sm btn-accent"
+                style={{ padding: "8px 20px", fontSize: 11 }}>
+                {saving ? "SAVING..." : "SAVE"}
+              </button>
+              {saved && (
+                <span style={{ fontSize: 12, color: "var(--risk-low)" }}>✓ Saved</span>
+              )}
+              {webhook && (
+                <button type="button" onClick={() => setWebhook("")}
+                  className="btn-sm btn-ghost" style={{ fontSize: 11, padding: "8px 14px" }}>
+                  Remove
+                </button>
+              )}
+            </div>
+          </form>
+        </div>
+
+        <div style={{ fontSize: 11, color: "var(--text-muted)", fontFamily: "var(--font-mono)",
+          letterSpacing: "0.05em", textAlign: "center" }}>
+          ALERTS FIRE ON: HIGH / MEDIUM RISK · 7-DAY AND 14-DAY STALE
+        </div>
+      </div>
+    </div>
+  );
+}
+
 // ── MAIN DASHBOARD ───────────────────────────────────────────
 function Dashboard({ user, onLogout }) {
   const [deals, setDeals]           = useState([]);
   const [selectedId, setSelectedId] = useState(null);
   const [showAddDeal, setShowAddDeal] = useState(false);
+  const [showSettings, setShowSettings] = useState(false);
   const [loading, setLoading]       = useState(true);
   const [query, setQuery]           = useState("");
   const [stageFilter, setStageFilter] = useState("All");
@@ -1069,8 +1174,10 @@ function Dashboard({ user, onLogout }) {
           ))}
         </div>
 
-        <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
+        <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
           <div style={{ fontSize: 12, color: "var(--text-3)" }}>{user?.email}</div>
+          <button onClick={() => setShowSettings(true)} className="btn-sm btn-ghost"
+            title="Settings">⚙</button>
           <button onClick={onLogout} className="btn-sm btn-ghost">Sign out</button>
         </div>
       </div>
@@ -1229,6 +1336,13 @@ function Dashboard({ user, onLogout }) {
         <AddDealModal
           onClose={() => setShowAddDeal(false)}
           onAdd={deal => { setDeals(d => [deal, ...d]); setSelectedId(deal.id); }}
+        />
+      )}
+
+      {showSettings && (
+        <SettingsModal
+          user={user}
+          onClose={() => setShowSettings(false)}
         />
       )}
     </div>

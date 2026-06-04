@@ -1,7 +1,8 @@
 const express = require("express");
 const router = express.Router();
 const { supabaseAdmin } = require("../lib/supabase");
-const { analyzeDeal } = require("../services/analyzer");
+const { analyzeDeal }    = require("../services/analyzer");
+const { sendSlackAlert } = require("../services/slack");
 const { Resend } = require("resend");
 
 // ── SECURITY ─────────────────────────────────────────────────
@@ -47,7 +48,8 @@ router.post("/update-stale", verifyCron, async (req, res) => {
       const { data: deal } = await supabaseAdmin.from("deals").select("*").eq("id", d.id).single();
       const { data: signals } = await supabaseAdmin.from("signals").select("*").eq("deal_id", d.id);
       const result = await analyzeDeal(deal, signals || []);
-      await supabaseAdmin.from("analyses").insert({
+
+      const { data: analysis } = await supabaseAdmin.from("analyses").insert({
         deal_id: d.id,
         risk_level: result.risk_level,
         close_score: result.close_score,
@@ -58,7 +60,16 @@ router.post("/update-stale", verifyCron, async (req, res) => {
         draft_email_subject: result.draft_email?.subject,
         draft_email_body: result.draft_email?.body,
         signal_count: (signals || []).length,
-      });
+      }).select().single();
+
+      // Slack alert for stale + high/medium risk
+      if (analysis && (result.risk_level === "high" || result.risk_level === "medium")) {
+        const { data: user } = await supabaseAdmin
+          .from("users").select("slack_webhook_url").eq("id", deal.user_id).single();
+        if (user?.slack_webhook_url) {
+          await sendSlackAlert(user.slack_webhook_url, { deal, analysis, type: "stale" });
+        }
+      }
     } catch (e) {
       console.error(`Re-analysis failed for deal ${d.id}:`, e.message);
     }

@@ -2,7 +2,8 @@
 const express = require("express");
 const router = express.Router();
 const { supabaseAdmin: supabase } = require("../lib/supabase");
-const { analyzeDeal } = require("../services/analyzer");
+const { analyzeDeal }    = require("../services/analyzer");
+const { sendSlackAlert } = require("../services/slack");
 
 // GET /api/deals — list all deals for user
 router.get("/", async (req, res) => {
@@ -168,6 +169,18 @@ router.post("/:id/analyze", async (req, res) => {
       .single();
 
     if (saveError) throw new Error(saveError.message);
+
+    // Send Slack alert for high/medium risk deals
+    if (result.risk_level === "high" || result.risk_level === "medium") {
+      const { data: user } = await supabase
+        .from("users")
+        .select("slack_webhook_url")
+        .eq("id", userId)
+        .single();
+      if (user?.slack_webhook_url) {
+        sendSlackAlert(user.slack_webhook_url, { deal, analysis, type: "analysis" });
+      }
+    }
 
     res.json({ analysis });
   } catch (err) {
