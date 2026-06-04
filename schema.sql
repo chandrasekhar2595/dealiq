@@ -13,6 +13,7 @@ create table users (
   name text,
   company text,
   slack_webhook_url text,
+  slack_channel text,
   gmail_access_token text,
   gmail_refresh_token text,
   created_at timestamptz default now()

@@ -1002,22 +1002,24 @@ function Section({ label, content, last = false }) {
 }
 
 // ── SETTINGS MODAL ───────────────────────────────────────────
-function SettingsModal({ user, onClose }) {
-  const [webhook, setWebhook] = useState(user?.slack_webhook_url || "");
-  const [saving, setSaving]   = useState(false);
-  const [saved, setSaved]     = useState(false);
-  const [error, setError]     = useState("");
+function SettingsModal({ user, onClose, slackChannel }) {
+  const isConnected = !!user?.slack_webhook_url;
+  const channel     = slackChannel || user?.slack_channel || "";
+  const [disconnecting, setDisconnecting] = useState(false);
 
-  async function handleSave(e) {
-    e.preventDefault();
-    setSaving(true); setError(""); setSaved(false);
+  function handleConnectSlack() {
+    const token = getToken();
+    window.location.href = `${API.replace("/api", "")}/api/auth/slack?token=${token}`;
+  }
+
+  async function handleDisconnect() {
+    setDisconnecting(true);
     try {
-      await api("/auth/settings", { method: "PUT", body: { slack_webhook_url: webhook } });
-      setSaved(true);
-      setTimeout(() => setSaved(false), 3000);
+      await api("/auth/slack", { method: "DELETE" });
+      window.location.reload();
     } catch (err) {
-      setError(friendlyError(err.message));
-    } finally { setSaving(false); }
+      alert(friendlyError(err.message));
+    } finally { setDisconnecting(false); }
   }
 
   return (
@@ -1042,63 +1044,74 @@ function SettingsModal({ user, onClose }) {
         {/* Slack section */}
         <div style={{ background: "rgba(255,255,255,0.02)", border: "1px solid var(--border)",
           borderRadius: 10, padding: "20px 20px", marginBottom: 20 }}>
-          <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 14 }}>
-            <div style={{ width: 32, height: 32, background: "#4A154B",
+          <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 16 }}>
+            <div style={{ width: 36, height: 36, background: "#4A154B",
               borderRadius: 8, display: "flex", alignItems: "center",
-              justifyContent: "center", fontSize: 16, flexShrink: 0 }}>
+              justifyContent: "center", fontSize: 18, flexShrink: 0 }}>
               #
             </div>
-            <div>
+            <div style={{ flex: 1 }}>
               <div style={{ fontSize: 13, fontWeight: 600, color: "var(--text-1)" }}>Slack Alerts</div>
               <div style={{ fontSize: 11, color: "var(--text-3)" }}>
-                Get notified in Slack when deals go high risk or stale
+                Get notified when deals go high risk or stale
               </div>
             </div>
+            {isConnected && (
+              <div style={{ fontFamily: "var(--font-mono)", fontSize: 10,
+                padding: "3px 10px", borderRadius: 20,
+                background: "var(--risk-low)14", color: "var(--risk-low)",
+                border: "1px solid var(--risk-low)30" }}>
+                ✓ CONNECTED
+              </div>
+            )}
           </div>
 
-          <form onSubmit={handleSave}>
-            <div style={{ fontFamily: "var(--font-mono)", fontSize: 10,
-              color: "var(--text-3)", letterSpacing: "0.08em",
-              textTransform: "uppercase", marginBottom: 6 }}>
-              Webhook URL
-            </div>
-            <input className="field-input"
-              placeholder="https://hooks.slack.com/services/..."
-              value={webhook}
-              onChange={e => setWebhook(e.target.value)}
-              style={{ marginBottom: 8, fontFamily: "var(--font-mono)", fontSize: 12 }} />
-
-            <div style={{ fontSize: 11, color: "var(--text-muted)", marginBottom: 14, lineHeight: 1.5 }}>
-              Create an Incoming Webhook at{" "}
-              <span style={{ color: "var(--blue-light)" }}>api.slack.com/apps</span>
-              {" "}→ Incoming Webhooks → Add New Webhook to Workspace.
-            </div>
-
-            {error && (
-              <div style={{ fontSize: 12, color: "var(--risk-high)", marginBottom: 10 }}>⚠ {error}</div>
-            )}
-
-            <div style={{ display: "flex", gap: 10, alignItems: "center" }}>
-              <button type="submit" disabled={saving} className="btn-sm btn-accent"
-                style={{ padding: "8px 20px", fontSize: 11 }}>
-                {saving ? "SAVING..." : "SAVE"}
+          {isConnected ? (
+            <div>
+              <div style={{ display: "flex", alignItems: "center", gap: 10,
+                background: "rgba(34,197,94,0.06)", border: "1px solid rgba(34,197,94,0.2)",
+                borderRadius: 8, padding: "12px 14px", marginBottom: 14 }}>
+                <span style={{ fontSize: 16 }}>#</span>
+                <div>
+                  <div style={{ fontSize: 13, fontWeight: 500, color: "var(--text-1)" }}>
+                    {channel || "Slack channel"}
+                  </div>
+                  <div style={{ fontSize: 11, color: "var(--text-3)" }}>
+                    Alerts will post here
+                  </div>
+                </div>
+              </div>
+              <button onClick={handleDisconnect} disabled={disconnecting}
+                className="btn-sm btn-ghost"
+                style={{ fontSize: 11, padding: "8px 16px", color: "#ef4444",
+                  borderColor: "#ef444432" }}>
+                {disconnecting ? "Disconnecting..." : "Disconnect Slack"}
               </button>
-              {saved && (
-                <span style={{ fontSize: 12, color: "var(--risk-low)" }}>✓ Saved</span>
-              )}
-              {webhook && (
-                <button type="button" onClick={() => setWebhook("")}
-                  className="btn-sm btn-ghost" style={{ fontSize: 11, padding: "8px 14px" }}>
-                  Remove
-                </button>
-              )}
             </div>
-          </form>
-        </div>
+          ) : (
+            <div>
+              <div style={{ fontSize: 12, color: "var(--text-3)", marginBottom: 16, lineHeight: 1.6 }}>
+                Connect your Slack workspace to receive deal alerts directly in a channel of your choice.
+              </div>
+              <button onClick={handleConnectSlack}
+                style={{ display: "flex", alignItems: "center", gap: 10,
+                  background: "#fff", border: "none", borderRadius: 6,
+                  padding: "10px 16px", cursor: "pointer", fontSize: 14,
+                  fontWeight: 600, color: "#1d1c1d", transition: "box-shadow 0.15s" }}
+                onMouseOver={e => e.currentTarget.style.boxShadow = "0 4px 16px rgba(0,0,0,0.3)"}
+                onMouseOut={e => e.currentTarget.style.boxShadow = "none"}>
+                <span style={{ fontSize: 20 }}>#</span>
+                Add to Slack
+              </button>
+            </div>
+          )}
 
-        <div style={{ fontSize: 11, color: "var(--text-muted)", fontFamily: "var(--font-mono)",
-          letterSpacing: "0.05em", textAlign: "center" }}>
-          ALERTS FIRE ON: HIGH / MEDIUM RISK · 7-DAY AND 14-DAY STALE
+          {!isConnected && (
+            <div style={{ marginTop: 12, fontSize: 10, color: "var(--text-muted)",
+              fontFamily: "var(--font-mono)", letterSpacing: "0.05em" }}>
+              ALERTS FIRE ON: HIGH / MEDIUM RISK · 7-DAY AND 14-DAY STALE
+            </div>
+          )}
         </div>
       </div>
     </div>
@@ -1106,11 +1119,11 @@ function SettingsModal({ user, onClose }) {
 }
 
 // ── MAIN DASHBOARD ───────────────────────────────────────────
-function Dashboard({ user, onLogout }) {
+function Dashboard({ user, onLogout, openSettings = false, slackChannel = "" }) {
   const [deals, setDeals]           = useState([]);
   const [selectedId, setSelectedId] = useState(null);
   const [showAddDeal, setShowAddDeal] = useState(false);
-  const [showSettings, setShowSettings] = useState(false);
+  const [showSettings, setShowSettings] = useState(openSettings);
   const [loading, setLoading]       = useState(true);
   const [query, setQuery]           = useState("");
   const [stageFilter, setStageFilter] = useState("All");
@@ -1342,6 +1355,7 @@ function Dashboard({ user, onLogout }) {
       {showSettings && (
         <SettingsModal
           user={user}
+          slackChannel={slackChannel}
           onClose={() => setShowSettings(false)}
         />
       )}
@@ -1353,8 +1367,17 @@ function Dashboard({ user, onLogout }) {
 export default function App() {
   const [user, setUser]         = useState(null);
   const [checking, setChecking] = useState(true);
+  const [slackResult, setSlackResult] = useState(null); // {status, channel}
 
   useEffect(() => {
+    // Handle Slack OAuth redirect
+    const params = new URLSearchParams(window.location.search);
+    const slack = params.get("slack");
+    if (slack) {
+      setSlackResult({ status: slack, channel: params.get("channel") || "" });
+      window.history.replaceState({}, "", window.location.pathname);
+    }
+
     const token = getToken();
     if (!token) { setChecking(false); return; }
     api("/auth/me")
@@ -1376,5 +1399,6 @@ export default function App() {
   );
 
   if (!user) return <LoginPage onLogin={setUser} />;
-  return <Dashboard user={user} onLogout={handleLogout} />;
+  return <Dashboard user={user} onLogout={handleLogout}
+    openSettings={!!slackResult} slackChannel={slackResult?.channel} />;
 }
