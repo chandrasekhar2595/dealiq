@@ -1117,6 +1117,12 @@ function GmailSection({ user, justConnected, gmailEmail }) {
             fontFamily: "var(--font-mono)", letterSpacing: "0.05em" }}>
             READ-ONLY ACCESS · EMAILS NEVER STORED · SIGNALS ONLY
           </div>
+          <div style={{ marginTop: 12, padding: "10px 12px", borderRadius: 6,
+            background: "rgba(251,188,4,0.08)", border: "1px solid rgba(251,188,4,0.25)",
+            fontSize: 12, color: "var(--text-2)", lineHeight: 1.6 }}>
+            <strong style={{ color: "#f59e0b" }}>⚠ Heads up:</strong> Google may show an "app isn't verified" warning.
+            Click <strong>Advanced</strong> → <strong>Go to DealIQ</strong> to continue — this is safe.
+          </div>
         </div>
       )}
     </div>
