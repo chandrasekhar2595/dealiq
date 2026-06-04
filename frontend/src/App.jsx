@@ -1048,12 +1048,13 @@ function GmailSection({ user, justConnected, gmailEmail }) {
     } finally { setDisconnecting(false); }
   }
 
-  const GoogleG = () => (
-    <svg width="20" height="20" viewBox="0 0 533.5 544.3" xmlns="http://www.w3.org/2000/svg">
-      <path d="M533.5 278.4c0-18.5-1.5-37.1-4.7-55.3H272.1v104.8h147c-6.1 33.8-25.7 63.7-54.4 82.7v68h87.7c51.5-47.4 81.1-117.4 81.1-200.2z" fill="#4285f4"/>
-      <path d="M272.1 544.3c73.4 0 135.3-24.1 180.4-65.7l-87.7-68c-24.4 16.6-55.9 26-92.6 26-71 0-131.2-47.9-152.8-112.3H28.9v70.1c46.2 91.9 140.3 149.9 243.2 149.9z" fill="#34a853"/>
-      <path d="M119.3 324.3c-11.4-33.8-11.4-70.4 0-104.2V150H28.9c-38.6 76.9-38.6 167.5 0 244.4l90.4-70.1z" fill="#fbbc04"/>
-      <path d="M272.1 107.7c38.8-.6 76.3 14 104.4 40.8l77.7-77.7C405 24.6 339.7-.8 272.1 0 169.2 0 75.1 58 28.9 150l90.4 70.1c21.5-64.5 81.8-112.4 152.8-112.4z" fill="#ea4335"/>
+  const GmailM = () => (
+    <svg width="20" height="20" viewBox="0 0 48 48" xmlns="http://www.w3.org/2000/svg">
+      <path fill="#4caf50" d="M45 16.2l-5 2.75-5 4.75V40h7a3 3 0 003-3V16.2z"/>
+      <path fill="#1e88e5" d="M3 16.2l3.5 2.75L11 23.7V40H4a3 3 0 01-3-3V16.2z"/>
+      <polygon fill="#e53935" points="35,11.2 24,19.45 13,11.2 12,17 13,17 24,25.25 35,17 36,17"/>
+      <path fill="#c62828" d="M3 12.298V16.2l10 7.5V11.2L9.2 9.4C7.5 8.2 5 8.7 4 9.5l-1 2.8z"/>
+      <path fill="#fbc02d" d="M45 12.298V16.2l-10 7.5V11.2l3.8-1.8c1.7-1.2 4.2-.7 5.2.1l1 2.8z"/>
     </svg>
   );
 
@@ -1064,7 +1065,7 @@ function GmailSection({ user, justConnected, gmailEmail }) {
         <div style={{ width: 36, height: 36, background: "#fff",
           borderRadius: 8, display: "flex", alignItems: "center",
           justifyContent: "center", flexShrink: 0, border: "1px solid #e0e0e0" }}>
-          <GoogleG />
+          <GmailM />
         </div>
         <div style={{ flex: 1 }}>
           <div style={{ fontSize: 13, fontWeight: 600, color: "var(--text-1)" }}>Gmail Signals</div>
@@ -1110,7 +1111,7 @@ function GmailSection({ user, justConnected, gmailEmail }) {
               fontWeight: 600, color: "#1d1c1d", transition: "box-shadow 0.15s" }}
             onMouseOver={e => e.currentTarget.style.boxShadow = "0 4px 16px rgba(0,0,0,0.3)"}
             onMouseOut={e => e.currentTarget.style.boxShadow = "none"}>
-            <GoogleG /> Connect Gmail
+            <GmailM /> Connect Gmail
           </button>
           <div style={{ marginTop: 10, fontSize: 10, color: "var(--text-muted)",
             fontFamily: "var(--font-mono)", letterSpacing: "0.05em" }}>
