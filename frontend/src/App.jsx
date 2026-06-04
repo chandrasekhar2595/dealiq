@@ -81,6 +81,71 @@ function Skeleton({ w = "100%", h = 14, mb = 8 }) {
   return <div className="skeleton" style={{ width: w, height: h, marginBottom: mb }} />;
 }
 
+// ── LOGO MARK (Direction C — eye + pulse) ────────────────────
+function LogoMark({ size = 36 }) {
+  const s = size;
+  // Eye shape: two arcs meeting at left/right points
+  // Center of eye at (s*0.5, s*0.5), width s*0.9, height s*0.5
+  const cx = s * 0.5, cy = s * 0.5;
+  const w = s * 0.44, h = s * 0.26;
+  const eyePath = `M ${cx - w} ${cy} Q ${cx} ${cy - h} ${cx + w} ${cy} Q ${cx} ${cy + h} ${cx - w} ${cy} Z`;
+  // Pulse line: flat → spike up → flat, centered in the eye
+  const pw = w * 0.85, ph = h * 0.72;
+  const pulsePath = `
+    M ${cx - pw} ${cy}
+    L ${cx - pw * 0.35} ${cy}
+    L ${cx - pw * 0.15} ${cy - ph}
+    L ${cx + pw * 0.05} ${cy + ph * 0.55}
+    L ${cx + pw * 0.25} ${cy}
+    L ${cx + pw} ${cy}
+  `;
+  return (
+    <svg width={s} height={s} viewBox={`0 0 ${s} ${s}`} fill="none">
+      <defs>
+        <clipPath id={`eye-clip-${s}`}>
+          <path d={eyePath} />
+        </clipPath>
+      </defs>
+      {/* Eye shape */}
+      <path d={eyePath} stroke="#1e3a5f" strokeWidth={s * 0.045} fill="rgba(14,165,233,0.06)" />
+      {/* Pulse line clipped inside eye */}
+      <g clipPath={`url(#eye-clip-${s})`}>
+        <path d={pulsePath} stroke="url(#pulse-grad)" strokeWidth={s * 0.07}
+          strokeLinecap="round" strokeLinejoin="round" fill="none"
+          style={{ filter: `drop-shadow(0 0 ${s * 0.06}px rgba(245,166,35,0.7))` }} />
+      </g>
+      {/* Gradient for pulse */}
+      <defs>
+        <linearGradient id="pulse-grad" x1="0%" y1="0%" x2="100%" y2="0%">
+          <stop offset="0%" stopColor="#f5a623" stopOpacity="0.4" />
+          <stop offset="40%" stopColor="#f5a623" />
+          <stop offset="100%" stopColor="#ff6b35" stopOpacity="0.4" />
+        </linearGradient>
+      </defs>
+    </svg>
+  );
+}
+
+// ── LOGO FULL (mark + wordmark) ──────────────────────────────
+function Logo({ size = 36, showWordmark = true }) {
+  return (
+    <div style={{ display: "flex", alignItems: "center", gap: size * 0.22 }}>
+      <LogoMark size={size} />
+      {showWordmark && (
+        <div style={{ fontFamily: "var(--font-mono)", fontWeight: 900,
+          fontSize: size * 0.52, letterSpacing: -0.5, lineHeight: 1 }}>
+          <span style={{ color: "var(--text-1)" }}>Deal</span>
+          <span style={{
+            background: "linear-gradient(135deg, #f5a623, #ff6b35)",
+            WebkitBackgroundClip: "text", WebkitTextFillColor: "transparent",
+            backgroundClip: "text",
+          }}>IQ</span>
+        </div>
+      )}
+    </div>
+  );
+}
+
 // ── LOGIN PAGE ───────────────────────────────────────────────
 function LoginPage({ onLogin }) {
   const [form, setForm]       = useState({ email: "", password: "" });
@@ -128,12 +193,8 @@ function LoginPage({ onLogin }) {
 
         {/* Logo */}
         <div style={{ marginBottom: 40 }}>
-          <div style={{ display: "inline-flex",
-            background: "linear-gradient(145deg, #f5f0e6, #ede8d8)",
-            border: "1px solid rgba(245,166,35,0.3)", borderRadius: 20, padding: 5,
-            boxShadow: "0 0 0 4px rgba(245,166,35,0.06), 0 12px 40px rgba(0,0,0,0.4), 0 0 50px rgba(245,166,35,0.12)",
-            marginBottom: 32 }}>
-            <img src="/logo.png" alt="DealIQ" style={{ height: 80, borderRadius: 15, display: "block" }} />
+          <div style={{ marginBottom: 28 }}>
+            <Logo size={64} />
           </div>
 
           <div style={{ fontSize: 36, fontWeight: 800, color: "var(--text-1)",
@@ -967,20 +1028,7 @@ function Dashboard({ user, onLogout }) {
         display: "flex", alignItems: "center", justifyContent: "space-between",
         background: "rgba(6,15,31,0.8)", backdropFilter: "blur(12px)",
         position: "sticky", top: 0, zIndex: 10 }}>
-        <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
-          <div style={{ background: "linear-gradient(145deg, #f5f0e6, #ede8d8)",
-            borderRadius: 10, padding: 3, border: "1px solid rgba(245,166,35,0.25)",
-            boxShadow: "0 2px 12px rgba(0,0,0,0.3)" }}>
-            <img src="/logo.png" alt="DealIQ" style={{ height: 30, borderRadius: 7, display: "block" }} />
-          </div>
-          <div style={{ fontFamily: "var(--font-mono)", fontWeight: 900,
-            fontSize: 18, letterSpacing: -0.5, lineHeight: 1 }}>
-            <span style={{ color: "var(--text-1)" }}>Deal</span>
-            <span style={{ background: "linear-gradient(135deg, #f5a623, #ff6b35)",
-              WebkitBackgroundClip: "text", WebkitTextFillColor: "transparent",
-              backgroundClip: "text" }}>IQ</span>
-          </div>
-        </div>
+        <Logo size={38} />
 
         {/* Pipeline stats */}
         <div className="header-stats" style={{ display: "flex", gap: 6, alignItems: "center" }}>
