@@ -83,6 +83,7 @@ router.post("/daily-digest", verifyCron, async (req, res) => {
   if (userErr) return res.status(500).json({ error: userErr.message });
 
   let sent = 0;
+  let lastError = null;
   for (const user of users) {
     // Get their at-risk and stale deals
     const { data: deals } = await supabaseAdmin
@@ -92,12 +93,10 @@ router.post("/daily-digest", verifyCron, async (req, res) => {
       .order("days_stale", { ascending: false })
       .limit(10);
 
-    if (!deals || deals.length === 0) continue;
-
     const atRisk = deals.filter(d => d.analyses?.[0]?.risk_level === "high");
     const totalValue = deals.reduce((s, d) => s + Number(d.value || 0), 0);
 
-    if (atRisk.length === 0 && deals.every(d => d.days_stale < 3)) continue;
+    if (!deals || deals.length === 0) continue;
 
     const dealRows = deals.slice(0, 5).map(d => {
       const a = d.analyses?.[0];
@@ -166,7 +165,7 @@ router.post("/daily-digest", verifyCron, async (req, res) => {
 
     try {
       await resend.emails.send({
-        from: "DealIQ <digest@dealiq.ai>",
+        from: "DealIQ <onboarding@resend.dev>",
         to: user.email,
         subject: `${atRisk.length > 0 ? `⚠ ${atRisk.length} deal${atRisk.length > 1 ? "s" : ""} at risk · ` : ""}Your DealIQ pipeline briefing`,
         html,
@@ -174,10 +173,11 @@ router.post("/daily-digest", verifyCron, async (req, res) => {
       sent++;
     } catch (e) {
       console.error(`Email failed for ${user.email}:`, e.message);
+      lastError = e.message;
     }
   }
 
-  res.json({ users: users.length, emails_sent: sent });
+  res.json({ users: users.length, emails_sent: sent, ...(lastError && { last_error: lastError }) });
 });
 
 module.exports = router;
