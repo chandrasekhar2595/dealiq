@@ -22,7 +22,23 @@ app.use(express.json());
 app.use("/api/auth", authRouter);
 
 app.get("/api/health", (req, res) => {
-  res.json({ status: "ok", version: "1.1.0", service: "DealIQ API" });
+  res.json({ status: "ok", version: "1.2.0", service: "DealIQ API", slack: "enabled" });
+});
+
+// Test Slack webhook directly
+app.post("/api/test-slack", async (req, res) => {
+  const { webhook_url } = req.body;
+  if (!webhook_url) return res.status(400).json({ error: "webhook_url required" });
+  const { sendSlackAlert } = require("./services/slack");
+  await sendSlackAlert(webhook_url, {
+    deal: { company: "Test Deal", contact_name: "Test Contact", contact_role: "CEO",
+      value: 50000, stage: "Proposal Sent", days_stale: 12 },
+    analysis: { risk_level: "high", close_score: 32, urgency: "immediate",
+      stall_reason: "This is a test alert from DealIQ.",
+      recommended_action: "If you see this in Slack, the integration is working." },
+    type: "analysis",
+  });
+  res.json({ sent: true });
 });
 
 // ── PROTECTED ROUTES ─────────────────────────────────────────

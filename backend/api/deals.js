@@ -178,7 +178,7 @@ router.post("/:id/analyze", async (req, res) => {
         .eq("id", userId)
         .single();
       if (user?.slack_webhook_url) {
-        sendSlackAlert(user.slack_webhook_url, { deal, analysis, type: "analysis" });
+        await sendSlackAlert(user.slack_webhook_url, { deal, analysis, type: "analysis" });
       }
     }
 
