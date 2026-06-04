@@ -21,7 +21,16 @@ app.use(express.json());
 app.use("/api/auth", authRouter);
 
 app.get("/api/health", (req, res) => {
-  res.json({ status: "ok", version: "1.0.0", service: "DealIQ API" });
+  res.json({
+    status: "ok",
+    version: "1.0.0",
+    service: "DealIQ API",
+    env: {
+      supabase_url:  process.env.SUPABASE_URL ? "set" : "MISSING",
+      supabase_key:  process.env.SUPABASE_SERVICE_KEY ? "set" : "MISSING",
+      anthropic_key: process.env.ANTHROPIC_API_KEY ? "set" : "MISSING",
+    },
+  });
 });
 
 // ── PROTECTED ROUTES ─────────────────────────────────────────
