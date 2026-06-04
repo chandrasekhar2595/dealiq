@@ -667,52 +667,82 @@ function DealDetail({ dealId, onBack, onUpdate, onDelete }) {
       </div>
 
       {/* Meta */}
-      <div style={{ fontSize: 13, color: "var(--text-3)", marginBottom: 28, display: "flex", gap: 6 }}>
+      <div style={{ fontSize: 13, color: "var(--text-3)", marginBottom: 24, display: "flex", gap: 6, flexWrap: "wrap" }}>
         <span>{deal.contact_name}</span>
         {deal.contact_role && <><span>·</span><span>{deal.contact_role}</span></>}
         <span>·</span>
         <span style={{ fontFamily: "var(--font-mono)", color: "var(--blue-light)", fontWeight: 600 }}>
           ${Number(deal.value || 0).toLocaleString()}
         </span>
-        <span>·</span>
-        <span style={{ fontFamily: "var(--font-mono)", color: deal.days_stale > 7 ? "var(--risk-high)" : "var(--text-3)" }}>
-          {deal.days_stale}d stale
-        </span>
+        {deal.days_stale > 0 && (
+          <>
+            <span>·</span>
+            <span style={{ fontFamily: "var(--font-mono)",
+              color: deal.days_stale > 14 ? "var(--risk-high)" : deal.days_stale > 7 ? "var(--risk-med)" : "var(--text-3)",
+              fontWeight: deal.days_stale > 7 ? 600 : 400 }}>
+              {deal.days_stale}d stale
+            </span>
+          </>
+        )}
       </div>
 
       {/* Score hero */}
       {analysis && (
-        <div className="score-hero" style={{ display: "flex", gap: 24,
+        <div className="score-hero" style={{
           background: "rgba(6,15,31,0.8)", backdropFilter: "blur(16px)",
-          border: "1px solid rgba(255,255,255,0.06)",
-          borderRadius: 14, padding: "22px 28px", marginBottom: 24, alignItems: "center",
-          boxShadow: `0 8px 32px rgba(0,0,0,0.3), inset 0 0 40px ${r?.glow || "transparent"}18` }}>
-          <ScoreRing score={analysis.close_score} size={96} />
-          <div style={{ flex: 1 }}>
-            <div style={{ fontFamily: "var(--font-mono)", fontSize: 9,
-              color: "var(--text-3)", letterSpacing: "0.15em", marginBottom: 6 }}>
-              CLOSE PROBABILITY
+          border: `1px solid ${r?.border || "rgba(255,255,255,0.06)"}`,
+          borderRadius: 14, padding: "24px 28px", marginBottom: 24,
+          boxShadow: `0 8px 32px rgba(0,0,0,0.3), 0 0 0 1px ${r?.glow || "transparent"}20` }}>
+
+          {/* Top row: ring + verdict */}
+          <div style={{ display: "flex", gap: 24, alignItems: "center", marginBottom: 20 }}>
+            <ScoreRing score={analysis.close_score} size={104} />
+            <div style={{ flex: 1 }}>
+              <div style={{ fontFamily: "var(--font-mono)", fontSize: 9,
+                color: "var(--text-3)", letterSpacing: "0.15em", marginBottom: 6 }}>
+                CLOSE PROBABILITY
+              </div>
+              <div style={{ fontSize: 22, fontWeight: 800, letterSpacing: -0.3,
+                color: r?.color, marginBottom: 10,
+                textShadow: `0 0 24px ${r?.glow || "transparent"}` }}>
+                {analysis.close_score >= 70 ? "Strong position" :
+                 analysis.close_score >= 50 ? "Needs attention" : "At risk of stalling"}
+              </div>
+              <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
+                <span style={{ fontFamily: "var(--font-mono)", fontSize: 10, padding: "4px 12px",
+                  borderRadius: 20, background: r?.bg, color: r?.color, border: `1px solid ${r?.border}`,
+                  boxShadow: `0 0 10px ${r?.glow}` }}>
+                  {(analysis.urgency || "").replace("_", " ").toUpperCase()}
+                </span>
+                {signals.length > 0 && (
+                  <span style={{ fontFamily: "var(--font-mono)", fontSize: 10, padding: "4px 12px",
+                    borderRadius: 20, background: "rgba(14,165,233,0.08)",
+                    color: "var(--blue-light)", border: "1px solid rgba(14,165,233,0.2)" }}>
+                    {signals.length} SIGNALS
+                  </span>
+                )}
+                <span style={{ fontFamily: "var(--font-mono)", fontSize: 10, padding: "4px 12px",
+                  borderRadius: 20, background: RISK[analysis.risk_level]?.bg,
+                  color: RISK[analysis.risk_level]?.color,
+                  border: `1px solid ${RISK[analysis.risk_level]?.border}` }}>
+                  {analysis.risk_level?.toUpperCase()} RISK
+                </span>
+              </div>
             </div>
-            <div style={{ fontSize: 18, fontWeight: 700,
-              color: analysis.close_score >= 70 ? "var(--risk-low)" :
-                     analysis.close_score >= 50 ? "var(--risk-med)" : "var(--risk-high)",
-              marginBottom: 12,
-              textShadow: `0 0 20px ${r?.glow || "transparent"}` }}>
-              {analysis.close_score >= 70 ? "Strong position" :
-               analysis.close_score >= 50 ? "Needs attention" : "At risk of stalling"}
+          </div>
+
+          {/* Score bar */}
+          <div>
+            <div style={{ height: 6, background: "var(--border)", borderRadius: 3, overflow: "hidden" }}>
+              <div style={{ height: "100%", borderRadius: 3,
+                width: `${analysis.close_score}%`,
+                background: `linear-gradient(90deg, ${r?.color}80, ${r?.color})`,
+                boxShadow: `0 0 8px ${r?.glow}`,
+                transition: "width 1.2s cubic-bezier(0.4,0,0.2,1)" }} />
             </div>
-            <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
-              <span style={{ fontFamily: "var(--font-mono)", fontSize: 10, padding: "4px 12px",
-                borderRadius: 20, background: r?.bg, color: r?.color,
-                border: `1px solid ${r?.border}`,
-                boxShadow: `0 0 12px ${r?.glow}` }}>
-                {(analysis.urgency || "").replace("_", " ").toUpperCase()}
-              </span>
-              <span style={{ fontFamily: "var(--font-mono)", fontSize: 10, padding: "4px 12px",
-                borderRadius: 20, background: "rgba(14,165,233,0.08)",
-                color: "var(--blue-light)", border: "1px solid rgba(14,165,233,0.2)" }}>
-                {signals.length} SIGNALS
-              </span>
+            <div style={{ display: "flex", justifyContent: "space-between", marginTop: 5 }}>
+              <span style={{ fontFamily: "var(--font-mono)", fontSize: 9, color: "var(--text-muted)" }}>0</span>
+              <span style={{ fontFamily: "var(--font-mono)", fontSize: 9, color: "var(--text-muted)" }}>100</span>
             </div>
           </div>
         </div>
@@ -800,12 +830,12 @@ function DealDetail({ dealId, onBack, onUpdate, onDelete }) {
             {tab === "insights" && (
               <div>
                 <Section label="Stall Reason" content={analysis.stall_reason} />
-                <Section label="Insight" content={analysis.insight} />
+                <Section label="Insight" content={analysis.insight} last />
               </div>
             )}
             {tab === "action" && (
               <div>
-                <Section label="Recommended Action" content={analysis.recommended_action} />
+                <Section label="Recommended Action" content={analysis.recommended_action} last />
               </div>
             )}
             {tab === "draft" && (
@@ -872,12 +902,18 @@ function DealDetail({ dealId, onBack, onUpdate, onDelete }) {
   );
 }
 
-function Section({ label, content }) {
+function Section({ label, content, last = false }) {
   return (
-    <div style={{ marginBottom: 20 }}>
-      <div style={{ fontFamily: "var(--font-mono)", fontSize: 10, letterSpacing: "0.1em",
-        color: "var(--blue)", marginBottom: 8, textTransform: "uppercase" }}>{label}</div>
-      <div style={{ fontSize: 14, lineHeight: 1.75, color: "var(--text-2)" }}>{content}</div>
+    <div style={{ paddingBottom: last ? 0 : 20, marginBottom: last ? 0 : 20,
+      borderBottom: last ? "none" : "1px solid var(--border)" }}>
+      <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 10 }}>
+        <div style={{ width: 3, height: 14, borderRadius: 2,
+          background: "linear-gradient(180deg, var(--blue), var(--blue-light))",
+          boxShadow: "0 0 8px rgba(14,165,233,0.4)", flexShrink: 0 }} />
+        <div style={{ fontFamily: "var(--font-mono)", fontSize: 10, letterSpacing: "0.12em",
+          color: "var(--blue-light)", textTransform: "uppercase", fontWeight: 700 }}>{label}</div>
+      </div>
+      <div style={{ fontSize: 14, lineHeight: 1.8, color: "var(--text-2)", paddingLeft: 11 }}>{content}</div>
     </div>
   );
 }
@@ -932,14 +968,17 @@ function Dashboard({ user, onLogout }) {
         background: "rgba(6,15,31,0.8)", backdropFilter: "blur(12px)",
         position: "sticky", top: 0, zIndex: 10 }}>
         <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
-          <img src="/logo.png" alt="DealIQ"
-            style={{ height: 36, borderRadius: 8,
-              boxShadow: "0 2px 12px rgba(0,0,0,0.4)" }} />
-          <div style={{ fontFamily: "var(--font-mono)", fontSize: 8,
-            letterSpacing: "0.2em", background: "rgba(14,165,233,0.08)",
-            border: "1px solid rgba(14,165,233,0.15)", padding: "2px 8px",
-            borderRadius: 20, color: "var(--blue-light)" }}>
-            AI
+          <div style={{ background: "linear-gradient(145deg, #f5f0e6, #ede8d8)",
+            borderRadius: 10, padding: 3, border: "1px solid rgba(245,166,35,0.25)",
+            boxShadow: "0 2px 12px rgba(0,0,0,0.3)" }}>
+            <img src="/logo.png" alt="DealIQ" style={{ height: 30, borderRadius: 7, display: "block" }} />
+          </div>
+          <div style={{ fontFamily: "var(--font-mono)", fontWeight: 900,
+            fontSize: 18, letterSpacing: -0.5, lineHeight: 1 }}>
+            <span style={{ color: "var(--text-1)" }}>Deal</span>
+            <span style={{ background: "linear-gradient(135deg, #f5a623, #ff6b35)",
+              WebkitBackgroundClip: "text", WebkitTextFillColor: "transparent",
+              backgroundClip: "text" }}>IQ</span>
           </div>
         </div>
 
