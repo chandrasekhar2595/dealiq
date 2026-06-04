@@ -116,20 +116,17 @@ function LoginPage({ onLogin }) {
       alignItems: "center", justifyContent: "center", padding: 20 }}>
       <div style={{ width: "100%", maxWidth: 420 }}>
         {/* Branding */}
-        <div style={{ textAlign: "center", marginBottom: 44 }}>
-          <div style={{ fontFamily: "var(--font-mono)", fontSize: 44, fontWeight: 900,
-            letterSpacing: -1.5, marginBottom: 12, lineHeight: 1 }}>
-            <span style={{ color: "var(--text-1)" }}>Deal</span>
-            <span style={{
-              background: "linear-gradient(135deg, #f5a623, #ff6b35)",
-              WebkitBackgroundClip: "text", WebkitTextFillColor: "transparent",
-              backgroundClip: "text",
-            }}>IQ</span>
+        <div style={{ textAlign: "center", marginBottom: 36 }}>
+          <div style={{ display: "inline-block", marginBottom: 20 }}>
+            <img src="/logo.png" alt="DealIQ"
+              style={{ height: 140, borderRadius: 20,
+                boxShadow: "0 8px 40px rgba(0,0,0,0.5), 0 0 60px rgba(245,166,35,0.12)",
+                display: "block" }} />
           </div>
-          <div style={{ fontSize: 16, fontWeight: 500, color: "var(--text-2)", marginBottom: 16 }}>
+          <div style={{ fontSize: 15, fontWeight: 500, color: "var(--text-2)", marginBottom: 16 }}>
             Know which deals are dying before they do.
           </div>
-          <div style={{ display: "flex", justifyContent: "center", gap: 20, marginTop: 14 }}>
+          <div style={{ display: "flex", justifyContent: "center", gap: 20 }}>
             {["Signal detection", "Risk scoring", "AI follow-ups"].map(f => (
               <div key={f} style={{ fontSize: 11, color: "var(--text-muted)",
                 fontFamily: "var(--font-mono)", letterSpacing: "0.05em" }}>
@@ -895,18 +892,14 @@ function Dashboard({ user, onLogout }) {
         display: "flex", alignItems: "center", justifyContent: "space-between",
         background: "rgba(6,15,31,0.8)", backdropFilter: "blur(12px)",
         position: "sticky", top: 0, zIndex: 10 }}>
-        <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
-          <div style={{ fontFamily: "var(--font-mono)", fontSize: 22, fontWeight: 900, letterSpacing: -0.5 }}>
-            <span style={{ color: "var(--text-1)" }}>Deal</span>
-            <span style={{
-              background: "linear-gradient(135deg, #f5a623, #ff6b35)",
-              WebkitBackgroundClip: "text", WebkitTextFillColor: "transparent", backgroundClip: "text",
-            }}>IQ</span>
-          </div>
+        <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
+          <img src="/logo.png" alt="DealIQ"
+            style={{ height: 36, borderRadius: 8,
+              boxShadow: "0 2px 12px rgba(0,0,0,0.4)" }} />
           <div style={{ fontFamily: "var(--font-mono)", fontSize: 8,
-            color: "var(--text-muted)", letterSpacing: "0.2em",
-            background: "rgba(14,165,233,0.08)", border: "1px solid rgba(14,165,233,0.15)",
-            padding: "2px 8px", borderRadius: 20, color: "var(--blue-light)" }}>
+            letterSpacing: "0.2em", background: "rgba(14,165,233,0.08)",
+            border: "1px solid rgba(14,165,233,0.15)", padding: "2px 8px",
+            borderRadius: 20, color: "var(--blue-light)" }}>
             AI
           </div>
         </div>
