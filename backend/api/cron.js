@@ -25,16 +25,16 @@ router.post("/update-stale", verifyCron, async (req, res) => {
   if (error) return res.status(500).json({ error: error.message });
 
   const now = Date.now();
-  const updates = deals.map(d => ({
-    id: d.id,
-    days_stale: Math.floor((now - new Date(d.last_activity_at).getTime()) / 86_400_000),
-  }));
+  let updateCount = 0;
 
-  const { error: updateError } = await supabaseAdmin
-    .from("deals")
-    .upsert(updates, { onConflict: "id" });
-
-  if (updateError) return res.status(500).json({ error: updateError.message });
+  for (const d of deals) {
+    const days_stale = Math.floor((now - new Date(d.last_activity_at).getTime()) / 86_400_000);
+    const { error: updateError } = await supabaseAdmin
+      .from("deals")
+      .update({ days_stale })
+      .eq("id", d.id);
+    if (!updateError) updateCount++;
+  }
 
   // Re-analyze deals that just crossed 7 days stale
   const staleDeals = deals.filter(d => {
@@ -64,7 +64,7 @@ router.post("/update-stale", verifyCron, async (req, res) => {
     }
   }
 
-  res.json({ updated: updates.length, reanalyzed: staleDeals.slice(0, 5).length });
+  res.json({ updated: updateCount, reanalyzed: staleDeals.slice(0, 5).length });
 });
 
 // ── POST /api/cron/daily-digest ───────────────────────────────
