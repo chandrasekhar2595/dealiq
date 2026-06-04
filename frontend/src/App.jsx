@@ -112,91 +112,120 @@ function LoginPage({ onLogin }) {
   }
 
   return (
-    <div style={{ minHeight: "100vh", display: "flex",
-      alignItems: "center", justifyContent: "center", padding: 20 }}>
-      <div style={{ width: "100%", maxWidth: 420 }}>
-        {/* Branding */}
-        <div style={{ textAlign: "center", marginBottom: 36 }}>
-          <div style={{ display: "inline-block", marginBottom: 20 }}>
+    <div style={{ minHeight: "100vh", display: "flex", alignItems: "center",
+      justifyContent: "center", padding: "20px 16px", position: "relative", overflow: "hidden" }}>
+
+      {/* Background glow blobs — more visible */}
+      <div style={{ position: "fixed", top: "-20%", right: "-10%", width: 600, height: 600,
+        background: "radial-gradient(circle, rgba(14,165,233,0.18) 0%, transparent 65%)",
+        pointerEvents: "none" }} />
+      <div style={{ position: "fixed", bottom: "-20%", left: "-10%", width: 500, height: 500,
+        background: "radial-gradient(circle, rgba(245,166,35,0.12) 0%, transparent 65%)",
+        pointerEvents: "none" }} />
+
+      <div style={{ width: "100%", maxWidth: 440, position: "relative", zIndex: 1 }}>
+
+        {/* Logo — dark pill treatment so it blends with the page */}
+        <div style={{ textAlign: "center", marginBottom: 32 }}>
+          <div style={{ display: "inline-flex", alignItems: "center", justifyContent: "center",
+            background: "linear-gradient(145deg, #0d1f35, #060f1f)",
+            border: "1px solid rgba(245,166,35,0.25)",
+            borderRadius: 24, padding: 6, marginBottom: 20,
+            boxShadow: "0 0 0 1px rgba(245,166,35,0.08), 0 16px 48px rgba(0,0,0,0.5), 0 0 80px rgba(245,166,35,0.08)" }}>
             <img src="/logo.png" alt="DealIQ"
-              style={{ height: 150, borderRadius: 28,
-                boxShadow: "0 12px 48px rgba(0,0,0,0.6), 0 0 0 1px rgba(245,166,35,0.15), 0 0 60px rgba(245,166,35,0.1)",
-                display: "block" }} />
+              style={{ height: 110, borderRadius: 18,
+                mixBlendMode: "multiply", display: "block" }} />
           </div>
-          <div style={{ fontSize: 15, fontWeight: 500, color: "var(--text-2)", marginBottom: 16 }}>
-            Know which deals are dying before they do.
+
+          <div style={{ fontSize: 22, fontWeight: 700, color: "var(--text-1)",
+            letterSpacing: -0.3, marginBottom: 8 }}>
+            Find the dying deal.{" "}
+            <span style={{ background: "linear-gradient(135deg, #f5a623, #ff6b35)",
+              WebkitBackgroundClip: "text", WebkitTextFillColor: "transparent",
+              backgroundClip: "text" }}>Close it.</span>
           </div>
-          <div style={{ display: "flex", justifyContent: "center", gap: 20 }}>
-            {["Signal detection", "Risk scoring", "AI follow-ups"].map(f => (
-              <div key={f} style={{ fontSize: 11, color: "var(--text-muted)",
-                fontFamily: "var(--font-mono)", letterSpacing: "0.05em" }}>
-                ✦ {f}
+          <div style={{ fontSize: 14, color: "var(--text-3)", marginBottom: 20 }}>
+            AI-powered deal intelligence for B2B sales teams.
+          </div>
+
+          {/* Feature pills — visible badges */}
+          <div style={{ display: "flex", justifyContent: "center", gap: 8, flexWrap: "wrap" }}>
+            {[
+              { label: "Signal Detection", color: "#7dd3fc", bg: "rgba(14,165,233,0.1)", border: "rgba(14,165,233,0.2)" },
+              { label: "Risk Scoring",     color: "#f59e0b", bg: "rgba(245,158,11,0.1)", border: "rgba(245,158,11,0.2)" },
+              { label: "AI Follow-ups",   color: "#a78bfa", bg: "rgba(167,139,250,0.1)", border: "rgba(167,139,250,0.2)" },
+            ].map(({ label, color, bg, border }) => (
+              <div key={label} style={{ fontSize: 11, fontFamily: "var(--font-mono)",
+                letterSpacing: "0.04em", padding: "4px 12px", borderRadius: 20,
+                background: bg, border: `1px solid ${border}`, color }}>
+                {label}
               </div>
             ))}
           </div>
         </div>
 
-        {/* Card */}
-        <div style={{
-          background: "rgba(6,15,31,0.85)",
-          backdropFilter: "blur(24px)",
-          WebkitBackdropFilter: "blur(24px)",
-          border: "1px solid rgba(255,255,255,0.07)",
-          borderRadius: 16, padding: "36px 40px",
-          boxShadow: "0 32px 80px rgba(0,0,0,0.6), 0 0 0 1px rgba(14,165,233,0.08) inset, 0 1px 0 rgba(255,255,255,0.05) inset",
-        }}>
-          <div style={{ fontFamily: "var(--font-mono)", fontSize: 11, letterSpacing: "0.1em",
-            color: "var(--text-3)", marginBottom: 20, textTransform: "uppercase" }}>
-            {mode === "login" ? "Sign in to your workspace" : "Create your account"}
-          </div>
-
-          {error && (
-            <div style={{ background: "#ef444414", border: "1px solid #ef444432",
-              borderRadius: 8, padding: "10px 14px", marginBottom: 16,
-              fontSize: 13, color: "#ef4444", display: "flex", alignItems: "center", gap: 8 }}>
-              <span>⚠</span> {error}
+        {/* Card — visible glass with gradient top border */}
+        <div style={{ position: "relative", borderRadius: 18, padding: 2,
+          background: "linear-gradient(160deg, rgba(245,166,35,0.2), rgba(14,165,233,0.1) 50%, rgba(255,255,255,0.04))" }}>
+          <div style={{
+            background: "rgba(6,15,31,0.92)",
+            backdropFilter: "blur(32px)",
+            WebkitBackdropFilter: "blur(32px)",
+            borderRadius: 16, padding: "32px 36px",
+          }}>
+            <div style={{ fontFamily: "var(--font-mono)", fontSize: 10, letterSpacing: "0.12em",
+              color: "var(--text-3)", marginBottom: 22, textTransform: "uppercase" }}>
+              {mode === "login" ? "→ Sign in to your workspace" : "→ Create your account"}
             </div>
-          )}
-          {success && (
-            <div style={{ background: "#22c55e14", border: "1px solid #22c55e32",
-              borderRadius: 8, padding: "10px 14px", marginBottom: 16,
-              fontSize: 13, color: "#22c55e", display: "flex", alignItems: "center", gap: 8 }}>
-              <span>✓</span> {success}
-            </div>
-          )}
 
-          <form onSubmit={handleSubmit}>
-            {mode === "signup" && (
-              <>
-                <input className="field-input" placeholder="Full name"
-                  value={name} onChange={e => setName(e.target.value)} />
-                <input className="field-input" placeholder="Company"
-                  value={company} onChange={e => setCompany(e.target.value)} />
-              </>
+            {error && (
+              <div style={{ background: "#ef444414", border: "1px solid #ef444432",
+                borderRadius: 8, padding: "10px 14px", marginBottom: 16,
+                fontSize: 13, color: "#ef4444", display: "flex", alignItems: "center", gap: 8 }}>
+                ⚠ {error}
+              </div>
             )}
-            <input className="field-input" type="email" placeholder="Email address"
-              value={form.email} onChange={e => setForm(f => ({ ...f, email: e.target.value }))} required />
-            <input className="field-input" type="password" placeholder="Password"
-              value={form.password} onChange={e => setForm(f => ({ ...f, password: e.target.value }))} required
-              style={{ marginBottom: 20 }} />
+            {success && (
+              <div style={{ background: "#22c55e14", border: "1px solid #22c55e32",
+                borderRadius: 8, padding: "10px 14px", marginBottom: 16,
+                fontSize: 13, color: "#22c55e", display: "flex", alignItems: "center", gap: 8 }}>
+                ✓ {success}
+              </div>
+            )}
 
-            <button type="submit" disabled={loading} className="btn btn-primary">
-              {loading ? "..." : mode === "login" ? "SIGN IN" : "CREATE ACCOUNT"}
-            </button>
-          </form>
+            <form onSubmit={handleSubmit}>
+              {mode === "signup" && (
+                <>
+                  <input className="field-input" placeholder="Full name"
+                    value={name} onChange={e => setName(e.target.value)} />
+                  <input className="field-input" placeholder="Company"
+                    value={company} onChange={e => setCompany(e.target.value)} />
+                </>
+              )}
+              <input className="field-input" type="email" placeholder="Email address"
+                value={form.email} onChange={e => setForm(f => ({ ...f, email: e.target.value }))} required />
+              <input className="field-input" type="password" placeholder="Password"
+                value={form.password} onChange={e => setForm(f => ({ ...f, password: e.target.value }))} required
+                style={{ marginBottom: 22 }} />
 
-          <div style={{ textAlign: "center", marginTop: 18, fontSize: 13, color: "var(--text-3)" }}>
-            {mode === "login"
-              ? <>No account?{" "}<span onClick={() => { setMode("signup"); setError(""); setSuccess(""); }}
-                  style={{ color: "var(--accent)", cursor: "pointer", fontWeight: 500 }}>Sign up free</span></>
-              : <>Have an account?{" "}<span onClick={() => { setMode("login"); setError(""); setSuccess(""); }}
-                  style={{ color: "var(--accent)", cursor: "pointer", fontWeight: 500 }}>Sign in</span></>
-            }
+              <button type="submit" disabled={loading} className="btn btn-primary">
+                {loading ? "..." : mode === "login" ? "SIGN IN" : "CREATE ACCOUNT"}
+              </button>
+            </form>
+
+            <div style={{ textAlign: "center", marginTop: 18, fontSize: 13, color: "var(--text-3)" }}>
+              {mode === "login"
+                ? <>No account?{" "}<span onClick={() => { setMode("signup"); setError(""); setSuccess(""); }}
+                    style={{ color: "var(--accent)", cursor: "pointer", fontWeight: 600 }}>Sign up free →</span></>
+                : <>Have an account?{" "}<span onClick={() => { setMode("login"); setError(""); setSuccess(""); }}
+                    style={{ color: "var(--accent)", cursor: "pointer", fontWeight: 600 }}>Sign in →</span></>
+              }
+            </div>
           </div>
         </div>
 
         <div style={{ textAlign: "center", marginTop: 20, fontSize: 11,
-          color: "var(--text-muted)", fontFamily: "var(--font-mono)" }}>
+          color: "var(--text-muted)", fontFamily: "var(--font-mono)", letterSpacing: "0.05em" }}>
           256-bit encryption · Data never shared · SOC 2 in progress
         </div>
       </div>
