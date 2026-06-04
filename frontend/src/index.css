@@ -284,4 +284,8 @@ body {
   .main-panel     { padding: 20px 16px !important; }
   .header-stats   { display: none !important; }
   .score-hero     { flex-direction: column !important; gap: 12px !important; }
+
+  /* Login split → stack on mobile */
+  .login-left  { display: none !important; }
+  .login-right { width: 100% !important; padding: 40px 24px !important; background: none !important; }
 }

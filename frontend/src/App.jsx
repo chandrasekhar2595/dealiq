@@ -112,120 +112,133 @@ function LoginPage({ onLogin }) {
   }
 
   return (
-    <div style={{ minHeight: "100vh", display: "flex", alignItems: "center",
-      justifyContent: "center", padding: "20px 16px", position: "relative", overflow: "hidden" }}>
+    <div style={{ minHeight: "100vh", display: "flex", position: "relative", overflow: "hidden" }}>
 
-      {/* Background glow blobs — more visible */}
-      <div style={{ position: "fixed", top: "-20%", right: "-10%", width: 600, height: 600,
-        background: "radial-gradient(circle, rgba(14,165,233,0.18) 0%, transparent 65%)",
-        pointerEvents: "none" }} />
-      <div style={{ position: "fixed", bottom: "-20%", left: "-10%", width: 500, height: 500,
-        background: "radial-gradient(circle, rgba(245,166,35,0.12) 0%, transparent 65%)",
-        pointerEvents: "none" }} />
+      {/* Blobs */}
+      <div style={{ position: "fixed", top: "-10%", right: "-5%", width: 700, height: 700,
+        background: "radial-gradient(circle, rgba(14,165,233,0.15) 0%, transparent 65%)", pointerEvents: "none" }} />
+      <div style={{ position: "fixed", bottom: "-15%", left: "-5%", width: 600, height: 600,
+        background: "radial-gradient(circle, rgba(245,166,35,0.1) 0%, transparent 65%)", pointerEvents: "none" }} />
 
-      <div style={{ width: "100%", maxWidth: 440, position: "relative", zIndex: 1 }}>
+      {/* ── LEFT PANEL — branding ─────────────────────────────── */}
+      <div style={{ flex: 1, display: "flex", flexDirection: "column", justifyContent: "center",
+        padding: "60px 64px", position: "relative", zIndex: 1,
+        borderRight: "1px solid rgba(255,255,255,0.05)" }}
+        className="login-left">
 
-        {/* Logo — dark pill treatment so it blends with the page */}
-        <div style={{ textAlign: "center", marginBottom: 32 }}>
-          <div style={{ display: "inline-flex", alignItems: "center", justifyContent: "center",
+        {/* Logo */}
+        <div style={{ marginBottom: 40 }}>
+          <div style={{ display: "inline-flex",
             background: "linear-gradient(145deg, #f5f0e6, #ede8d8)",
-            border: "1px solid rgba(245,166,35,0.3)",
-            borderRadius: 24, padding: 6, marginBottom: 20,
-            boxShadow: "0 0 0 4px rgba(245,166,35,0.08), 0 16px 48px rgba(0,0,0,0.5), 0 0 60px rgba(245,166,35,0.15)" }}>
-            <img src="/logo.png" alt="DealIQ"
-              style={{ height: 110, borderRadius: 18, display: "block" }} />
+            border: "1px solid rgba(245,166,35,0.3)", borderRadius: 20, padding: 5,
+            boxShadow: "0 0 0 4px rgba(245,166,35,0.06), 0 12px 40px rgba(0,0,0,0.4), 0 0 50px rgba(245,166,35,0.12)",
+            marginBottom: 32 }}>
+            <img src="/logo.png" alt="DealIQ" style={{ height: 80, borderRadius: 15, display: "block" }} />
           </div>
 
-          <div style={{ fontSize: 22, fontWeight: 700, color: "var(--text-1)",
-            letterSpacing: -0.3, marginBottom: 8 }}>
-            Find the dying deal.{" "}
+          <div style={{ fontSize: 36, fontWeight: 800, color: "var(--text-1)",
+            letterSpacing: -1, lineHeight: 1.15, marginBottom: 12 }}>
+            Find the dying deal.<br />
             <span style={{ background: "linear-gradient(135deg, #f5a623, #ff6b35)",
-              WebkitBackgroundClip: "text", WebkitTextFillColor: "transparent",
-              backgroundClip: "text" }}>Close it.</span>
+              WebkitBackgroundClip: "text", WebkitTextFillColor: "transparent", backgroundClip: "text" }}>
+              Close it.
+            </span>
           </div>
-          <div style={{ fontSize: 14, color: "var(--text-3)", marginBottom: 20 }}>
-            AI-powered deal intelligence for B2B sales teams.
-          </div>
-
-          {/* Feature pills — visible badges */}
-          <div style={{ display: "flex", justifyContent: "center", gap: 8, flexWrap: "wrap" }}>
-            {[
-              { label: "Signal Detection", color: "#7dd3fc", bg: "rgba(14,165,233,0.1)", border: "rgba(14,165,233,0.2)" },
-              { label: "Risk Scoring",     color: "#f59e0b", bg: "rgba(245,158,11,0.1)", border: "rgba(245,158,11,0.2)" },
-              { label: "AI Follow-ups",   color: "#a78bfa", bg: "rgba(167,139,250,0.1)", border: "rgba(167,139,250,0.2)" },
-            ].map(({ label, color, bg, border }) => (
-              <div key={label} style={{ fontSize: 11, fontFamily: "var(--font-mono)",
-                letterSpacing: "0.04em", padding: "4px 12px", borderRadius: 20,
-                background: bg, border: `1px solid ${border}`, color }}>
-                {label}
-              </div>
-            ))}
+          <div style={{ fontSize: 15, color: "var(--text-3)", lineHeight: 1.6, maxWidth: 340 }}>
+            AI-powered deal intelligence that tells you which deals are stalling — and exactly what to do about it.
           </div>
         </div>
 
-        {/* Card — visible glass with gradient top border */}
-        <div style={{ position: "relative", borderRadius: 18, padding: 2,
-          background: "linear-gradient(160deg, rgba(245,166,35,0.2), rgba(14,165,233,0.1) 50%, rgba(255,255,255,0.04))" }}>
-          <div style={{
-            background: "rgba(6,15,31,0.92)",
-            backdropFilter: "blur(32px)",
-            WebkitBackdropFilter: "blur(32px)",
-            borderRadius: 16, padding: "32px 36px",
-          }}>
-            <div style={{ fontFamily: "var(--font-mono)", fontSize: 10, letterSpacing: "0.12em",
-              color: "var(--text-3)", marginBottom: 22, textTransform: "uppercase" }}>
-              {mode === "login" ? "→ Sign in to your workspace" : "→ Create your account"}
-            </div>
-
-            {error && (
-              <div style={{ background: "#ef444414", border: "1px solid #ef444432",
-                borderRadius: 8, padding: "10px 14px", marginBottom: 16,
-                fontSize: 13, color: "#ef4444", display: "flex", alignItems: "center", gap: 8 }}>
-                ⚠ {error}
+        {/* Feature list */}
+        <div style={{ display: "flex", flexDirection: "column", gap: 16, marginBottom: 48 }}>
+          {[
+            { icon: "◎", color: "#7dd3fc", label: "Signal Detection", desc: "Gmail, Slack, CRM — all signals in one place" },
+            { icon: "◈", color: "#f59e0b", label: "Risk Scoring",     desc: "AI scores every deal from 0–100 in seconds" },
+            { icon: "✦", color: "#a78bfa", label: "AI Follow-ups",   desc: "Draft the perfect email for every stalled deal" },
+          ].map(({ icon, color, label, desc }) => (
+            <div key={label} style={{ display: "flex", alignItems: "flex-start", gap: 14 }}>
+              <div style={{ width: 36, height: 36, borderRadius: 10, flexShrink: 0,
+                background: `${color}14`, border: `1px solid ${color}30`,
+                display: "flex", alignItems: "center", justifyContent: "center",
+                fontSize: 14, color }}>
+                {icon}
               </div>
-            )}
-            {success && (
-              <div style={{ background: "#22c55e14", border: "1px solid #22c55e32",
-                borderRadius: 8, padding: "10px 14px", marginBottom: 16,
-                fontSize: 13, color: "#22c55e", display: "flex", alignItems: "center", gap: 8 }}>
-                ✓ {success}
+              <div>
+                <div style={{ fontSize: 13, fontWeight: 600, color: "var(--text-1)", marginBottom: 2 }}>{label}</div>
+                <div style={{ fontSize: 12, color: "var(--text-3)", lineHeight: 1.5 }}>{desc}</div>
               </div>
-            )}
-
-            <form onSubmit={handleSubmit}>
-              {mode === "signup" && (
-                <>
-                  <input className="field-input" placeholder="Full name"
-                    value={name} onChange={e => setName(e.target.value)} />
-                  <input className="field-input" placeholder="Company"
-                    value={company} onChange={e => setCompany(e.target.value)} />
-                </>
-              )}
-              <input className="field-input" type="email" placeholder="Email address"
-                value={form.email} onChange={e => setForm(f => ({ ...f, email: e.target.value }))} required />
-              <input className="field-input" type="password" placeholder="Password"
-                value={form.password} onChange={e => setForm(f => ({ ...f, password: e.target.value }))} required
-                style={{ marginBottom: 22 }} />
-
-              <button type="submit" disabled={loading} className="btn btn-primary">
-                {loading ? "..." : mode === "login" ? "SIGN IN" : "CREATE ACCOUNT"}
-              </button>
-            </form>
-
-            <div style={{ textAlign: "center", marginTop: 18, fontSize: 13, color: "var(--text-3)" }}>
-              {mode === "login"
-                ? <>No account?{" "}<span onClick={() => { setMode("signup"); setError(""); setSuccess(""); }}
-                    style={{ color: "var(--accent)", cursor: "pointer", fontWeight: 600 }}>Sign up free →</span></>
-                : <>Have an account?{" "}<span onClick={() => { setMode("login"); setError(""); setSuccess(""); }}
-                    style={{ color: "var(--accent)", cursor: "pointer", fontWeight: 600 }}>Sign in →</span></>
-              }
             </div>
-          </div>
+          ))}
         </div>
 
-        <div style={{ textAlign: "center", marginTop: 20, fontSize: 11,
-          color: "var(--text-muted)", fontFamily: "var(--font-mono)", letterSpacing: "0.05em" }}>
-          256-bit encryption · Data never shared · SOC 2 in progress
+        {/* Social proof */}
+        <div style={{ fontFamily: "var(--font-mono)", fontSize: 10, color: "var(--text-muted)",
+          letterSpacing: "0.08em", borderTop: "1px solid var(--border)", paddingTop: 20 }}>
+          256-BIT ENCRYPTION · DATA NEVER SHARED · SOC 2 IN PROGRESS
+        </div>
+      </div>
+
+      {/* ── RIGHT PANEL — form ────────────────────────────────── */}
+      <div style={{ width: 460, display: "flex", flexDirection: "column", justifyContent: "center",
+        padding: "60px 48px", position: "relative", zIndex: 1,
+        background: "rgba(4,10,22,0.6)", backdropFilter: "blur(24px)" }}
+        className="login-right">
+
+        <div style={{ fontFamily: "var(--font-mono)", fontSize: 9, letterSpacing: "0.2em",
+          color: "var(--text-muted)", marginBottom: 28, textTransform: "uppercase" }}>
+          {mode === "login" ? "→ Welcome back" : "→ Get started free"}
+        </div>
+
+        <div style={{ fontSize: 24, fontWeight: 700, color: "var(--text-1)",
+          marginBottom: 6, letterSpacing: -0.3 }}>
+          {mode === "login" ? "Sign in" : "Create account"}
+        </div>
+        <div style={{ fontSize: 13, color: "var(--text-3)", marginBottom: 28 }}>
+          {mode === "login" ? "Enter your credentials to continue." : "Start closing more deals today."}
+        </div>
+
+        {error && (
+          <div style={{ background: "#ef444414", border: "1px solid #ef444432",
+            borderRadius: 8, padding: "10px 14px", marginBottom: 16,
+            fontSize: 13, color: "#ef4444", display: "flex", alignItems: "center", gap: 8 }}>
+            ⚠ {error}
+          </div>
+        )}
+        {success && (
+          <div style={{ background: "#22c55e14", border: "1px solid #22c55e32",
+            borderRadius: 8, padding: "10px 14px", marginBottom: 16,
+            fontSize: 13, color: "#22c55e", display: "flex", alignItems: "center", gap: 8 }}>
+            ✓ {success}
+          </div>
+        )}
+
+        <form onSubmit={handleSubmit}>
+          {mode === "signup" && (
+            <>
+              <input className="field-input" placeholder="Full name"
+                value={name} onChange={e => setName(e.target.value)} />
+              <input className="field-input" placeholder="Company"
+                value={company} onChange={e => setCompany(e.target.value)} />
+            </>
+          )}
+          <input className="field-input" type="email" placeholder="Email address"
+            value={form.email} onChange={e => setForm(f => ({ ...f, email: e.target.value }))} required />
+          <input className="field-input" type="password" placeholder="Password"
+            value={form.password} onChange={e => setForm(f => ({ ...f, password: e.target.value }))} required
+            style={{ marginBottom: 22 }} />
+
+          <button type="submit" disabled={loading} className="btn btn-primary">
+            {loading ? "..." : mode === "login" ? "SIGN IN" : "CREATE ACCOUNT"}
+          </button>
+        </form>
+
+        <div style={{ textAlign: "center", marginTop: 20, fontSize: 13, color: "var(--text-3)" }}>
+          {mode === "login"
+            ? <>No account?{" "}<span onClick={() => { setMode("signup"); setError(""); setSuccess(""); }}
+                style={{ color: "var(--accent)", cursor: "pointer", fontWeight: 600 }}>Sign up free →</span></>
+            : <>Have an account?{" "}<span onClick={() => { setMode("login"); setError(""); setSuccess(""); }}
+                style={{ color: "var(--accent)", cursor: "pointer", fontWeight: 600 }}>Sign in →</span></>
+          }
         </div>
       </div>
     </div>
