@@ -84,44 +84,66 @@ function Skeleton({ w = "100%", h = 14, mb = 8 }) {
 // ── LOGO MARK (Direction C — eye + pulse) ────────────────────
 function LogoMark({ size = 36 }) {
   const s = size;
-  // Eye shape: two arcs meeting at left/right points
-  // Center of eye at (s*0.5, s*0.5), width s*0.9, height s*0.5
   const cx = s * 0.5, cy = s * 0.5;
-  const w = s * 0.44, h = s * 0.26;
+  const w = s * 0.44, h = s * 0.25;
+  const id = `logo-${s}`;
+
+  // Eye: two smooth arcs
   const eyePath = `M ${cx - w} ${cy} Q ${cx} ${cy - h} ${cx + w} ${cy} Q ${cx} ${cy + h} ${cx - w} ${cy} Z`;
-  // Pulse line: flat → spike up → flat, centered in the eye
-  const pw = w * 0.85, ph = h * 0.72;
-  const pulsePath = `
-    M ${cx - pw} ${cy}
-    L ${cx - pw * 0.35} ${cy}
-    L ${cx - pw * 0.15} ${cy - ph}
-    L ${cx + pw * 0.05} ${cy + ph * 0.55}
-    L ${cx + pw * 0.25} ${cy}
-    L ${cx + pw} ${cy}
-  `;
+
+  // Pulse: enters flat, sharp spike up, drops below baseline, returns flat
+  const pw = w * 0.82;
+  const ph = h * 0.82;
+  const pulsePath = [
+    `M ${cx - pw} ${cy}`,
+    `L ${cx - pw * 0.28} ${cy}`,
+    `L ${cx - pw * 0.08} ${cy - ph}`,
+    `L ${cx + pw * 0.08} ${cy + ph * 0.5}`,
+    `L ${cx + pw * 0.24} ${cy}`,
+    `L ${cx + pw} ${cy}`,
+  ].join(" ");
+
   return (
-    <svg width={s} height={s} viewBox={`0 0 ${s} ${s}`} fill="none">
+    <svg width={s} height={s} viewBox={`0 0 ${s} ${s}`} fill="none"
+      style={{ filter: `drop-shadow(0 0 ${s * 0.12}px rgba(245,166,35,0.25))`, overflow: "visible" }}>
       <defs>
-        <clipPath id={`eye-clip-${s}`}>
-          <path d={eyePath} />
-        </clipPath>
-      </defs>
-      {/* Eye shape */}
-      <path d={eyePath} stroke="#1e3a5f" strokeWidth={s * 0.045} fill="rgba(14,165,233,0.06)" />
-      {/* Pulse line clipped inside eye */}
-      <g clipPath={`url(#eye-clip-${s})`}>
-        <path d={pulsePath} stroke="url(#pulse-grad)" strokeWidth={s * 0.07}
-          strokeLinecap="round" strokeLinejoin="round" fill="none"
-          style={{ filter: `drop-shadow(0 0 ${s * 0.06}px rgba(245,166,35,0.7))` }} />
-      </g>
-      {/* Gradient for pulse */}
-      <defs>
-        <linearGradient id="pulse-grad" x1="0%" y1="0%" x2="100%" y2="0%">
-          <stop offset="0%" stopColor="#f5a623" stopOpacity="0.4" />
-          <stop offset="40%" stopColor="#f5a623" />
-          <stop offset="100%" stopColor="#ff6b35" stopOpacity="0.4" />
+        <clipPath id={`clip-${id}`}><path d={eyePath} /></clipPath>
+        <linearGradient id={`pg-${id}`} x1="0%" y1="0%" x2="100%" y2="0%">
+          <stop offset="0%"   stopColor="#f5a623" stopOpacity="0.2" />
+          <stop offset="35%"  stopColor="#f5a623" stopOpacity="1"   />
+          <stop offset="65%"  stopColor="#ff6b35" stopOpacity="1"   />
+          <stop offset="100%" stopColor="#ff6b35" stopOpacity="0.2" />
+        </linearGradient>
+        <linearGradient id={`eg-${id}`} x1="0%" y1="0%" x2="0%" y2="100%">
+          <stop offset="0%"   stopColor="#2a4a6e" />
+          <stop offset="100%" stopColor="#0d1f35" />
         </linearGradient>
       </defs>
+
+      {/* Eye fill — subtle blue inner glow */}
+      <path d={eyePath} fill={`url(#eg-${id})`} />
+
+      {/* Eye border — visible light blue stroke */}
+      <path d={eyePath} stroke="rgba(125,211,252,0.35)" strokeWidth={s * 0.038} />
+
+      {/* Pulse line clipped inside eye */}
+      <g clipPath={`url(#clip-${id})`}>
+        <path d={pulsePath}
+          stroke={`url(#pg-${id})`}
+          strokeWidth={s * 0.052}
+          strokeLinecap="round" strokeLinejoin="round"
+          fill="none"
+          style={{ filter: `drop-shadow(0 0 ${s * 0.09}px rgba(245,166,35,0.9))` }} />
+      </g>
+
+      {/* Pupil dot at spike peak */}
+      <circle
+        cx={cx - s * 0.04} cy={cy - ph * 0.45}
+        r={s * 0.028}
+        fill="#f5a623"
+        style={{ filter: `drop-shadow(0 0 ${s * 0.06}px #f5a623)` }}
+        clipPath={`url(#clip-${id})`}
+      />
     </svg>
   );
 }
