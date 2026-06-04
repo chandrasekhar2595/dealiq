@@ -34,9 +34,9 @@ async function api(path, options = {}) {
 }
 
 const RISK = {
-  high:   { color: "#ef4444", bg: "#ef444414", border: "#ef444432" },
-  medium: { color: "#f59e0b", bg: "#f59e0b14", border: "#f59e0b32" },
-  low:    { color: "#22c55e", bg: "#22c55e14", border: "#22c55e32" },
+  high:   { color: "#ef4444", bg: "#ef444418", border: "#ef444440", glow: "rgba(239,68,68,0.3)" },
+  medium: { color: "#f59e0b", bg: "#f59e0b18", border: "#f59e0b40", glow: "rgba(245,158,11,0.3)" },
+  low:    { color: "#22c55e", bg: "#22c55e18", border: "#22c55e40", glow: "rgba(34,197,94,0.3)" },
 };
 
 const STAGE_COLOR = {
@@ -56,13 +56,16 @@ function ScoreRing({ score, size = 80 }) {
   const circ = 2 * Math.PI * r;
   const offset = circ - (score / 100) * circ;
   const color = score >= 70 ? "#22c55e" : score >= 50 ? "#f59e0b" : "#ef4444";
+  const glowColor = score >= 70 ? "rgba(34,197,94,0.5)" : score >= 50 ? "rgba(245,158,11,0.5)" : "rgba(239,68,68,0.5)";
   const cx = size / 2, cy = size / 2;
   return (
-    <svg width={size} height={size} style={{ transform: "rotate(-90deg)", flexShrink: 0 }}>
-      <circle cx={cx} cy={cy} r={r} fill="none" stroke="#0a1a30" strokeWidth="6" />
+    <svg width={size} height={size}
+      style={{ transform: "rotate(-90deg)", flexShrink: 0,
+        filter: `drop-shadow(0 0 ${size * 0.1}px ${glowColor})` }}>
+      <circle cx={cx} cy={cy} r={r} fill="none" stroke="#0d1f35" strokeWidth="6" />
       <circle cx={cx} cy={cy} r={r} fill="none" stroke={color} strokeWidth="6"
         strokeDasharray={circ} strokeDashoffset={offset} strokeLinecap="round"
-        style={{ transition: "stroke-dashoffset 1s ease" }} />
+        style={{ transition: "stroke-dashoffset 1.2s cubic-bezier(0.4,0,0.2,1)" }} />
       <text x={cx} y={cy} textAnchor="middle" dominantBaseline="middle"
         style={{ transform: `rotate(90deg)`, transformOrigin: `${cx}px ${cy}px`,
           fill: color, fontSize: size * 0.22, fontWeight: "700",
@@ -109,19 +112,21 @@ function LoginPage({ onLogin }) {
   }
 
   return (
-    <div style={{
-      minHeight: "100vh", background: "var(--bg)", display: "flex",
-      alignItems: "center", justifyContent: "center", padding: 20,
-      backgroundImage: "radial-gradient(ellipse 80% 50% at 50% -5%, #0a1f3d 0%, transparent 70%)",
-    }}>
-      <div style={{ width: "100%", maxWidth: 400 }}>
+    <div style={{ minHeight: "100vh", display: "flex",
+      alignItems: "center", justifyContent: "center", padding: 20 }}>
+      <div style={{ width: "100%", maxWidth: 420 }}>
         {/* Branding */}
-        <div style={{ textAlign: "center", marginBottom: 40 }}>
-          <div style={{ fontFamily: "var(--font-mono)", fontSize: 38, fontWeight: 900,
-            color: "var(--text-1)", letterSpacing: -1, marginBottom: 10 }}>
-            Deal<span style={{ color: "var(--accent)" }}>IQ</span>
+        <div style={{ textAlign: "center", marginBottom: 44 }}>
+          <div style={{ fontFamily: "var(--font-mono)", fontSize: 44, fontWeight: 900,
+            letterSpacing: -1.5, marginBottom: 12, lineHeight: 1 }}>
+            <span style={{ color: "var(--text-1)" }}>Deal</span>
+            <span style={{
+              background: "linear-gradient(135deg, #f5a623, #ff6b35)",
+              WebkitBackgroundClip: "text", WebkitTextFillColor: "transparent",
+              backgroundClip: "text",
+            }}>IQ</span>
           </div>
-          <div style={{ fontSize: 16, fontWeight: 500, color: "var(--text-2)", marginBottom: 8 }}>
+          <div style={{ fontSize: 16, fontWeight: 500, color: "var(--text-2)", marginBottom: 16 }}>
             Know which deals are dying before they do.
           </div>
           <div style={{ display: "flex", justifyContent: "center", gap: 20, marginTop: 14 }}>
@@ -136,9 +141,12 @@ function LoginPage({ onLogin }) {
 
         {/* Card */}
         <div style={{
-          background: "var(--bg-card)", border: "1px solid var(--border)",
-          borderRadius: 14, padding: "32px 36px",
-          boxShadow: "0 24px 64px rgba(0,0,0,0.5), 0 0 0 1px rgba(14,165,233,0.06) inset",
+          background: "rgba(6,15,31,0.85)",
+          backdropFilter: "blur(24px)",
+          WebkitBackdropFilter: "blur(24px)",
+          border: "1px solid rgba(255,255,255,0.07)",
+          borderRadius: 16, padding: "36px 40px",
+          boxShadow: "0 32px 80px rgba(0,0,0,0.6), 0 0 0 1px rgba(14,165,233,0.08) inset, 0 1px 0 rgba(255,255,255,0.05) inset",
         }}>
           <div style={{ fontFamily: "var(--font-mono)", fontSize: 11, letterSpacing: "0.1em",
             color: "var(--text-3)", marginBottom: 20, textTransform: "uppercase" }}>
@@ -638,28 +646,35 @@ function DealDetail({ dealId, onBack, onUpdate, onDelete }) {
 
       {/* Score hero */}
       {analysis && (
-        <div className="score-hero" style={{ display: "flex", gap: 20,
-          background: "var(--bg-card)", border: "1px solid var(--border)",
-          borderRadius: 12, padding: "20px 24px", marginBottom: 24, alignItems: "center" }}>
-          <ScoreRing score={analysis.close_score} size={90} />
+        <div className="score-hero" style={{ display: "flex", gap: 24,
+          background: "rgba(6,15,31,0.8)", backdropFilter: "blur(16px)",
+          border: "1px solid rgba(255,255,255,0.06)",
+          borderRadius: 14, padding: "22px 28px", marginBottom: 24, alignItems: "center",
+          boxShadow: `0 8px 32px rgba(0,0,0,0.3), inset 0 0 40px ${r?.glow || "transparent"}18` }}>
+          <ScoreRing score={analysis.close_score} size={96} />
           <div style={{ flex: 1 }}>
-            <div style={{ fontFamily: "var(--font-mono)", fontSize: 10,
-              color: "var(--text-3)", letterSpacing: "0.1em", marginBottom: 4 }}>
+            <div style={{ fontFamily: "var(--font-mono)", fontSize: 9,
+              color: "var(--text-3)", letterSpacing: "0.15em", marginBottom: 6 }}>
               CLOSE PROBABILITY
             </div>
-            <div style={{ fontSize: 15, fontWeight: 600, color: "var(--text-1)", marginBottom: 8 }}>
+            <div style={{ fontSize: 18, fontWeight: 700,
+              color: analysis.close_score >= 70 ? "var(--risk-low)" :
+                     analysis.close_score >= 50 ? "var(--risk-med)" : "var(--risk-high)",
+              marginBottom: 12,
+              textShadow: `0 0 20px ${r?.glow || "transparent"}` }}>
               {analysis.close_score >= 70 ? "Strong position" :
                analysis.close_score >= 50 ? "Needs attention" : "At risk of stalling"}
             </div>
             <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
-              <span style={{ fontFamily: "var(--font-mono)", fontSize: 10, padding: "3px 10px",
+              <span style={{ fontFamily: "var(--font-mono)", fontSize: 10, padding: "4px 12px",
                 borderRadius: 20, background: r?.bg, color: r?.color,
-                border: `1px solid ${r?.border}` }}>
+                border: `1px solid ${r?.border}`,
+                boxShadow: `0 0 12px ${r?.glow}` }}>
                 {(analysis.urgency || "").replace("_", " ").toUpperCase()}
               </span>
-              <span style={{ fontFamily: "var(--font-mono)", fontSize: 10, padding: "3px 10px",
-                borderRadius: 20, background: "var(--bg-hover)",
-                color: "var(--text-3)", border: "1px solid var(--border)" }}>
+              <span style={{ fontFamily: "var(--font-mono)", fontSize: 10, padding: "4px 12px",
+                borderRadius: 20, background: "rgba(14,165,233,0.08)",
+                color: "var(--blue-light)", border: "1px solid rgba(14,165,233,0.2)" }}>
                 {signals.length} SIGNALS
               </span>
             </div>
@@ -880,27 +895,34 @@ function Dashboard({ user, onLogout }) {
         display: "flex", alignItems: "center", justifyContent: "space-between",
         background: "rgba(6,15,31,0.8)", backdropFilter: "blur(12px)",
         position: "sticky", top: 0, zIndex: 10 }}>
-        <div style={{ display: "flex", alignItems: "center", gap: 14 }}>
-          <div style={{ fontFamily: "var(--font-mono)", fontSize: 22, fontWeight: 900,
-            color: "var(--text-1)", letterSpacing: -0.5 }}>
-            Deal<span style={{ color: "var(--accent)" }}>IQ</span>
+        <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
+          <div style={{ fontFamily: "var(--font-mono)", fontSize: 22, fontWeight: 900, letterSpacing: -0.5 }}>
+            <span style={{ color: "var(--text-1)" }}>Deal</span>
+            <span style={{
+              background: "linear-gradient(135deg, #f5a623, #ff6b35)",
+              WebkitBackgroundClip: "text", WebkitTextFillColor: "transparent", backgroundClip: "text",
+            }}>IQ</span>
           </div>
-          <div style={{ fontFamily: "var(--font-mono)", fontSize: 9,
-            color: "var(--text-muted)", letterSpacing: "0.15em" }}>
-            AI INTELLIGENCE
+          <div style={{ fontFamily: "var(--font-mono)", fontSize: 8,
+            color: "var(--text-muted)", letterSpacing: "0.2em",
+            background: "rgba(14,165,233,0.08)", border: "1px solid rgba(14,165,233,0.15)",
+            padding: "2px 8px", borderRadius: 20, color: "var(--blue-light)" }}>
+            AI
           </div>
         </div>
 
         {/* Pipeline stats */}
-        <div className="header-stats" style={{ display: "flex", gap: 28, alignItems: "center" }}>
+        <div className="header-stats" style={{ display: "flex", gap: 6, alignItems: "center" }}>
           {[
-            { label: "Pipeline", value: `$${totalValue.toLocaleString()}`, color: "var(--blue-light)" },
-            { label: "Deals",    value: deals.length, color: "var(--text-2)" },
-            { label: "At Risk",  value: atRisk, color: atRisk > 0 ? "var(--risk-high)" : "var(--text-3)" },
-          ].map(({ label, value, color }) => (
-            <div key={label} style={{ textAlign: "center" }}>
-              <div style={{ fontFamily: "var(--font-mono)", fontSize: 16,
-                fontWeight: 700, color }}>{value}</div>
+            { label: "Pipeline", value: `$${totalValue.toLocaleString()}`, color: "var(--blue-light)", glow: "rgba(125,211,252,0.4)" },
+            { label: "Deals",    value: deals.length, color: "var(--text-2)", glow: null },
+            { label: "At Risk",  value: atRisk, color: atRisk > 0 ? "var(--risk-high)" : "var(--text-3)", glow: atRisk > 0 ? "rgba(239,68,68,0.4)" : null },
+          ].map(({ label, value, color, glow }) => (
+            <div key={label} style={{ textAlign: "center", padding: "6px 16px",
+              background: "rgba(255,255,255,0.03)", borderRadius: 8,
+              border: "1px solid rgba(255,255,255,0.05)" }}>
+              <div style={{ fontFamily: "var(--font-mono)", fontSize: 17, fontWeight: 700,
+                color, textShadow: glow ? `0 0 16px ${glow}` : "none" }}>{value}</div>
               <div style={{ fontSize: 10, color: "var(--text-3)", marginTop: 1 }}>{label}</div>
             </div>
           ))}
