@@ -93,7 +93,12 @@ router.post("/daily-digest", verifyCron, async (req, res) => {
       .order("days_stale", { ascending: false })
       .limit(10);
 
+    if (!deals || deals.length === 0) continue;
+
     const atRisk = deals.filter(d => d.analyses?.[0]?.risk_level === "high");
+
+    // Only email if there's something worth surfacing
+    if (atRisk.length === 0 && deals.every(d => d.days_stale < 3)) continue;
     const totalValue = deals.reduce((s, d) => s + Number(d.value || 0), 0);
 
     if (!deals || deals.length === 0) continue;
