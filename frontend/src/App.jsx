@@ -1168,7 +1168,7 @@ function Dashboard({ user, onLogout, openSettings = false, slackChannel = "" }) 
         display: "flex", alignItems: "center", justifyContent: "space-between",
         background: "rgba(6,15,31,0.8)", backdropFilter: "blur(12px)",
         position: "sticky", top: 0, zIndex: 10 }}>
-        <Logo size={38} />
+        <Logo size={44} />
 
         {/* Pipeline stats */}
         <div className="header-stats" style={{ display: "flex", gap: 6, alignItems: "center" }}>
@@ -1188,9 +1188,18 @@ function Dashboard({ user, onLogout, openSettings = false, slackChannel = "" }) 
         </div>
 
         <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
-          <div style={{ fontSize: 12, color: "var(--text-3)" }}>{user?.email}</div>
-          <button onClick={() => setShowSettings(true)} className="btn-sm btn-ghost"
-            title="Settings">⚙</button>
+          <div style={{ fontSize: 12, color: "var(--text-3)",
+            maxWidth: 180, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
+            {user?.email}
+          </div>
+          <button onClick={() => setShowSettings(true)}
+            className="btn-sm btn-ghost"
+            style={{ padding: "6px 10px", fontSize: 14, display: "flex",
+              alignItems: "center", gap: 6, color: "var(--text-2)",
+              borderColor: "var(--border-hi)" }}>
+            ⚙ <span style={{ fontSize: 10, fontFamily: "var(--font-mono)",
+              letterSpacing: "0.07em" }}>Settings</span>
+          </button>
           <button onClick={onLogout} className="btn-sm btn-ghost">Sign out</button>
         </div>
       </div>
