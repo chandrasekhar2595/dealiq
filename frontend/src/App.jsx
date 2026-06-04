@@ -128,13 +128,12 @@ function LoginPage({ onLogin }) {
         {/* Logo — dark pill treatment so it blends with the page */}
         <div style={{ textAlign: "center", marginBottom: 32 }}>
           <div style={{ display: "inline-flex", alignItems: "center", justifyContent: "center",
-            background: "linear-gradient(145deg, #0d1f35, #060f1f)",
-            border: "1px solid rgba(245,166,35,0.25)",
+            background: "linear-gradient(145deg, #f5f0e6, #ede8d8)",
+            border: "1px solid rgba(245,166,35,0.3)",
             borderRadius: 24, padding: 6, marginBottom: 20,
-            boxShadow: "0 0 0 1px rgba(245,166,35,0.08), 0 16px 48px rgba(0,0,0,0.5), 0 0 80px rgba(245,166,35,0.08)" }}>
+            boxShadow: "0 0 0 4px rgba(245,166,35,0.08), 0 16px 48px rgba(0,0,0,0.5), 0 0 60px rgba(245,166,35,0.15)" }}>
             <img src="/logo.png" alt="DealIQ"
-              style={{ height: 110, borderRadius: 18,
-                mixBlendMode: "multiply", display: "block" }} />
+              style={{ height: 110, borderRadius: 18, display: "block" }} />
           </div>
 
           <div style={{ fontSize: 22, fontWeight: 700, color: "var(--text-1)",
