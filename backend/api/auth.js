@@ -166,6 +166,94 @@ router.delete("/slack", async (req, res) => {
   res.json({ success: true });
 });
 
+// ── GMAIL OAUTH ──────────────────────────────────────────────
+
+// GET /api/auth/gmail — redirect to Google OAuth
+router.get("/gmail", (req, res) => {
+  const clientId    = process.env.GOOGLE_CLIENT_ID;
+  const redirectUri = process.env.GOOGLE_REDIRECT_URI ||
+    "https://dealiq-backend.vercel.app/api/auth/gmail/callback";
+  const token = req.query.token;
+
+  if (!clientId) return res.status(500).json({ error: "GOOGLE_CLIENT_ID not configured" });
+  if (!token)    return res.status(400).json({ error: "token required" });
+
+  const url = new URL("https://accounts.google.com/o/oauth2/v2/auth");
+  url.searchParams.set("client_id",     clientId);
+  url.searchParams.set("redirect_uri",  redirectUri);
+  url.searchParams.set("response_type", "code");
+  url.searchParams.set("scope",         "https://www.googleapis.com/auth/gmail.readonly");
+  url.searchParams.set("access_type",   "offline");
+  url.searchParams.set("prompt",        "consent");
+  url.searchParams.set("state",         token);
+
+  res.redirect(url.toString());
+});
+
+// GET /api/auth/gmail/callback — Google redirects here after approval
+router.get("/gmail/callback", async (req, res) => {
+  const { code, state: token, error } = req.query;
+  const appUrl = process.env.NEXT_PUBLIC_APP_URL ||
+    "https://dealiq-frontend-omega.vercel.app";
+
+  if (error) return res.redirect(`${appUrl}?gmail=error&reason=${error}`);
+  if (!code || !token) return res.redirect(`${appUrl}?gmail=error&reason=missing_params`);
+
+  try {
+    const { data: { user }, error: authError } = await supabase.auth.getUser(token);
+    if (authError || !user) return res.redirect(`${appUrl}?gmail=error&reason=invalid_token`);
+
+    // Exchange code for tokens
+    const tokenRes = await fetch("https://oauth2.googleapis.com/token", {
+      method: "POST",
+      headers: { "Content-Type": "application/x-www-form-urlencoded" },
+      body: new URLSearchParams({
+        client_id:     process.env.GOOGLE_CLIENT_ID,
+        client_secret: process.env.GOOGLE_CLIENT_SECRET,
+        redirect_uri:  process.env.GOOGLE_REDIRECT_URI ||
+          "https://dealiq-backend.vercel.app/api/auth/gmail/callback",
+        code,
+        grant_type: "authorization_code",
+      }),
+    });
+    const tokenData = await tokenRes.json();
+    if (!tokenData.access_token) {
+      return res.redirect(`${appUrl}?gmail=error&reason=token_exchange_failed`);
+    }
+
+    // Get user's Gmail address
+    const profileRes = await fetch("https://www.googleapis.com/oauth2/v2/userinfo", {
+      headers: { Authorization: `Bearer ${tokenData.access_token}` },
+    });
+    const profile = await profileRes.json();
+
+    await supabaseAdmin.from("users").update({
+      gmail_access_token:  tokenData.access_token,
+      gmail_refresh_token: tokenData.refresh_token || null,
+    }).eq("id", user.id);
+
+    const gmailEmail = encodeURIComponent(profile.email || "");
+    res.redirect(`${appUrl}?gmail=connected&email=${gmailEmail}`);
+  } catch (err) {
+    console.error("Gmail callback error:", err.message);
+    res.redirect(`${appUrl}?gmail=error&reason=server_error`);
+  }
+});
+
+// DELETE /api/auth/gmail — disconnect Gmail
+router.delete("/gmail", async (req, res) => {
+  const token = req.headers.authorization?.replace("Bearer ", "");
+  if (!token) return res.status(401).json({ error: "No token" });
+
+  const { data: { user }, error } = await supabase.auth.getUser(token);
+  if (error || !user) return res.status(401).json({ error: "Invalid token" });
+
+  await supabaseAdmin.from("users")
+    .update({ gmail_access_token: null, gmail_refresh_token: null })
+    .eq("id", user.id);
+  res.json({ success: true });
+});
+
 module.exports = router;
 
 // ── AUTH MIDDLEWARE ──────────────────────────────────────────

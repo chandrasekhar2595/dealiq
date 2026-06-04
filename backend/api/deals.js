@@ -2,8 +2,9 @@
 const express = require("express");
 const router = express.Router();
 const { supabaseAdmin: supabase } = require("../lib/supabase");
-const { analyzeDeal }    = require("../services/analyzer");
-const { sendSlackAlert } = require("../services/slack");
+const { analyzeDeal }             = require("../services/analyzer");
+const { sendSlackAlert }          = require("../services/slack");
+const { fetchEmailsForContact, extractSignals, refreshAccessToken } = require("../services/gmail");
 
 // GET /api/deals — list all deals for user
 router.get("/", async (req, res) => {
@@ -201,6 +202,67 @@ router.post("/:id/signals", async (req, res) => {
 
   if (error) return res.status(500).json({ error: error.message });
   res.status(201).json({ signal: data });
+});
+
+// POST /api/deals/:id/sync-gmail — pull real email signals from Gmail
+router.post("/:id/sync-gmail", async (req, res) => {
+  const { id } = req.params;
+  const userId = req.user.id;
+
+  // Get deal
+  const { data: deal, error: dealError } = await supabase
+    .from("deals").select("*").eq("id", id).eq("user_id", userId).single();
+  if (dealError || !deal) return res.status(404).json({ error: "Deal not found" });
+
+  // Get user's Gmail tokens
+  const { data: user } = await supabase
+    .from("users").select("gmail_access_token, gmail_refresh_token").eq("id", userId).single();
+
+  if (!user?.gmail_access_token) {
+    return res.status(400).json({ error: "Gmail not connected. Connect Gmail in Settings first." });
+  }
+
+  try {
+    let accessToken = user.gmail_access_token;
+
+    // Try to refresh token if we have a refresh token
+    if (user.gmail_refresh_token) {
+      try {
+        accessToken = await refreshAccessToken(user.gmail_refresh_token);
+        await supabase.from("users").update({ gmail_access_token: accessToken }).eq("id", userId);
+      } catch (e) {
+        // Use existing token if refresh fails
+      }
+    }
+
+    // Fetch emails for this contact
+    const emails = await fetchEmailsForContact(accessToken, deal.contact_email);
+
+    // Extract signals
+    const newSignals = extractSignals(emails, deal.contact_email, deal.days_stale);
+
+    if (!newSignals.length) {
+      return res.json({ synced: 0, message: "No new signals found" });
+    }
+
+    // Delete old Gmail signals for this deal, insert fresh ones
+    await supabase.from("signals")
+      .delete().eq("deal_id", id).eq("source", "gmail");
+
+    const { data: inserted } = await supabase.from("signals")
+      .insert(newSignals.map(s => ({ ...s, deal_id: id })))
+      .select();
+
+    // Update last_activity_at if we found recent emails
+    await supabase.from("deals")
+      .update({ updated_at: new Date().toISOString() })
+      .eq("id", id);
+
+    res.json({ synced: inserted?.length || 0, signals: inserted });
+  } catch (err) {
+    console.error("Gmail sync error:", err.message);
+    res.status(500).json({ error: err.message });
+  }
 });
 
 // Mock signals for deals with no real data yet

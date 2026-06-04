@@ -666,6 +666,7 @@ function DealDetail({ dealId, onBack, onUpdate, onDelete }) {
   const [loading, setLoading]     = useState(true);
   const [showEdit, setShowEdit]   = useState(false);
   const [showConfirm, setShowConfirm] = useState(false);
+  const [syncing, setSyncing]     = useState(false);
 
   useEffect(() => {
     setLoading(true);
@@ -692,6 +693,22 @@ function DealDetail({ dealId, onBack, onUpdate, onDelete }) {
     } catch (err) {
       alert(friendlyError(err.message));
     } finally { setShowConfirm(false); }
+  }
+
+  async function syncGmail() {
+    setSyncing(true);
+    try {
+      const { synced, signals: newSignals } = await api(`/deals/${dealId}/sync-gmail`, { method: "POST" });
+      if (synced > 0) setSignals(newSignals);
+      alert(synced > 0 ? `✓ Synced ${synced} Gmail signals` : "No new signals found for this contact.");
+    } catch (err) {
+      const msg = friendlyError(err.message);
+      if (msg.includes("Gmail not connected")) {
+        alert("Connect Gmail in ⚙ Settings first.");
+      } else {
+        alert(msg);
+      }
+    } finally { setSyncing(false); }
   }
 
   if (loading) return (
@@ -865,14 +882,22 @@ function DealDetail({ dealId, onBack, onUpdate, onDelete }) {
               onClick={() => setTab(t)}>{label}</button>
           ))}
         </div>
-        <button onClick={runAnalysis} disabled={analyzing} className="btn-analyze"
-          style={{ marginLeft: 12 }}>
-          {analyzing
-            ? <span style={{ display: "flex", alignItems: "center", gap: 6 }}>
-                <span className="dot" /><span className="dot" /><span className="dot" />
-              </span>
-            : "⚡ Analyze"}
-        </button>
+        <div style={{ display: "flex", gap: 6, marginLeft: 12 }}>
+          <button onClick={syncGmail} disabled={syncing} className="btn-sm btn-ghost"
+            title="Sync Gmail signals for this contact"
+            style={{ fontSize: 10, padding: "7px 12px", display: "flex", alignItems: "center", gap: 5 }}>
+            {syncing
+              ? <><span className="dot" /><span className="dot" /></>
+              : <><span>✉</span> Sync Gmail</>}
+          </button>
+          <button onClick={runAnalysis} disabled={analyzing} className="btn-analyze">
+            {analyzing
+              ? <span style={{ display: "flex", alignItems: "center", gap: 6 }}>
+                  <span className="dot" /><span className="dot" /><span className="dot" />
+                </span>
+              : "⚡ Analyze"}
+          </button>
+        </div>
       </div>
 
       {/* Analysis content */}
@@ -1001,9 +1026,97 @@ function Section({ label, content, last = false }) {
   );
 }
 
+// ── GMAIL SECTION ────────────────────────────────────────────
+function GmailSection({ user, justConnected, gmailEmail }) {
+  const isConnected  = justConnected || !!user?.gmail_access_token;
+  const email        = gmailEmail || "";
+  const [disconnecting, setDisconnecting] = useState(false);
+
+  function handleConnect() {
+    const token = getToken();
+    sessionStorage.setItem("dealiq_pre_oauth_token", token);
+    window.location.href = `${API.replace("/api", "")}/api/auth/gmail?token=${token}`;
+  }
+
+  async function handleDisconnect() {
+    setDisconnecting(true);
+    try {
+      await api("/auth/gmail", { method: "DELETE" });
+      window.location.reload();
+    } catch (err) {
+      alert(friendlyError(err.message));
+    } finally { setDisconnecting(false); }
+  }
+
+  return (
+    <div style={{ background: "rgba(255,255,255,0.02)", border: "1px solid var(--border)",
+      borderRadius: 10, padding: "20px 20px" }}>
+      <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 16 }}>
+        <div style={{ width: 36, height: 36, background: "#fff",
+          borderRadius: 8, display: "flex", alignItems: "center",
+          justifyContent: "center", fontSize: 18, flexShrink: 0,
+          border: "1px solid #e0e0e0" }}>
+          ✉
+        </div>
+        <div style={{ flex: 1 }}>
+          <div style={{ fontSize: 13, fontWeight: 600, color: "var(--text-1)" }}>Gmail Signals</div>
+          <div style={{ fontSize: 11, color: "var(--text-3)" }}>
+            Pull real email signals from your Gmail into deal analysis
+          </div>
+        </div>
+        {isConnected && (
+          <div style={{ fontFamily: "var(--font-mono)", fontSize: 10, padding: "3px 10px",
+            borderRadius: 20, background: "var(--risk-low)14", color: "var(--risk-low)",
+            border: "1px solid var(--risk-low)30" }}>✓ CONNECTED</div>
+        )}
+      </div>
+
+      {isConnected ? (
+        <div>
+          <div style={{ display: "flex", alignItems: "center", gap: 10,
+            background: "rgba(34,197,94,0.06)", border: "1px solid rgba(34,197,94,0.2)",
+            borderRadius: 8, padding: "10px 14px", marginBottom: 12 }}>
+            <span>✉</span>
+            <div style={{ fontSize: 13, color: "var(--text-1)" }}>
+              {email || "Gmail connected"}
+            </div>
+          </div>
+          <div style={{ fontSize: 11, color: "var(--text-3)", marginBottom: 12, lineHeight: 1.5 }}>
+            Open any deal and click <strong style={{ color: "var(--text-2)" }}>Sync Gmail</strong> to pull real email signals.
+          </div>
+          <button onClick={handleDisconnect} disabled={disconnecting}
+            className="btn-sm btn-ghost"
+            style={{ fontSize: 11, padding: "8px 16px", color: "#ef4444", borderColor: "#ef444432" }}>
+            {disconnecting ? "Disconnecting..." : "Disconnect Gmail"}
+          </button>
+        </div>
+      ) : (
+        <div>
+          <div style={{ fontSize: 12, color: "var(--text-3)", marginBottom: 16, lineHeight: 1.6 }}>
+            Connect your Gmail to automatically detect reply patterns, email silence, and engagement signals for each deal.
+          </div>
+          <button onClick={handleConnect}
+            style={{ display: "flex", alignItems: "center", gap: 10,
+              background: "#fff", border: "1px solid #e0e0e0", borderRadius: 6,
+              padding: "10px 16px", cursor: "pointer", fontSize: 14,
+              fontWeight: 600, color: "#1d1c1d", transition: "box-shadow 0.15s" }}
+            onMouseOver={e => e.currentTarget.style.boxShadow = "0 4px 16px rgba(0,0,0,0.3)"}
+            onMouseOut={e => e.currentTarget.style.boxShadow = "none"}>
+            <span>G</span> Connect Gmail
+          </button>
+          <div style={{ marginTop: 10, fontSize: 10, color: "var(--text-muted)",
+            fontFamily: "var(--font-mono)", letterSpacing: "0.05em" }}>
+            READ-ONLY ACCESS · EMAILS NEVER STORED · SIGNALS ONLY
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}
+
 // ── SETTINGS MODAL ───────────────────────────────────────────
-function SettingsModal({ user, onClose, slackChannel, justConnected }) {
-  const isConnected = justConnected || !!user?.slack_webhook_url;
+function SettingsModal({ user, onClose, slackChannel, gmailEmail, justConnected }) {
+  const isConnected = (justConnected === "slack") || !!user?.slack_webhook_url;
   const channel     = slackChannel || user?.slack_channel || "";
   const [disconnecting, setDisconnecting] = useState(false);
 
@@ -1102,7 +1215,16 @@ function SettingsModal({ user, onClose, slackChannel, justConnected }) {
                   fontWeight: 600, color: "#1d1c1d", transition: "box-shadow 0.15s" }}
                 onMouseOver={e => e.currentTarget.style.boxShadow = "0 4px 16px rgba(0,0,0,0.3)"}
                 onMouseOut={e => e.currentTarget.style.boxShadow = "none"}>
-                <span style={{ fontSize: 20 }}>#</span>
+                <svg width="20" height="20" viewBox="0 0 127 127">
+                  <path d="M27.2 80c0 7.3-5.9 13.2-13.2 13.2S.8 87.3.8 80s5.9-13.2 13.2-13.2H27.2V80z" fill="#E01E5A"/>
+                  <path d="M33.7 80c0-7.3 5.9-13.2 13.2-13.2s13.2 5.9 13.2 13.2v33.1c0 7.3-5.9 13.2-13.2 13.2s-13.2-5.9-13.2-13.2V80z" fill="#E01E5A"/>
+                  <path d="M46.9 27.2c-7.3 0-13.2-5.9-13.2-13.2S39.6.8 46.9.8s13.2 5.9 13.2 13.2V27.2H46.9z" fill="#36C5F0"/>
+                  <path d="M46.9 33.7c7.3 0 13.2 5.9 13.2 13.2s-5.9 13.2-13.2 13.2H13.8C6.5 60.1.6 54.2.6 46.9s5.9-13.2 13.2-13.2H46.9z" fill="#36C5F0"/>
+                  <path d="M99.8 46.9c0-7.3 5.9-13.2 13.2-13.2s13.2 5.9 13.2 13.2-5.9 13.2-13.2 13.2H99.8V46.9z" fill="#2EB67D"/>
+                  <path d="M93.3 46.9c0 7.3-5.9 13.2-13.2 13.2s-13.2-5.9-13.2-13.2V13.8C66.9 6.5 72.8.6 80.1.6s13.2 5.9 13.2 13.2V46.9z" fill="#2EB67D"/>
+                  <path d="M80.1 99.8c7.3 0 13.2 5.9 13.2 13.2s-5.9 13.2-13.2 13.2-13.2-5.9-13.2-13.2V99.8H80.1z" fill="#ECB22E"/>
+                  <path d="M80.1 93.3c-7.3 0-13.2-5.9-13.2-13.2s5.9-13.2 13.2-13.2h33.1c7.3 0 13.2 5.9 13.2 13.2s-5.9 13.2-13.2 13.2H80.1z" fill="#ECB22E"/>
+                </svg>
                 Add to Slack
               </button>
             </div>
@@ -1115,13 +1237,16 @@ function SettingsModal({ user, onClose, slackChannel, justConnected }) {
             </div>
           )}
         </div>
+
+        {/* Gmail section */}
+        <GmailSection user={user} justConnected={justConnected === "gmail"} gmailEmail={gmailEmail} />
       </div>
     </div>
   );
 }
 
 // ── MAIN DASHBOARD ───────────────────────────────────────────
-function Dashboard({ user, onLogout, openSettings = false, slackChannel = "" }) {
+function Dashboard({ user, onLogout, openSettings = false, slackChannel = "", gmailEmail = "", justConnected = "" }) {
   const [deals, setDeals]           = useState([]);
   const [selectedId, setSelectedId] = useState(null);
   const [showAddDeal, setShowAddDeal] = useState(false);
@@ -1367,7 +1492,8 @@ function Dashboard({ user, onLogout, openSettings = false, slackChannel = "" }) 
         <SettingsModal
           user={user}
           slackChannel={slackChannel}
-          justConnected={slackChannel !== ""}
+          gmailEmail={gmailEmail}
+          justConnected={justConnected}
           onClose={() => setShowSettings(false)}
         />
       )}
@@ -1379,14 +1505,18 @@ function Dashboard({ user, onLogout, openSettings = false, slackChannel = "" }) 
 export default function App() {
   const [user, setUser]         = useState(null);
   const [checking, setChecking] = useState(true);
-  const [slackResult, setSlackResult] = useState(null); // {status, channel}
+  const [oauthResult, setOauthResult] = useState(null); // {type, status, value}
 
   useEffect(() => {
-    // Handle Slack OAuth redirect
     const params = new URLSearchParams(window.location.search);
     const slack = params.get("slack");
+    const gmail = params.get("gmail");
+
     if (slack) {
-      setSlackResult({ status: slack, channel: params.get("channel") || "" });
+      setOauthResult({ type: "slack", status: slack, value: params.get("channel") || "" });
+      window.history.replaceState({}, "", window.location.pathname);
+    } else if (gmail) {
+      setOauthResult({ type: "gmail", status: gmail, value: params.get("email") || "" });
       window.history.replaceState({}, "", window.location.pathname);
     }
 
@@ -1402,8 +1532,8 @@ export default function App() {
     api("/auth/me")
       .then(({ user }) => {
         setUser(user);
-        // If returning from Slack OAuth, refresh again to get updated slack_webhook_url
-        if (slack === "connected") {
+        // Refresh user after OAuth to get updated tokens
+        if (slack === "connected" || gmail === "connected") {
           setTimeout(() => {
             api("/auth/me").then(({ user }) => setUser(user)).catch(() => {});
           }, 500);
@@ -1432,5 +1562,9 @@ export default function App() {
 
   if (!user) return <LoginPage onLogin={setUser} />;
   return <Dashboard user={user} onLogout={handleLogout}
-    openSettings={!!slackResult} slackChannel={slackResult?.channel} />;
+    openSettings={!!oauthResult}
+    slackChannel={oauthResult?.type === "slack" ? oauthResult.value : ""}
+    gmailEmail={oauthResult?.type === "gmail" ? oauthResult.value : ""}
+    justConnected={oauthResult?.type || ""}
+  />;
 }
