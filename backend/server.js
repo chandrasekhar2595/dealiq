@@ -5,6 +5,7 @@ const express = require("express");
 const cors = require("cors");
 const { router: authRouter, requireAuth } = require("./api/auth");
 const dealsRouter = require("./api/deals");
+const cronRouter  = require("./api/cron");
 
 const app = express();
 
@@ -26,6 +27,7 @@ app.get("/api/health", (req, res) => {
 
 // ── PROTECTED ROUTES ─────────────────────────────────────────
 app.use("/api/deals", requireAuth, dealsRouter);
+app.use("/api/cron", cronRouter);
 
 // ── ERROR HANDLER ─────────────────────────────────────────────
 app.use((err, req, res, next) => {

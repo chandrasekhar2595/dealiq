@@ -9,5 +9,9 @@
   ],
   "routes": [
     { "src": "/(.*)", "dest": "/server.js" }
+  ],
+  "crons": [
+    { "path": "/api/cron/update-stale", "schedule": "0 0 * * *" },
+    { "path": "/api/cron/daily-digest", "schedule": "0 7 * * *" }
   ]
 }
