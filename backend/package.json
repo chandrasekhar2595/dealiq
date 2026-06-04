@@ -1,5 +1,5 @@
 {
-  "name": "dealsiq-backend",
+  "name": "dealiq-backend",
   "version": "1.0.0",
   "description": "DealIQ API server",
   "main": "server.js",
