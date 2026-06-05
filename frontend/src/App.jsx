@@ -59,6 +59,36 @@ const STAGE_COLOR = {
 
 const SOURCE_ICON = { gmail: "✉", slack: "#", linkedin: "in", crm: "⊙", intent: "◎" };
 
+// ── COMPANY AVATAR ───────────────────────────────────────────
+function CompanyAvatar({ company, contactEmail, size = 40 }) {
+  const [imgFailed, setImgFailed] = useState(false);
+  const domain = contactEmail?.split("@")[1];
+  const logoUrl = domain ? `https://logo.clearbit.com/${domain}` : null;
+  const color = ["#0ea5e9","#8b5cf6","#f59e0b","#22c55e","#ef4444","#ec4899"][
+    (company || "A").charCodeAt(0) % 6
+  ];
+  const style = { width: size, height: size, borderRadius: 10, flexShrink: 0,
+    overflow: "hidden", border: "1px solid var(--border)" };
+
+  if (logoUrl && !imgFailed) {
+    return (
+      <div style={{ ...style, background: "var(--bg-card)",
+        display: "flex", alignItems: "center", justifyContent: "center" }}>
+        <img src={logoUrl} alt={company} onError={() => setImgFailed(true)}
+          style={{ width: size - 10, height: size - 10, objectFit: "contain" }} />
+      </div>
+    );
+  }
+  return (
+    <div style={{ ...style, background: `linear-gradient(135deg, ${color}30, ${color}15)`,
+      borderColor: `${color}40`, display: "flex", alignItems: "center",
+      justifyContent: "center", fontFamily: "var(--font-mono)",
+      fontWeight: 900, fontSize: size * 0.4, color }}>
+      {(company || "?")[0].toUpperCase()}
+    </div>
+  );
+}
+
 // ── SCORE RING ───────────────────────────────────────────────
 function ScoreRing({ score, size = 80, riskLevel }) {
   const r = (size / 2) - 7;
@@ -800,11 +830,6 @@ function DealDetail({ dealId, onBack, onUpdate, onDelete }) {
     neutral:  { icon: "→", color: "#7dd3fc" },
   };
 
-  // Company letter avatar
-  const avatarColor = ["#0ea5e9","#8b5cf6","#f59e0b","#22c55e","#ef4444","#ec4899"][
-    deal.company.charCodeAt(0) % 6
-  ];
-
   // Last analyzed time
   const analyzedAgo = analysis?.analyzed_at
     ? (() => {
@@ -828,14 +853,7 @@ function DealDetail({ dealId, onBack, onUpdate, onDelete }) {
       {/* Header row */}
       <div style={{ display: "flex", alignItems: "center", gap: 12, marginBottom: 4, flexWrap: "wrap" }}>
         <button onClick={onBack} className="btn-sm btn-ghost">← Back</button>
-        {/* Company avatar */}
-        <div style={{ width: 40, height: 40, borderRadius: 10, flexShrink: 0,
-          background: `linear-gradient(135deg, ${avatarColor}30, ${avatarColor}15)`,
-          border: `1px solid ${avatarColor}40`,
-          display: "flex", alignItems: "center", justifyContent: "center",
-          fontFamily: "var(--font-mono)", fontWeight: 900, fontSize: 16, color: avatarColor }}>
-          {deal.company[0].toUpperCase()}
-        </div>
+        <CompanyAvatar company={deal.company} contactEmail={deal.contact_email} size={40} />
         <div style={{ fontSize: 22, fontWeight: 700, color: "var(--text-1)", flex: 1 }}>
           {deal.company}
         </div>
