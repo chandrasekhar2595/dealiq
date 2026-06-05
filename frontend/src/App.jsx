@@ -914,7 +914,7 @@ function DealDetail({ dealId, onBack, onUpdate, onDelete }) {
       <div style={{ display: "flex", justifyContent: "space-between",
         alignItems: "center", marginBottom: 12 }}>
         <div style={{ display: "flex", borderBottom: "1px solid var(--border)", flex: 1 }}>
-          {[["insights","AI Insights"],["action","Next Action"],["draft","Draft Email"]].map(([t, label]) => (
+          {[["insights","Deal Insights"],["action","Next Action"],["draft","Draft Email"]].map(([t, label]) => (
             <button key={t} className={`tab-btn ${tab === t ? "active" : ""}`}
               onClick={() => setTab(t)}>{label}</button>
           ))}
@@ -955,7 +955,7 @@ function DealDetail({ dealId, onBack, onUpdate, onDelete }) {
               No analysis yet
             </div>
             <div style={{ fontSize: 12, color: "var(--text-muted)" }}>
-              Click Analyze to get AI intelligence on this deal
+              Click Analyze to get Deal Intelligence on this deal
             </div>
           </div>
         )}
@@ -1467,7 +1467,7 @@ function Dashboard({ user, onLogout, openSettings = false, slackChannel = "", gm
                 No deals yet
               </div>
               <div style={{ fontSize: 12, color: "var(--text-muted)", lineHeight: 1.5 }}>
-                Add your first deal to start getting AI intelligence.
+                Add your first deal to start getting Deal Intelligence.
               </div>
             </div>
           )}
