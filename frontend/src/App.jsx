@@ -29,6 +29,11 @@ async function api(path, options = {}) {
     body: options.body ? JSON.stringify(options.body) : undefined,
   });
   const data = await res.json();
+  if (res.status === 401) {
+    clearToken();
+    window.location.reload();
+    return;
+  }
   if (!res.ok) throw new Error(data.error || "Request failed");
   return data;
 }
