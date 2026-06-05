@@ -5,6 +5,7 @@ const { supabaseAdmin: supabase } = require("../lib/supabase");
 const { analyzeDeal }             = require("../services/analyzer");
 const { sendSlackAlert }          = require("../services/slack");
 const { fetchEmailsForContact, extractSignals, refreshAccessToken } = require("../services/gmail");
+const { fetchContactNews, extractLinkedInSignals } = require("../services/linkedin");
 
 // GET /api/deals — list all deals for user
 router.get("/", async (req, res) => {
@@ -261,6 +262,37 @@ router.post("/:id/sync-gmail", async (req, res) => {
     res.json({ synced: inserted?.length || 0, signals: inserted });
   } catch (err) {
     console.error("Gmail sync error:", err.message);
+    res.status(500).json({ error: err.message });
+  }
+});
+
+// POST /api/deals/:id/sync-linkedin — pull news signals for contact + company
+router.post("/:id/sync-linkedin", async (req, res) => {
+  const { id } = req.params;
+  const userId = req.user.id;
+
+  const { data: deal, error: dealError } = await supabase
+    .from("deals").select("*").eq("id", id).eq("user_id", userId).single();
+  if (dealError || !deal) return res.status(404).json({ error: "Deal not found" });
+
+  try {
+    const newsItems = await fetchContactNews(deal.contact_name, deal.company);
+    const newSignals = extractLinkedInSignals(newsItems, deal.contact_name, deal.company);
+
+    if (!newSignals.length) {
+      return res.json({ synced: 0, message: "No news signals found for this contact or company" });
+    }
+
+    // Replace old linkedin signals with fresh ones
+    await supabase.from("signals").delete().eq("deal_id", id).eq("source", "linkedin");
+
+    const { data: inserted } = await supabase.from("signals")
+      .insert(newSignals.map(s => ({ ...s, deal_id: id })))
+      .select();
+
+    res.json({ synced: inserted?.length || 0, signals: inserted });
+  } catch (err) {
+    console.error("LinkedIn sync error:", err.message);
     res.status(500).json({ error: err.message });
   }
 });

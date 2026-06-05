@@ -336,7 +336,7 @@ function LoginPage({ onLogin }) {
 // ── ADD DEAL MODAL ───────────────────────────────────────────
 function AddDealModal({ onClose, onAdd }) {
   const [form, setForm]   = useState({ company: "", contact_name: "", contact_email: "",
-    contact_role: "", value: "", stage: "Discovery", notes: "" });
+    contact_role: "", linkedin_url: "", value: "", stage: "Discovery", notes: "" });
   const [loading, setLoading] = useState(false);
   const [error, setError]     = useState("");
 
@@ -357,6 +357,7 @@ function AddDealModal({ onClose, onAdd }) {
     { key: "contact_name",  label: "Contact Name",  required: true },
     { key: "contact_email", label: "Contact Email", required: true, type: "email" },
     { key: "contact_role",  label: "Contact Role" },
+    { key: "linkedin_url",  label: "LinkedIn URL (optional)", type: "url" },
     { key: "value",         label: "Deal Value ($)", type: "number" },
   ];
 
@@ -442,6 +443,7 @@ function EditDealModal({ deal, onClose, onSave }) {
     contact_name:  deal.contact_name  || "",
     contact_email: deal.contact_email || "",
     contact_role:  deal.contact_role  || "",
+    linkedin_url:  deal.linkedin_url  || "",
     value:         deal.value         || "",
     stage:         deal.stage         || "Discovery",
     notes:         deal.notes         || "",
@@ -468,6 +470,7 @@ function EditDealModal({ deal, onClose, onSave }) {
     { key: "contact_name",  label: "Contact Name",  required: true },
     { key: "contact_email", label: "Contact Email", required: true, type: "email" },
     { key: "contact_role",  label: "Contact Role" },
+    { key: "linkedin_url",  label: "LinkedIn URL (optional)", type: "url" },
     { key: "value",         label: "Deal Value ($)", type: "number" },
   ];
 
@@ -672,6 +675,7 @@ function DealDetail({ dealId, onBack, onUpdate, onDelete }) {
   const [showEdit, setShowEdit]   = useState(false);
   const [showConfirm, setShowConfirm] = useState(false);
   const [syncing, setSyncing]     = useState(false);
+  const [syncingLinkedIn, setSyncingLinkedIn] = useState(false);
 
   useEffect(() => {
     setLoading(true);
@@ -705,7 +709,7 @@ function DealDetail({ dealId, onBack, onUpdate, onDelete }) {
     setSyncing(true);
     try {
       const { synced, signals: newSignals } = await api(`/deals/${dealId}/sync-gmail`, { method: "POST" });
-      if (synced > 0) setSignals(newSignals);
+      if (synced > 0) setSignals(prev => [...prev.filter(s => s.source !== "gmail"), ...newSignals]);
       alert(synced > 0 ? `✓ Synced ${synced} Gmail signals` : "No new signals found for this contact.");
     } catch (err) {
       const msg = friendlyError(err.message);
@@ -715,6 +719,17 @@ function DealDetail({ dealId, onBack, onUpdate, onDelete }) {
         alert(msg);
       }
     } finally { setSyncing(false); }
+  }
+
+  async function syncLinkedIn() {
+    setSyncingLinkedIn(true);
+    try {
+      const { synced, signals: newSignals } = await api(`/deals/${dealId}/sync-linkedin`, { method: "POST" });
+      if (synced > 0) setSignals(prev => [...prev.filter(s => s.source !== "linkedin"), ...newSignals]);
+      alert(synced > 0 ? `✓ Found ${synced} LinkedIn/news signals` : "No news signals found for this contact or company.");
+    } catch (err) {
+      alert(friendlyError(err.message));
+    } finally { setSyncingLinkedIn(false); }
   }
 
   if (loading) return (
@@ -889,6 +904,13 @@ function DealDetail({ dealId, onBack, onUpdate, onDelete }) {
           ))}
         </div>
         <div style={{ display: "flex", gap: 6, marginLeft: 12 }}>
+          <button onClick={syncLinkedIn} disabled={syncingLinkedIn} className="btn-sm btn-ghost"
+            title="Sync LinkedIn/news signals for this contact"
+            style={{ fontSize: 10, padding: "7px 12px", display: "flex", alignItems: "center", gap: 5 }}>
+            {syncingLinkedIn
+              ? <><span className="dot" /><span className="dot" /></>
+              : <><span style={{ fontWeight: 700, color: "#0a66c2" }}>in</span> Sync LinkedIn</>}
+          </button>
           <button onClick={syncGmail} disabled={syncing} className="btn-sm btn-ghost"
             title="Sync Gmail signals for this contact"
             style={{ fontSize: 10, padding: "7px 12px", display: "flex", alignItems: "center", gap: 5 }}>
