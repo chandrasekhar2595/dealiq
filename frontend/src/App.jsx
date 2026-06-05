@@ -72,14 +72,17 @@ function companyToDomain(company) {
 function CompanyAvatar({ company, contactEmail, size = 40 }) {
   const emailDomain = contactEmail?.split("@")[1];
   const companyDomain = companyToDomain(company);
-  const [failed, setFailed] = useState(false);
+  const [srcIndex, setSrcIndex] = useState(0);
 
   const personalDomains = ["gmail.com","yahoo.com","hotmail.com","outlook.com","icloud.com","protonmail.com"];
-  const domain = (emailDomain && !personalDomains.includes(emailDomain))
-    ? emailDomain
-    : companyDomain;
+  const domain = (emailDomain && !personalDomains.includes(emailDomain)) ? emailDomain : companyDomain;
 
-  const logoUrl = domain ? `https://logo.clearbit.com/${domain}` : null;
+  // Try Clearbit first (full logo), then Google favicons (always works), then letter
+  const sources = domain ? [
+    `https://logo.clearbit.com/${domain}`,
+    `https://www.google.com/s2/favicons?domain=${domain}&sz=64`,
+  ] : [];
+
   const color = ["#0ea5e9","#8b5cf6","#f59e0b","#22c55e","#ef4444","#ec4899"][
     (company || "A").charCodeAt(0) % 6
   ];
@@ -87,10 +90,11 @@ function CompanyAvatar({ company, contactEmail, size = 40 }) {
     overflow: "hidden", border: "1px solid var(--border)",
     display: "flex", alignItems: "center", justifyContent: "center" };
 
-  if (logoUrl && !failed) {
+  if (srcIndex < sources.length) {
     return (
       <div style={{ ...style, background: "var(--bg-card)" }}>
-        <img src={logoUrl} alt={company} onError={() => setFailed(true)}
+        <img src={sources[srcIndex]} alt={company}
+          onError={() => setSrcIndex(i => i + 1)}
           style={{ width: size - 8, height: size - 8, objectFit: "contain" }} />
       </div>
     );
