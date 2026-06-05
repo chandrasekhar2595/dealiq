@@ -685,6 +685,7 @@ function DealDetail({ dealId, onBack, onUpdate, onDelete }) {
     try {
       const { analysis: a } = await api(`/deals/${dealId}/analyze`, { method: "POST" });
       setAnalysis(a); setTab("insights");
+      onUpdate({ id: dealId, latest_analysis: a });
     } catch (err) {
       alert(friendlyError(err.message));
     } finally { setAnalyzing(false); }
