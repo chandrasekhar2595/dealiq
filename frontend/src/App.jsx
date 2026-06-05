@@ -60,22 +60,50 @@ const STAGE_COLOR = {
 const SOURCE_ICON = { gmail: "✉", slack: "#", linkedin: "in", crm: "⊙", intent: "◎" };
 
 // ── COMPANY AVATAR ───────────────────────────────────────────
+function companyToDomain(company) {
+  const cleaned = company
+    .replace(/\b(inc|llc|ltd|corp|co|company|group|holdings|technologies|tech|solutions|services|platforms|global|international|enterprises|ventures)\b/gi, "")
+    .replace(/[^a-z0-9]/gi, "")
+    .toLowerCase()
+    .trim();
+  return cleaned ? `${cleaned}.com` : null;
+}
+
 function CompanyAvatar({ company, contactEmail, size = 40 }) {
-  const [imgFailed, setImgFailed] = useState(false);
-  const domain = contactEmail?.split("@")[1];
-  const logoUrl = domain ? `https://logo.clearbit.com/${domain}` : null;
+  const emailDomain = contactEmail?.split("@")[1];
+  const companyDomain = companyToDomain(company);
+  const [tryIndex, setTryIndex] = useState(0);
+
+  const personalDomains = ["gmail.com","yahoo.com","hotmail.com","outlook.com","icloud.com","protonmail.com"];
+  const candidates = [
+    emailDomain && !personalDomains.includes(emailDomain) ? emailDomain : null,
+    companyDomain,
+  ].filter(Boolean);
+
+  const currentDomain = candidates[tryIndex];
+  const logoUrl = currentDomain ? `https://logo.clearbit.com/${currentDomain}` : null;
+
   const color = ["#0ea5e9","#8b5cf6","#f59e0b","#22c55e","#ef4444","#ec4899"][
     (company || "A").charCodeAt(0) % 6
   ];
   const style = { width: size, height: size, borderRadius: 10, flexShrink: 0,
     overflow: "hidden", border: "1px solid var(--border)" };
 
-  if (logoUrl && !imgFailed) {
+  if (logoUrl) {
     return (
       <div style={{ ...style, background: "var(--bg-card)",
         display: "flex", alignItems: "center", justifyContent: "center" }}>
-        <img src={logoUrl} alt={company} onError={() => setImgFailed(true)}
-          style={{ width: size - 10, height: size - 10, objectFit: "contain" }} />
+        <img src={logoUrl} alt={company}
+          onError={() => {
+            if (tryIndex < candidates.length - 1) setTryIndex(i => i + 1);
+            else setTryIndex(candidates.length); // exhausted all — show letter
+          }}
+          style={{ width: size - 8, height: size - 8, objectFit: "contain",
+            display: tryIndex >= candidates.length ? "none" : "block" }} />
+        {tryIndex >= candidates.length && (
+          <span style={{ fontFamily: "var(--font-mono)", fontWeight: 900,
+            fontSize: size * 0.4, color }}>{(company || "?")[0].toUpperCase()}</span>
+        )}
       </div>
     );
   }
