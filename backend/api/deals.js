@@ -2,7 +2,7 @@
 const express = require("express");
 const router = express.Router();
 const { supabaseAdmin: supabase } = require("../lib/supabase");
-const { analyzeDeal }             = require("../services/analyzer");
+const { analyzeDeal, generateMeetingPrep, handleObjection, suggestStageUpdate } = require("../services/analyzer");
 const { sendSlackAlert }          = require("../services/slack");
 const { fetchEmailsForContact, extractSignals, refreshAccessToken } = require("../services/gmail");
 const { fetchContactNews, extractLinkedInSignals } = require("../services/linkedin");
@@ -312,6 +312,64 @@ router.post("/:id/sync-linkedin", async (req, res) => {
     res.json({ synced: inserted?.length || 0, signals: inserted });
   } catch (err) {
     console.error("LinkedIn sync error:", err.message);
+    res.status(500).json({ error: err.message });
+  }
+});
+
+// POST /api/deals/:id/meeting-prep — generate pre-call brief
+router.post("/:id/meeting-prep", async (req, res) => {
+  const { id } = req.params;
+  const userId = req.user.id;
+
+  const { data: deal } = await supabase.from("deals").select("*").eq("id", id).eq("user_id", userId).single();
+  if (!deal) return res.status(404).json({ error: "Deal not found" });
+
+  const { data: signals } = await supabase.from("signals").select("*").eq("deal_id", id).order("detected_at", { ascending: false }).limit(10);
+  const { data: analyses } = await supabase.from("analyses").select("*").eq("deal_id", id).order("analyzed_at", { ascending: false }).limit(1);
+
+  try {
+    const brief = await generateMeetingPrep(deal, signals || [], analyses?.[0] || null);
+    res.json({ brief });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+// POST /api/deals/:id/objection — handle a sales objection
+router.post("/:id/objection", async (req, res) => {
+  const { id } = req.params;
+  const userId = req.user.id;
+  const { objection } = req.body;
+
+  if (!objection) return res.status(400).json({ error: "objection text required" });
+
+  const { data: deal } = await supabase.from("deals").select("*").eq("id", id).eq("user_id", userId).single();
+  if (!deal) return res.status(404).json({ error: "Deal not found" });
+
+  const { data: signals } = await supabase.from("signals").select("*").eq("deal_id", id).order("detected_at", { ascending: false }).limit(10);
+
+  try {
+    const result = await handleObjection(deal, signals || [], objection);
+    res.json({ result });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+// POST /api/deals/:id/suggest-stage — AI suggests stage update based on signals
+router.post("/:id/suggest-stage", async (req, res) => {
+  const { id } = req.params;
+  const userId = req.user.id;
+
+  const { data: deal } = await supabase.from("deals").select("*").eq("id", id).eq("user_id", userId).single();
+  if (!deal) return res.status(404).json({ error: "Deal not found" });
+
+  const { data: signals } = await supabase.from("signals").select("*").eq("deal_id", id).order("detected_at", { ascending: false }).limit(10);
+
+  try {
+    const suggestion = await suggestStageUpdate(deal, signals || []);
+    res.json({ suggestion });
+  } catch (err) {
     res.status(500).json({ error: err.message });
   }
 });

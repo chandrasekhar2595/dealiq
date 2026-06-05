@@ -674,9 +674,15 @@ function DealDetail({ dealId, onBack, onUpdate, onDelete }) {
   const [loading, setLoading]     = useState(true);
   const [showEdit, setShowEdit]   = useState(false);
   const [showConfirm, setShowConfirm] = useState(false);
-  const [syncing, setSyncing]         = useState(false);
+  const [syncing, setSyncing]               = useState(false);
   const [syncingLinkedIn, setSyncingLinkedIn] = useState(false);
-  const [previousScore, setPreviousScore] = useState(null);
+  const [previousScore, setPreviousScore]   = useState(null);
+  const [meetingPrep, setMeetingPrep]       = useState(null);
+  const [loadingPrep, setLoadingPrep]       = useState(false);
+  const [objection, setObjection]           = useState("");
+  const [objectionResult, setObjectionResult] = useState(null);
+  const [loadingObjection, setLoadingObjection] = useState(false);
+  const [stageSuggestion, setStageSuggestion] = useState(null);
 
   useEffect(() => {
     setLoading(true);
@@ -692,6 +698,7 @@ function DealDetail({ dealId, onBack, onUpdate, onDelete }) {
       setPreviousScore(previousScore);
       setAnalysis(a); setTab("insights");
       onUpdate({ id: dealId, latest_analysis: a });
+      checkStageSuggestion();
     } catch (err) {
       alert(friendlyError(err.message));
     } finally { setAnalyzing(false); }
@@ -740,6 +747,32 @@ function DealDetail({ dealId, onBack, onUpdate, onDelete }) {
     } catch (err) {
       alert(friendlyError(err.message));
     } finally { setSyncingLinkedIn(false); }
+  }
+
+  async function getMeetingPrep() {
+    setLoadingPrep(true); setMeetingPrep(null); setTab("prep");
+    try {
+      const { brief } = await api(`/deals/${dealId}/meeting-prep`, { method: "POST" });
+      setMeetingPrep(brief);
+    } catch (err) { alert(friendlyError(err.message)); }
+    finally { setLoadingPrep(false); }
+  }
+
+  async function submitObjection() {
+    if (!objection.trim()) return;
+    setLoadingObjection(true); setObjectionResult(null);
+    try {
+      const { result } = await api(`/deals/${dealId}/objection`, { method: "POST", body: { objection } });
+      setObjectionResult(result);
+    } catch (err) { alert(friendlyError(err.message)); }
+    finally { setLoadingObjection(false); }
+  }
+
+  async function checkStageSuggestion() {
+    try {
+      const { suggestion } = await api(`/deals/${dealId}/suggest-stage`, { method: "POST" });
+      if (suggestion?.should_update) setStageSuggestion(suggestion);
+    } catch (err) { /* silent */ }
   }
 
   if (loading) return (
@@ -914,7 +947,7 @@ function DealDetail({ dealId, onBack, onUpdate, onDelete }) {
       <div style={{ display: "flex", justifyContent: "space-between",
         alignItems: "center", marginBottom: 12 }}>
         <div style={{ display: "flex", borderBottom: "1px solid var(--border)", flex: 1 }}>
-          {[["insights","Deal Insights"],["action","Next Action"],["draft","Draft Email"]].map(([t, label]) => (
+          {[["insights","Deal Insights"],["action","Next Action"],["draft","Draft Email"],["prep","Meeting Prep"],["objection","Objections"]].map(([t, label]) => (
             <button key={t} className={`tab-btn ${tab === t ? "active" : ""}`}
               onClick={() => setTab(t)}>{label}</button>
           ))}
@@ -977,6 +1010,33 @@ function DealDetail({ dealId, onBack, onUpdate, onDelete }) {
           </div>
         )}
 
+        {/* Stage suggestion banner */}
+        {stageSuggestion && (
+          <div style={{ marginBottom: 16, padding: "12px 16px", borderRadius: 8,
+            background: "rgba(245,158,11,0.08)", border: "1px solid rgba(245,158,11,0.3)",
+            display: "flex", justifyContent: "space-between", alignItems: "center", gap: 12 }}>
+            <div>
+              <span style={{ fontFamily: "var(--font-mono)", fontSize: 10, color: "#f59e0b",
+                letterSpacing: "0.1em" }}>STAGE SUGGESTION</span>
+              <div style={{ fontSize: 13, color: "var(--text-2)", marginTop: 3 }}>
+                Move to <strong style={{ color: "var(--text-1)" }}>{stageSuggestion.suggested_stage}</strong> — {stageSuggestion.reason}
+              </div>
+            </div>
+            <div style={{ display: "flex", gap: 8, flexShrink: 0 }}>
+              <button className="btn-sm" onClick={async () => {
+                await api(`/deals/${dealId}`, { method: "PUT", body: { stage: stageSuggestion.suggested_stage } });
+                setDeal(d => ({ ...d, stage: stageSuggestion.suggested_stage }));
+                setStageSuggestion(null);
+              }} style={{ background: "#f59e0b", color: "#000", border: "none",
+                borderRadius: 6, padding: "5px 14px", cursor: "pointer", fontSize: 11, fontWeight: 700 }}>
+                Update
+              </button>
+              <button className="btn-sm btn-ghost" onClick={() => setStageSuggestion(null)}
+                style={{ fontSize: 11 }}>Dismiss</button>
+            </div>
+          </div>
+        )}
+
         {analysis && !analyzing && (
           <>
             {tab === "insights" && (
@@ -988,6 +1048,107 @@ function DealDetail({ dealId, onBack, onUpdate, onDelete }) {
             {tab === "action" && (
               <div>
                 <Section label="Recommended Action" content={analysis.recommended_action} last />
+              </div>
+            )}
+            {tab === "prep" && (
+              <div>
+                {!meetingPrep && !loadingPrep && (
+                  <div style={{ textAlign: "center", padding: "32px 0" }}>
+                    <div style={{ fontSize: 28, marginBottom: 12 }}>📋</div>
+                    <div style={{ fontSize: 14, color: "var(--text-2)", marginBottom: 16 }}>
+                      Get a pre-call brief for this deal
+                    </div>
+                    <button onClick={getMeetingPrep} className="btn-analyze" style={{ fontSize: 13 }}>
+                      Generate Meeting Prep
+                    </button>
+                  </div>
+                )}
+                {loadingPrep && (
+                  <div style={{ display: "flex", alignItems: "center", gap: 10, padding: "20px 0" }}>
+                    <span className="dot" /><span className="dot" /><span className="dot" />
+                    <span style={{ fontSize: 13, color: "var(--text-3)" }}>Preparing your brief…</span>
+                  </div>
+                )}
+                {meetingPrep && !loadingPrep && (
+                  <div>
+                    <Section label="Situation" content={meetingPrep.situation} />
+                    <Section label="Contact Profile" content={meetingPrep.contact_profile} />
+                    <Section label="Goal for This Call" content={meetingPrep.goal} />
+                    <div style={{ marginBottom: 20 }}>
+                      <div style={{ fontFamily: "var(--font-mono)", fontSize: 10, letterSpacing: "0.1em",
+                        color: "var(--blue)", marginBottom: 10 }}>TALKING POINTS</div>
+                      {meetingPrep.talking_points?.map((p, i) => (
+                        <div key={i} style={{ display: "flex", gap: 10, marginBottom: 8, fontSize: 13, color: "var(--text-2)" }}>
+                          <span style={{ color: "#22c55e", fontWeight: 700, flexShrink: 0 }}>→</span>{p}
+                        </div>
+                      ))}
+                    </div>
+                    <div style={{ marginBottom: 20 }}>
+                      <div style={{ fontFamily: "var(--font-mono)", fontSize: 10, letterSpacing: "0.1em",
+                        color: "var(--blue)", marginBottom: 10 }}>QUESTIONS TO ASK</div>
+                      {meetingPrep.questions_to_ask?.map((q, i) => (
+                        <div key={i} style={{ display: "flex", gap: 10, marginBottom: 8, fontSize: 13, color: "var(--text-2)" }}>
+                          <span style={{ color: "#7dd3fc", flexShrink: 0 }}>?</span>{q}
+                        </div>
+                      ))}
+                    </div>
+                    <div style={{ padding: "14px 16px", borderRadius: 8,
+                      background: "rgba(167,139,250,0.08)", border: "1px solid rgba(167,139,250,0.2)",
+                      marginBottom: 16 }}>
+                      <div style={{ fontFamily: "var(--font-mono)", fontSize: 10, color: "#a78bfa",
+                        letterSpacing: "0.1em", marginBottom: 6 }}>OPENING LINE</div>
+                      <div style={{ fontSize: 13, color: "var(--text-1)", fontStyle: "italic" }}>
+                        "{meetingPrep.one_line_opener}"
+                      </div>
+                    </div>
+                    <button onClick={getMeetingPrep} className="btn-sm btn-ghost" style={{ fontSize: 11 }}>
+                      Regenerate
+                    </button>
+                  </div>
+                )}
+              </div>
+            )}
+            {tab === "objection" && (
+              <div>
+                <div style={{ marginBottom: 16 }}>
+                  <div style={{ fontFamily: "var(--font-mono)", fontSize: 10, letterSpacing: "0.1em",
+                    color: "var(--blue)", marginBottom: 8 }}>WHAT OBJECTION ARE YOU FACING?</div>
+                  <textarea
+                    value={objection}
+                    onChange={e => setObjection(e.target.value)}
+                    placeholder='e.g. "The price is too high" or "We need to think about it"'
+                    style={{ width: "100%", background: "var(--bg-hover)", border: "1px solid var(--border)",
+                      borderRadius: 8, padding: "12px 14px", fontSize: 13, color: "var(--text-1)",
+                      resize: "vertical", minHeight: 80, boxSizing: "border-box",
+                      fontFamily: "inherit", outline: "none" }}
+                  />
+                  <button onClick={submitObjection} disabled={loadingObjection || !objection.trim()}
+                    className="btn-analyze" style={{ marginTop: 10, fontSize: 13 }}>
+                    {loadingObjection ? "Handling…" : "Handle This Objection"}
+                  </button>
+                </div>
+                {objectionResult && (
+                  <div style={{ marginTop: 20 }}>
+                    <div style={{ display: "inline-block", padding: "3px 10px", borderRadius: 20,
+                      background: "rgba(239,68,68,0.1)", border: "1px solid rgba(239,68,68,0.3)",
+                      fontFamily: "var(--font-mono)", fontSize: 10, color: "#ef4444",
+                      letterSpacing: "0.08em", marginBottom: 16 }}>
+                      {objectionResult.objection_type?.toUpperCase()} OBJECTION
+                    </div>
+                    <Section label="What They Really Mean" content={objectionResult.what_it_really_means} />
+                    <Section label="Response Strategy" content={objectionResult.response_strategy} />
+                    <div style={{ padding: "14px 16px", borderRadius: 8,
+                      background: "rgba(34,197,94,0.06)", border: "1px solid rgba(34,197,94,0.2)",
+                      marginBottom: 16 }}>
+                      <div style={{ fontFamily: "var(--font-mono)", fontSize: 10, color: "#22c55e",
+                        letterSpacing: "0.1em", marginBottom: 8 }}>WORD FOR WORD</div>
+                      <div style={{ fontSize: 13, color: "var(--text-1)", lineHeight: 1.7, fontStyle: "italic" }}>
+                        "{objectionResult.word_for_word}"
+                      </div>
+                    </div>
+                    <Section label="Follow-up Question" content={objectionResult.follow_up_question} last />
+                  </div>
+                )}
               </div>
             )}
             {tab === "draft" && (

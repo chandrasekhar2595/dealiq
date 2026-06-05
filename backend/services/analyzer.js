@@ -87,4 +87,109 @@ Return JSON only.
   return JSON.parse(cleaned);
 }
 
-module.exports = { analyzeDeal };
+async function generateMeetingPrep(deal, signals, analysis) {
+  const signalText = signals.map(s => `- [${s.source.toUpperCase()}] ${s.summary}`).join("\n") || "No signals yet.";
+
+  const response = await client.messages.create({
+    model: "claude-sonnet-4-6",
+    max_tokens: 1200,
+    system: `You are a senior B2B sales coach preparing a rep for a call. Return JSON only, no markdown.`,
+    messages: [{
+      role: "user",
+      content: `Prepare a pre-call brief for this deal:
+
+Company: ${deal.company}
+Contact: ${deal.contact_name} (${deal.contact_role || "Unknown role"})
+Value: $${Number(deal.value || 0).toLocaleString()}
+Stage: ${deal.stage}
+Days stale: ${deal.days_stale}
+Notes: ${deal.notes || "None"}
+Risk: ${analysis?.risk_level || "unknown"} | Score: ${analysis?.close_score || "N/A"}
+
+Signals:
+${signalText}
+
+Return JSON:
+{
+  "situation": "<2 sentence deal situation summary>",
+  "contact_profile": "<what we know about this person and their likely priorities>",
+  "goal": "<what to achieve in this call>",
+  "talking_points": ["<point 1>", "<point 2>", "<point 3>"],
+  "questions_to_ask": ["<question 1>", "<question 2>", "<question 3>"],
+  "risks_to_address": ["<risk 1>", "<risk 2>"],
+  "one_line_opener": "<a natural, non-salesy opening line for the call>"
+}`
+    }],
+  });
+
+  const raw = response.content.filter(b => b.type === "text").map(b => b.text).join("");
+  return JSON.parse(raw.replace(/```json|```/g, "").trim());
+}
+
+async function handleObjection(deal, signals, objection) {
+  const signalText = signals.map(s => `- [${s.source.toUpperCase()}] ${s.summary}`).join("\n") || "No signals.";
+
+  const response = await client.messages.create({
+    model: "claude-sonnet-4-6",
+    max_tokens: 800,
+    system: `You are an expert B2B sales coach. Return JSON only, no markdown.`,
+    messages: [{
+      role: "user",
+      content: `A sales rep is facing this objection on a deal. Help them handle it.
+
+Deal: ${deal.company} | ${deal.contact_name} | $${Number(deal.value || 0).toLocaleString()} | ${deal.stage}
+Objection: "${objection}"
+
+Signals:
+${signalText}
+
+Return JSON:
+{
+  "objection_type": "<budget | timing | competition | authority | need | other>",
+  "what_it_really_means": "<what the prospect is actually saying underneath>",
+  "response_strategy": "<2-3 sentence approach>",
+  "word_for_word": "<exact words to say in response>",
+  "follow_up_question": "<a question to ask after your response to move forward>"
+}`
+    }],
+  });
+
+  const raw = response.content.filter(b => b.type === "text").map(b => b.text).join("");
+  return JSON.parse(raw.replace(/```json|```/g, "").trim());
+}
+
+async function suggestStageUpdate(deal, signals) {
+  const signalText = signals.map(s => `- [${s.source.toUpperCase()}] ${s.summary}`).join("\n") || "No signals.";
+  const stages = ["Discovery", "Proposal Sent", "Negotiation", "Closing", "Stalled"];
+
+  const response = await client.messages.create({
+    model: "claude-sonnet-4-6",
+    max_tokens: 200,
+    system: `You are a CRM automation engine. Return JSON only, no markdown.`,
+    messages: [{
+      role: "user",
+      content: `Based on these signals, should this deal's stage be updated?
+
+Current stage: ${deal.stage}
+Days stale: ${deal.days_stale}
+Notes: ${deal.notes || "None"}
+
+Signals:
+${signalText}
+
+Valid stages: ${stages.join(", ")}
+
+Return JSON:
+{
+  "should_update": true | false,
+  "suggested_stage": "<stage name or null>",
+  "reason": "<one sentence why>"
+}`
+    }],
+  });
+
+  const raw = response.content.filter(b => b.type === "text").map(b => b.text).join("");
+  return JSON.parse(raw.replace(/```json|```/g, "").trim());
+}
+
+module.exports = { analyzeDeal, generateMeetingPrep, handleObjection, suggestStageUpdate };
