@@ -1472,7 +1472,7 @@ function SettingsModal({ user, onClose, slackChannel, gmailEmail, justConnected 
 }
 
 // ── MAIN DASHBOARD ───────────────────────────────────────────
-function Dashboard({ user, onLogout, openSettings = false, slackChannel = "", gmailEmail = "", justConnected = "" }) {
+function Dashboard({ user, onLogout, openSettings = false, slackChannel = "", gmailEmail = "", justConnected = "", theme = "dark", onToggleTheme }) {
   const [deals, setDeals]           = useState([]);
   const [selectedId, setSelectedId] = useState(null);
   const [showAddDeal, setShowAddDeal] = useState(false);
@@ -1547,6 +1547,11 @@ function Dashboard({ user, onLogout, openSettings = false, slackChannel = "", gm
             maxWidth: 180, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
             {user?.email}
           </div>
+          <button onClick={onToggleTheme} className="btn-sm btn-ghost"
+            title="Toggle light/dark mode"
+            style={{ padding: "6px 10px", fontSize: 15 }}>
+            {theme === "dark" ? "☀️" : "🌙"}
+          </button>
           <button onClick={() => setShowSettings(true)}
             className="btn-sm btn-ghost"
             style={{ padding: "6px 10px", fontSize: 14, display: "flex",
@@ -1733,7 +1738,13 @@ function Dashboard({ user, onLogout, openSettings = false, slackChannel = "", gm
 export default function App() {
   const [user, setUser]         = useState(null);
   const [checking, setChecking] = useState(true);
-  const [oauthResult, setOauthResult] = useState(null); // {type, status, value}
+  const [oauthResult, setOauthResult] = useState(null);
+  const [theme, setTheme] = useState(() => localStorage.getItem("dealiq_theme") || "dark");
+
+  useEffect(() => {
+    document.documentElement.setAttribute("data-theme", theme);
+    localStorage.setItem("dealiq_theme", theme);
+  }, [theme]);
 
   useEffect(() => {
     const params = new URLSearchParams(window.location.search);
@@ -1794,5 +1805,6 @@ export default function App() {
     slackChannel={oauthResult?.type === "slack" ? oauthResult.value : ""}
     gmailEmail={oauthResult?.type === "gmail" ? oauthResult.value : ""}
     justConnected={oauthResult?.type || ""}
+    theme={theme} onToggleTheme={() => setTheme(t => t === "dark" ? "light" : "dark")}
   />;
 }
