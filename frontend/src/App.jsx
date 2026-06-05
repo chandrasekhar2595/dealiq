@@ -965,7 +965,7 @@ function DealDetail({ dealId, onBack, onUpdate, onDelete }) {
             <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 20 }}>
               <span className="dot" /><span className="dot" /><span className="dot" />
               <span style={{ fontSize: 13, color: "var(--text-3)" }}>
-                Analyzing deal with Claude AI…
+                Analyzing with Deal Intelligence…
               </span>
             </div>
             <Skeleton w="80%" h={14} mb={10} />
