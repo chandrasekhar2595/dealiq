@@ -800,12 +800,42 @@ function DealDetail({ dealId, onBack, onUpdate, onDelete }) {
     neutral:  { icon: "→", color: "#7dd3fc" },
   };
 
+  // Company letter avatar
+  const avatarColor = ["#0ea5e9","#8b5cf6","#f59e0b","#22c55e","#ef4444","#ec4899"][
+    deal.company.charCodeAt(0) % 6
+  ];
+
+  // Last analyzed time
+  const analyzedAgo = analysis?.analyzed_at
+    ? (() => {
+        const mins = Math.floor((Date.now() - new Date(analysis.analyzed_at).getTime()) / 60000);
+        if (mins < 1) return "just now";
+        if (mins < 60) return `${mins}m ago`;
+        const hrs = Math.floor(mins / 60);
+        if (hrs < 24) return `${hrs}h ago`;
+        return `${Math.floor(hrs / 24)}d ago`;
+      })()
+    : null;
+
+  // Featured LinkedIn signal (job change, funding, etc.)
+  const featuredSignal = signals.find(s =>
+    s.source === "linkedin" && ["job_change","funding","company_growth"].includes(s.type)
+  );
+
   return (
     <div className="main-panel" style={{ flex: 1, padding: "32px 36px", overflowY: "auto" }}>
 
       {/* Header row */}
       <div style={{ display: "flex", alignItems: "center", gap: 12, marginBottom: 4, flexWrap: "wrap" }}>
         <button onClick={onBack} className="btn-sm btn-ghost">← Back</button>
+        {/* Company avatar */}
+        <div style={{ width: 40, height: 40, borderRadius: 10, flexShrink: 0,
+          background: `linear-gradient(135deg, ${avatarColor}30, ${avatarColor}15)`,
+          border: `1px solid ${avatarColor}40`,
+          display: "flex", alignItems: "center", justifyContent: "center",
+          fontFamily: "var(--font-mono)", fontWeight: 900, fontSize: 16, color: avatarColor }}>
+          {deal.company[0].toUpperCase()}
+        </div>
         <div style={{ fontSize: 22, fontWeight: 700, color: "var(--text-1)", flex: 1 }}>
           {deal.company}
         </div>
@@ -815,23 +845,20 @@ function DealDetail({ dealId, onBack, onUpdate, onDelete }) {
           {deal.stage}
         </div>
         {r && (
-          <div style={{ fontFamily: "var(--font-mono)", fontSize: 10, padding: "3px 10px",
+          <div className={analysis.risk_level === "high" ? "risk-badge-high" : ""}
+            style={{ fontFamily: "var(--font-mono)", fontSize: 10, padding: "3px 10px",
             borderRadius: 20, background: r.bg, color: r.color,
             border: `1px solid ${r.border}`, letterSpacing: "0.06em" }}>
             {analysis.risk_level.toUpperCase()} RISK
           </div>
         )}
         <button onClick={() => setShowEdit(true)} className="btn-sm btn-ghost"
-          style={{ marginLeft: "auto" }}>
-          Edit
-        </button>
+          style={{ marginLeft: "auto" }}>Edit</button>
         <button onClick={() => setShowConfirm(true)} className="btn-sm"
           style={{ background: "#ef444414", border: "1px solid #ef444432",
             color: "#ef4444", fontFamily: "var(--font-mono)", fontSize: 10,
             fontWeight: 700, letterSpacing: "0.07em", padding: "6px 14px",
-            borderRadius: 6, cursor: "pointer", transition: "background 0.15s" }}>
-          Delete
-        </button>
+            borderRadius: 6, cursor: "pointer" }}>Delete</button>
       </div>
 
       {/* Meta */}
@@ -858,9 +885,9 @@ function DealDetail({ dealId, onBack, onUpdate, onDelete }) {
       {analysis && (
         <div className="score-hero" style={{
           background: "var(--bg-glass)", backdropFilter: "blur(16px)",
-          border: `1px solid ${r?.border || "rgba(255,255,255,0.06)"}`,
+          border: `1px solid ${r?.border || "var(--border)"}`,
           borderRadius: 14, padding: "24px 28px", marginBottom: 24,
-          boxShadow: `0 8px 32px rgba(0,0,0,0.3), 0 0 0 1px ${r?.glow || "transparent"}20` }}>
+          boxShadow: `0 8px 40px ${r?.glow || "rgba(0,0,0,0.2)"}30, 0 2px 8px rgba(0,0,0,0.15)` }}>
 
           {/* Top row: ring + verdict */}
           <div style={{ display: "flex", gap: 24, alignItems: "center", marginBottom: 20 }}>
@@ -922,28 +949,63 @@ function DealDetail({ dealId, onBack, onUpdate, onDelete }) {
         </div>
       )}
 
+      {/* Featured LinkedIn signal */}
+      {featuredSignal && (
+        <div className="signal-card featured" style={{ marginBottom: 16 }}>
+          <div style={{ flex: 1 }}>
+            <div style={{ fontFamily: "var(--font-mono)", fontSize: 9, color: "#f59e0b",
+              letterSpacing: "0.12em", marginBottom: 5 }}>⚡ INTELLIGENCE SIGNAL</div>
+            <div style={{ fontSize: 13, color: "var(--text-1)", fontWeight: 600,
+              lineHeight: 1.5 }}>{featuredSignal.summary}</div>
+          </div>
+          <div style={{ fontSize: 11, color: "#f59e0b", fontWeight: 700, flexShrink: 0 }}>USE THIS</div>
+        </div>
+      )}
+
       {/* Signals */}
-      {signals.length > 0 && (
+      {signals.length > 0 ? (
         <div style={{ marginBottom: 24 }}>
           <div style={{ fontFamily: "var(--font-mono)", fontSize: 10, letterSpacing: "0.1em",
-            color: "var(--text-3)", marginBottom: 10, textTransform: "uppercase" }}>
-            Signals ({signals.length})
+            color: "var(--text-3)", marginBottom: 10, display: "flex", justifyContent: "space-between" }}>
+            <span>SIGNALS ({signals.length})</span>
+            <span style={{ color: "var(--text-muted)" }}>SENTIMENT</span>
           </div>
-          {signals.slice(0, 5).map((sig, i) => (
-            <div key={i} className="signal-card">
-              <div style={{ fontFamily: "var(--font-mono)", fontSize: 10, padding: "2px 8px",
+          {signals.slice(0, 6).map((sig, i) => (
+            <div key={i} className={`signal-card ${sig.sentiment || "neutral"}`}>
+              <div style={{ fontFamily: "var(--font-mono)", fontSize: 9, padding: "2px 7px",
                 borderRadius: 4, background: "var(--bg-hover)", border: "1px solid var(--border)",
-                color: "var(--blue)", flexShrink: 0, letterSpacing: "0.05em" }}>
+                color: sig.source === "linkedin" ? "#0a66c2" : "var(--blue)",
+                flexShrink: 0, letterSpacing: "0.05em", fontWeight: 700 }}>
                 {SOURCE_ICON[sig.source] || "·"} {sig.source?.toUpperCase()}
               </div>
-              <div style={{ flex: 1, fontSize: 13, color: "var(--text-2)",
-                lineHeight: 1.5 }}>{sig.summary}</div>
-              <div style={{ fontSize: 16, color: SENT[sig.sentiment || "neutral"]?.color,
+              <div style={{ flex: 1, fontSize: 13, color: "var(--text-2)", lineHeight: 1.5 }}>
+                {sig.summary}
+              </div>
+              <div style={{ fontSize: 13, color: SENT[sig.sentiment || "neutral"]?.color,
                 fontWeight: 700, flexShrink: 0 }}>
                 {SENT[sig.sentiment || "neutral"]?.icon}
               </div>
             </div>
           ))}
+        </div>
+      ) : (
+        <div style={{ marginBottom: 24, padding: "24px", borderRadius: 12,
+          border: "1px dashed var(--border)", textAlign: "center" }}>
+          <div style={{ fontSize: 24, marginBottom: 8 }}>📡</div>
+          <div style={{ fontSize: 13, fontWeight: 600, color: "var(--text-2)", marginBottom: 6 }}>
+            No signals yet
+          </div>
+          <div style={{ fontSize: 12, color: "var(--text-3)", marginBottom: 16 }}>
+            Sync Gmail or LinkedIn to pull real signals for this deal
+          </div>
+          <div style={{ display: "flex", gap: 8, justifyContent: "center" }}>
+            <button onClick={syncGmail} className="btn-sm btn-ghost" style={{ fontSize: 11 }}>
+              ✉ Sync Gmail
+            </button>
+            <button onClick={syncLinkedIn} className="btn-sm btn-ghost" style={{ fontSize: 11 }}>
+              <span style={{ color: "#0a66c2", fontWeight: 700 }}>in</span> Sync LinkedIn
+            </button>
+          </div>
         </div>
       )}
 
@@ -971,13 +1033,21 @@ function DealDetail({ dealId, onBack, onUpdate, onDelete }) {
               ? <><span className="dot" /><span className="dot" /></>
               : <><span>✉</span> Sync Gmail</>}
           </button>
-          <button onClick={runAnalysis} disabled={analyzing} className="btn-analyze">
-            {analyzing
-              ? <span style={{ display: "flex", alignItems: "center", gap: 6 }}>
-                  <span className="dot" /><span className="dot" /><span className="dot" />
-                </span>
-              : "⚡ Analyze"}
-          </button>
+          <div style={{ display: "flex", flexDirection: "column", alignItems: "flex-end", gap: 2 }}>
+            <button onClick={runAnalysis} disabled={analyzing} className="btn-analyze">
+              {analyzing
+                ? <span style={{ display: "flex", alignItems: "center", gap: 6 }}>
+                    <span className="dot" /><span className="dot" /><span className="dot" />
+                  </span>
+                : "⚡ Analyze"}
+            </button>
+            {analyzedAgo && !analyzing && (
+              <span style={{ fontFamily: "var(--font-mono)", fontSize: 9,
+                color: "var(--text-muted)", letterSpacing: "0.05em" }}>
+                last run {analyzedAgo}
+              </span>
+            )}
+          </div>
         </div>
       </div>
 
