@@ -144,6 +144,15 @@ router.post("/:id/analyze", async (req, res) => {
     .order("detected_at", { ascending: false })
     .limit(10);
 
+  // Fetch previous analysis for comparison
+  const { data: prevAnalyses } = await supabase
+    .from("analyses")
+    .select("risk_level, close_score")
+    .eq("deal_id", id)
+    .order("analyzed_at", { ascending: false })
+    .limit(1);
+  const previousAnalysis = prevAnalyses?.[0] || null;
+
   // Use mock signals if none exist
   const effectiveSignals = (signals && signals.length > 0)
     ? signals
@@ -172,19 +181,29 @@ router.post("/:id/analyze", async (req, res) => {
 
     if (saveError) throw new Error(saveError.message);
 
-    // Send Slack alert for high/medium risk deals
-    if (result.risk_level === "high" || result.risk_level === "medium") {
+    // Top signal for Slack
+    const topSignal = effectiveSignals[0]?.summary || null;
+
+    // Send Slack alert for high/medium risk OR escalation from low → medium/high
+    const escalated = previousAnalysis && previousAnalysis.risk_level !== result.risk_level
+      && (result.risk_level === "high" || (result.risk_level === "medium" && previousAnalysis.risk_level === "low"));
+
+    if (result.risk_level === "high" || result.risk_level === "medium" || escalated) {
       const { data: user } = await supabase
         .from("users")
         .select("slack_webhook_url")
         .eq("id", userId)
         .single();
       if (user?.slack_webhook_url) {
-        await sendSlackAlert(user.slack_webhook_url, { deal, analysis, type: "analysis" });
+        await sendSlackAlert(user.slack_webhook_url, {
+          deal, analysis, type: "analysis",
+          topSignal,
+          previousRiskLevel: previousAnalysis?.risk_level || null,
+        });
       }
     }
 
-    res.json({ analysis });
+    res.json({ analysis, previousScore: previousAnalysis?.close_score || null });
   } catch (err) {
     res.status(500).json({ error: err.message });
   }

@@ -82,9 +82,13 @@ function extractSignals(emails, contactEmail, dealDaysStale) {
       signals.push({ source: "gmail", type: "slow_cadence",
         summary: `Last email with contact was ${daysSinceLastEmail} days ago — cadence slowing`,
         sentiment: "negative" });
+    } else if (daysSinceLastEmail === 0) {
+      signals.push({ source: "gmail", type: "active",
+        summary: `Recent email activity — contact engaged today`,
+        sentiment: "positive" });
     } else if (daysSinceLastEmail <= 2) {
       signals.push({ source: "gmail", type: "active",
-        summary: `Recent email activity — contact engaged within the last ${daysSinceLastEmail} days`,
+        summary: `Recent email activity — contact engaged ${daysSinceLastEmail} day${daysSinceLastEmail === 1 ? "" : "s"} ago`,
         sentiment: "positive" });
     }
   }

@@ -4,15 +4,20 @@ const RISK_EMOJI  = { high: "🔴", medium: "🟡", low: "🟢" };
 const RISK_COLOR  = { high: "#ef4444", medium: "#f59e0b", low: "#22c55e" };
 const URGENCY_LABEL = { immediate: "Act today", this_week: "This week", monitor: "Monitor" };
 
-async function sendSlackAlert(webhookUrl, { deal, analysis, type = "analysis" }) {
+async function sendSlackAlert(webhookUrl, { deal, analysis, type = "analysis", topSignal = null, previousRiskLevel = null }) {
   if (!webhookUrl) return;
 
   const emoji  = RISK_EMOJI[analysis.risk_level]  || "⚡";
   const color  = RISK_COLOR[analysis.risk_level]  || "#f5a623";
   const urgency = URGENCY_LABEL[analysis.urgency] || analysis.urgency;
 
+  const escalated = previousRiskLevel && previousRiskLevel !== analysis.risk_level
+    && (analysis.risk_level === "high" || (analysis.risk_level === "medium" && previousRiskLevel === "low"));
+
   const header = type === "stale"
     ? `*${deal.company}* has gone stale — ${deal.days_stale} days with no activity`
+    : escalated
+    ? `⚠️ *${deal.company}* escalated ${previousRiskLevel?.toUpperCase()} → ${analysis.risk_level?.toUpperCase()} RISK`
     : `*${deal.company}* just analyzed — ${emoji} ${analysis.risk_level?.toUpperCase()} RISK`;
 
   const payload = {
@@ -34,6 +39,10 @@ async function sendSlackAlert(webhookUrl, { deal, analysis, type = "analysis" })
           { type: "mrkdwn", text: `*Close Score*\n${analysis.close_score}/100 · ${urgency}` },
         ],
       },
+      ...(topSignal ? [{
+        type: "section",
+        text: { type: "mrkdwn", text: `*Top Signal*\n${topSignal}` },
+      }] : []),
       {
         type: "section",
         text: {

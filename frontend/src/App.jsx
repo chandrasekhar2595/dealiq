@@ -674,8 +674,9 @@ function DealDetail({ dealId, onBack, onUpdate, onDelete }) {
   const [loading, setLoading]     = useState(true);
   const [showEdit, setShowEdit]   = useState(false);
   const [showConfirm, setShowConfirm] = useState(false);
-  const [syncing, setSyncing]     = useState(false);
+  const [syncing, setSyncing]         = useState(false);
   const [syncingLinkedIn, setSyncingLinkedIn] = useState(false);
+  const [previousScore, setPreviousScore] = useState(null);
 
   useEffect(() => {
     setLoading(true);
@@ -687,7 +688,8 @@ function DealDetail({ dealId, onBack, onUpdate, onDelete }) {
   async function runAnalysis() {
     setAnalyzing(true);
     try {
-      const { analysis: a } = await api(`/deals/${dealId}/analyze`, { method: "POST" });
+      const { analysis: a, previousScore } = await api(`/deals/${dealId}/analyze`, { method: "POST" });
+      setPreviousScore(previousScore);
       setAnalysis(a); setTab("insights");
       onUpdate({ id: dealId, latest_analysis: a });
     } catch (err) {
@@ -709,8 +711,12 @@ function DealDetail({ dealId, onBack, onUpdate, onDelete }) {
     setSyncing(true);
     try {
       const { synced, signals: newSignals } = await api(`/deals/${dealId}/sync-gmail`, { method: "POST" });
-      if (synced > 0) setSignals(prev => [...prev.filter(s => s.source !== "gmail"), ...newSignals]);
-      alert(synced > 0 ? `✓ Synced ${synced} Gmail signals` : "No new signals found for this contact.");
+      if (synced > 0) {
+        setSignals(prev => [...prev.filter(s => s.source !== "gmail"), ...newSignals]);
+        runAnalysis();
+      } else {
+        alert("No new signals found for this contact.");
+      }
     } catch (err) {
       const msg = friendlyError(err.message);
       if (msg.includes("Gmail not connected")) {
@@ -725,8 +731,12 @@ function DealDetail({ dealId, onBack, onUpdate, onDelete }) {
     setSyncingLinkedIn(true);
     try {
       const { synced, signals: newSignals } = await api(`/deals/${dealId}/sync-linkedin`, { method: "POST" });
-      if (synced > 0) setSignals(prev => [...prev.filter(s => s.source !== "linkedin"), ...newSignals]);
-      alert(synced > 0 ? `✓ Found ${synced} LinkedIn/news signals` : "No news signals found for this contact or company.");
+      if (synced > 0) {
+        setSignals(prev => [...prev.filter(s => s.source !== "linkedin"), ...newSignals]);
+        runAnalysis();
+      } else {
+        alert("No news signals found for this contact or company.");
+      }
     } catch (err) {
       alert(friendlyError(err.message));
     } finally { setSyncingLinkedIn(false); }
@@ -820,8 +830,14 @@ function DealDetail({ dealId, onBack, onUpdate, onDelete }) {
             <ScoreRing score={analysis.close_score} size={104} riskLevel={analysis.risk_level} />
             <div style={{ flex: 1 }}>
               <div style={{ fontFamily: "var(--font-mono)", fontSize: 9,
-                color: "var(--text-3)", letterSpacing: "0.15em", marginBottom: 6 }}>
+                color: "var(--text-3)", letterSpacing: "0.15em", marginBottom: 6,
+                display: "flex", alignItems: "center", gap: 8 }}>
                 CLOSE PROBABILITY
+                {previousScore !== null && previousScore !== analysis.close_score && (
+                  <span style={{ color: analysis.close_score > previousScore ? "#22c55e" : "#ef4444", fontWeight: 700 }}>
+                    {analysis.close_score > previousScore ? "▲" : "▼"}{Math.abs(analysis.close_score - previousScore)}
+                  </span>
+                )}
               </div>
               <div style={{ fontSize: 22, fontWeight: 800, letterSpacing: -0.3,
                 color: r?.color, marginBottom: 10,
@@ -1500,7 +1516,7 @@ function Dashboard({ user, onLogout, openSettings = false, slackChannel = "", gm
                     </div>
                     <div style={{ fontFamily: "var(--font-mono)", fontSize: 9,
                       color: "var(--text-muted)", marginTop: 3 }}>
-                      {deal.stage} · {deal.days_stale}d stale
+                      {deal.stage} · {deal.days_stale === 0 ? "active today" : `${deal.days_stale}d stale`}
                     </div>
                   </div>
                   {a
