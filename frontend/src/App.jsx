@@ -7,8 +7,7 @@ function setToken(t) { localStorage.setItem("dealiq_token", t); }
 function clearToken() { localStorage.removeItem("dealiq_token"); }
 
 function getDaysStale(deal) {
-  if (!deal.last_activity_at) return deal.days_stale || 0;
-  return Math.floor((Date.now() - new Date(deal.last_activity_at).getTime()) / 86_400_000);
+  return deal.days_stale || 0;
 }
 
 const ERROR_MAP = {
