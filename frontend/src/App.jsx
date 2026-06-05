@@ -1356,7 +1356,9 @@ function Dashboard({ user, onLogout, openSettings = false, slackChannel = "", gm
         display: "flex", alignItems: "center", justifyContent: "space-between",
         background: "rgba(6,15,31,0.8)", backdropFilter: "blur(12px)",
         position: "sticky", top: 0, zIndex: 10 }}>
-        <Logo size={44} />
+        <div onClick={() => setSelectedId(null)} style={{ cursor: "pointer" }}>
+          <Logo size={44} />
+        </div>
 
         {/* Pipeline stats */}
         <div className="header-stats" style={{ display: "flex", gap: 6, alignItems: "center" }}>
