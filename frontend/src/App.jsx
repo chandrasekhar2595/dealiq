@@ -857,7 +857,7 @@ function DealDetail({ dealId, onBack, onUpdate, onDelete }) {
       {/* Score hero */}
       {analysis && (
         <div className="score-hero" style={{
-          background: "rgba(6,15,31,0.8)", backdropFilter: "blur(16px)",
+          background: "var(--bg-glass)", backdropFilter: "blur(16px)",
           border: `1px solid ${r?.border || "rgba(255,255,255,0.06)"}`,
           borderRadius: 14, padding: "24px 28px", marginBottom: 24,
           boxShadow: `0 8px 32px rgba(0,0,0,0.3), 0 0 0 1px ${r?.glow || "transparent"}20` }}>
@@ -1519,7 +1519,7 @@ function Dashboard({ user, onLogout, openSettings = false, slackChannel = "", gm
       {/* Header */}
       <div style={{ borderBottom: "1px solid var(--border)", padding: "14px 24px",
         display: "flex", alignItems: "center", justifyContent: "space-between",
-        background: "rgba(6,15,31,0.8)", backdropFilter: "blur(12px)",
+        background: "var(--bg-glass)", backdropFilter: "blur(12px)",
         position: "sticky", top: 0, zIndex: 10 }}>
         <div onClick={() => setSelectedId(null)} style={{ cursor: "pointer" }}>
           <Logo size={44} />

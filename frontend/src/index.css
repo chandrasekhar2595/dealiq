@@ -4,6 +4,7 @@
   --bg:          #020b18;
   --bg-card:     #060f1f;
   --bg-hover:    #0a1a30;
+  --bg-glass:    rgba(6,15,31,0.85);
   --border:      #0f2040;
   --border-hi:   #1a3a5c;
   --text-1:      #f1f5f9;
@@ -22,16 +23,17 @@
   --font-mono:   'IBM Plex Mono', ui-monospace, monospace;
 }
 
-[data-theme="light"] {
-  --bg:          #f8fafc;
+:root[data-theme="light"] {
+  --bg:          #f4f6f9;
   --bg-card:     #ffffff;
-  --bg-hover:    #f1f5f9;
-  --border:      #e2e8f0;
-  --border-hi:   #cbd5e1;
+  --bg-hover:    #eef1f6;
+  --bg-glass:    rgba(255,255,255,0.92);
+  --border:      #dde3ed;
+  --border-hi:   #c4cdd9;
   --text-1:      #0f172a;
-  --text-2:      #475569;
-  --text-3:      #94a3b8;
-  --text-muted:  #cbd5e1;
+  --text-2:      #3d4f65;
+  --text-3:      #7a8fa6;
+  --text-muted:  #c4cdd9;
   --blue:        #0284c7;
   --blue-light:  #0369a1;
 }
@@ -52,11 +54,10 @@ body {
   transition: background 0.2s, color 0.2s;
 }
 
-[data-theme="light"] body,
-[data-theme="light"] {
+:root[data-theme="light"] body {
   background-image:
-    radial-gradient(ellipse 70% 50% at 85% -10%, rgba(14,165,233,0.06) 0%, transparent 65%),
-    radial-gradient(ellipse 55% 45% at -5%  85%, rgba(245,166,35,0.04) 0%, transparent 60%);
+    radial-gradient(ellipse 70% 50% at 85% -10%, rgba(14,165,233,0.05) 0%, transparent 65%),
+    radial-gradient(ellipse 55% 45% at -5%  85%, rgba(245,166,35,0.03) 0%, transparent 60%);
 }
 
 #root { width: 100%; min-height: 100vh; }
@@ -74,7 +75,7 @@ body {
   border-radius: 12px;
   border: 1px solid var(--border);
   border-left: 3px solid var(--border);
-  background: rgba(6,15,31,0.8);
+  background: var(--bg-glass);
   backdrop-filter: blur(12px);
   cursor: pointer;
   transition: all 0.2s ease;
@@ -82,15 +83,19 @@ body {
 }
 .deal-card:hover {
   border-color: var(--border-hi);
-  background: rgba(10,26,48,0.9);
-  box-shadow: 0 8px 32px rgba(0,0,0,0.4), 0 0 0 1px rgba(255,255,255,0.04);
+  background: var(--bg-hover);
+  box-shadow: 0 8px 32px rgba(0,0,0,0.15), 0 0 0 1px rgba(255,255,255,0.04);
   transform: translateY(-1px);
 }
 .deal-card.selected {
   border-color: var(--blue);
   border-left-color: var(--blue);
-  background: rgba(7,24,40,0.95);
+  background: var(--bg-card);
   box-shadow: 0 0 0 1px rgba(14,165,233,0.3), 0 8px 32px rgba(14,165,233,0.12);
+}
+
+:root[data-theme="light"] .deal-card:hover {
+  box-shadow: 0 8px 24px rgba(0,0,0,0.08), 0 0 0 1px var(--border-hi);
 }
 .deal-card.risk-high   { border-left-color: var(--risk-high); }
 .deal-card.risk-medium { border-left-color: var(--risk-med);  }
