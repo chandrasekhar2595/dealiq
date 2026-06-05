@@ -77,11 +77,8 @@ function CompanyAvatar({ company, contactEmail, size = 40 }) {
   const personalDomains = ["gmail.com","yahoo.com","hotmail.com","outlook.com","icloud.com","protonmail.com"];
   const domain = (emailDomain && !personalDomains.includes(emailDomain)) ? emailDomain : companyDomain;
 
-  // Try Clearbit first (full logo), then Google favicons (always works), then letter
-  const sources = domain ? [
-    `https://logo.clearbit.com/${domain}`,
-    `https://www.google.com/s2/favicons?domain=${domain}&sz=64`,
-  ] : [];
+  // Try Clearbit only — Google favicons returns CMS logos (WordPress etc), not company logos
+  const sources = domain ? [`https://logo.clearbit.com/${domain}`] : [];
 
   const color = ["#0ea5e9","#8b5cf6","#f59e0b","#22c55e","#ef4444","#ec4899"][
     (company || "A").charCodeAt(0) % 6
