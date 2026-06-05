@@ -56,12 +56,12 @@ const STAGE_COLOR = {
 const SOURCE_ICON = { gmail: "✉", slack: "#", linkedin: "in", crm: "⊙", intent: "◎" };
 
 // ── SCORE RING ───────────────────────────────────────────────
-function ScoreRing({ score, size = 80 }) {
+function ScoreRing({ score, size = 80, riskLevel }) {
   const r = (size / 2) - 7;
   const circ = 2 * Math.PI * r;
   const offset = circ - (score / 100) * circ;
-  const color = score >= 70 ? "#22c55e" : score >= 50 ? "#f59e0b" : "#ef4444";
-  const glowColor = score >= 70 ? "rgba(34,197,94,0.5)" : score >= 50 ? "rgba(245,158,11,0.5)" : "rgba(239,68,68,0.5)";
+  const color = riskLevel === "high" ? "#ef4444" : riskLevel === "medium" ? "#f59e0b" : riskLevel === "low" ? "#22c55e" : (score >= 70 ? "#22c55e" : score >= 50 ? "#f59e0b" : "#ef4444");
+  const glowColor = riskLevel === "high" ? "rgba(239,68,68,0.5)" : riskLevel === "medium" ? "rgba(245,158,11,0.5)" : riskLevel === "low" ? "rgba(34,197,94,0.5)" : "rgba(156,163,175,0.3)";
   const cx = size / 2, cy = size / 2;
   return (
     <svg width={size} height={size}
@@ -802,7 +802,7 @@ function DealDetail({ dealId, onBack, onUpdate, onDelete }) {
 
           {/* Top row: ring + verdict */}
           <div style={{ display: "flex", gap: 24, alignItems: "center", marginBottom: 20 }}>
-            <ScoreRing score={analysis.close_score} size={104} />
+            <ScoreRing score={analysis.close_score} size={104} riskLevel={analysis.risk_level} />
             <div style={{ flex: 1 }}>
               <div style={{ fontFamily: "var(--font-mono)", fontSize: 9,
                 color: "var(--text-3)", letterSpacing: "0.15em", marginBottom: 6 }}>
@@ -1482,7 +1482,7 @@ function Dashboard({ user, onLogout, openSettings = false, slackChannel = "", gm
                     </div>
                   </div>
                   {a
-                    ? <ScoreRing score={a.close_score} size={60} />
+                    ? <ScoreRing score={a.close_score} size={60} riskLevel={a.risk_level} />
                     : <div style={{ fontFamily: "var(--font-mono)", fontSize: 9,
                         color: "var(--text-muted)", padding: "8px 0" }}>NO SCORE</div>
                   }
