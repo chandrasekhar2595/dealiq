@@ -1572,7 +1572,7 @@ export default function App() {
 
   function handleLogout() {
     api("/auth/logout", { method: "POST" }).catch(() => {});
-    clearToken(); setUser(null);
+    clearToken(); setUser(null); setOauthResult(null);
   }
 
   if (checking) return (
