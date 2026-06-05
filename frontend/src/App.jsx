@@ -6,6 +6,11 @@ function getToken() { return localStorage.getItem("dealiq_token"); }
 function setToken(t) { localStorage.setItem("dealiq_token", t); }
 function clearToken() { localStorage.removeItem("dealiq_token"); }
 
+function getDaysStale(deal) {
+  if (!deal.last_activity_at) return deal.days_stale || 0;
+  return Math.floor((Date.now() - new Date(deal.last_activity_at).getTime()) / 86_400_000);
+}
+
 const ERROR_MAP = {
   "Failed to fetch": "Unable to connect to server. Please try again.",
   "Load failed":     "Unable to connect to server. Please try again.",
@@ -838,13 +843,13 @@ function DealDetail({ dealId, onBack, onUpdate, onDelete }) {
         <span style={{ fontFamily: "var(--font-mono)", color: "var(--blue-light)", fontWeight: 600 }}>
           ${Number(deal.value || 0).toLocaleString()}
         </span>
-        {deal.days_stale > 0 && (
+        {getDaysStale(deal) > 0 && (
           <>
             <span>·</span>
             <span style={{ fontFamily: "var(--font-mono)",
-              color: deal.days_stale > 14 ? "var(--risk-high)" : deal.days_stale > 7 ? "var(--risk-med)" : "var(--text-3)",
-              fontWeight: deal.days_stale > 7 ? 600 : 400 }}>
-              {deal.days_stale}d stale
+              color: getDaysStale(deal) > 14 ? "var(--risk-high)" : getDaysStale(deal) > 7 ? "var(--risk-med)" : "var(--text-3)",
+              fontWeight: getDaysStale(deal) > 7 ? 600 : 400 }}>
+              {getDaysStale(deal)}d stale
             </span>
           </>
         )}
@@ -1679,7 +1684,7 @@ function Dashboard({ user, onLogout, openSettings = false, slackChannel = "", gm
                     </div>
                     <div style={{ fontFamily: "var(--font-mono)", fontSize: 9,
                       color: "var(--text-muted)", marginTop: 3 }}>
-                      {deal.stage} · {deal.days_stale === 0 ? "active today" : `${deal.days_stale}d stale`}
+                      {deal.stage} · {getDaysStale(deal) === 0 ? "active today" : `${getDaysStale(deal)}d stale`}
                     </div>
                   </div>
                   {a

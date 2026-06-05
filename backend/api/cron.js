@@ -17,7 +17,7 @@ function verifyCron(req, res, next) {
 
 // ── POST /api/cron/update-stale ───────────────────────────────
 // Runs daily at midnight — updates days_stale for every deal
-router.post("/update-stale", verifyCron, async (req, res) => {
+router.get("/update-stale", verifyCron, async (req, res) => {
   const { data: deals, error } = await supabaseAdmin
     .from("deals")
     .select("id, last_activity_at")
@@ -80,7 +80,7 @@ router.post("/update-stale", verifyCron, async (req, res) => {
 
 // ── POST /api/cron/daily-digest ───────────────────────────────
 // Runs daily at 7am — emails each user a summary of at-risk deals
-router.post("/daily-digest", verifyCron, async (req, res) => {
+router.get("/daily-digest", verifyCron, async (req, res) => {
   if (!process.env.RESEND_API_KEY) {
     return res.status(500).json({ error: "RESEND_API_KEY not set" });
   }
