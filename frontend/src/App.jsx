@@ -71,7 +71,7 @@ function ScoreRing({ score, size = 80, riskLevel }) {
     <svg width={size} height={size}
       style={{ transform: "rotate(-90deg)", flexShrink: 0,
         filter: `drop-shadow(0 0 ${size * 0.1}px ${glowColor})` }}>
-      <circle cx={cx} cy={cy} r={r} fill="none" stroke="#0d1f35" strokeWidth="6" />
+      <circle cx={cx} cy={cy} r={r} fill="none" stroke="var(--border)" strokeWidth="6" />
       <circle cx={cx} cy={cy} r={r} fill="none" stroke={color} strokeWidth="6"
         strokeDasharray={circ} strokeDashoffset={offset} strokeLinecap="round"
         style={{ transition: "stroke-dashoffset 1.2s cubic-bezier(0.4,0,0.2,1)" }} />
@@ -932,8 +932,8 @@ function DealDetail({ dealId, onBack, onUpdate, onDelete }) {
           {signals.slice(0, 5).map((sig, i) => (
             <div key={i} className="signal-card">
               <div style={{ fontFamily: "var(--font-mono)", fontSize: 10, padding: "2px 8px",
-                borderRadius: 4, background: "var(--bg-hover)",
-                color: "var(--blue-light)", flexShrink: 0, letterSpacing: "0.05em" }}>
+                borderRadius: 4, background: "var(--bg-hover)", border: "1px solid var(--border)",
+                color: "var(--blue)", flexShrink: 0, letterSpacing: "0.05em" }}>
                 {SOURCE_ICON[sig.source] || "·"} {sig.source?.toUpperCase()}
               </div>
               <div style={{ flex: 1, fontSize: 13, color: "var(--text-2)",
