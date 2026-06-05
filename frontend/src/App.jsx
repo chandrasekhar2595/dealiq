@@ -72,45 +72,32 @@ function companyToDomain(company) {
 function CompanyAvatar({ company, contactEmail, size = 40 }) {
   const emailDomain = contactEmail?.split("@")[1];
   const companyDomain = companyToDomain(company);
-  const [tryIndex, setTryIndex] = useState(0);
+  const [failed, setFailed] = useState(false);
 
   const personalDomains = ["gmail.com","yahoo.com","hotmail.com","outlook.com","icloud.com","protonmail.com"];
-  const candidates = [
-    emailDomain && !personalDomains.includes(emailDomain) ? emailDomain : null,
-    companyDomain,
-  ].filter(Boolean);
+  const domain = (emailDomain && !personalDomains.includes(emailDomain))
+    ? emailDomain
+    : companyDomain;
 
-  const currentDomain = candidates[tryIndex];
-  const logoUrl = currentDomain ? `https://logo.clearbit.com/${currentDomain}` : null;
-
+  const logoUrl = domain ? `https://logo.clearbit.com/${domain}` : null;
   const color = ["#0ea5e9","#8b5cf6","#f59e0b","#22c55e","#ef4444","#ec4899"][
     (company || "A").charCodeAt(0) % 6
   ];
   const style = { width: size, height: size, borderRadius: 10, flexShrink: 0,
-    overflow: "hidden", border: "1px solid var(--border)" };
+    overflow: "hidden", border: "1px solid var(--border)",
+    display: "flex", alignItems: "center", justifyContent: "center" };
 
-  if (logoUrl) {
+  if (logoUrl && !failed) {
     return (
-      <div style={{ ...style, background: "var(--bg-card)",
-        display: "flex", alignItems: "center", justifyContent: "center" }}>
-        <img src={logoUrl} alt={company}
-          onError={() => {
-            if (tryIndex < candidates.length - 1) setTryIndex(i => i + 1);
-            else setTryIndex(candidates.length); // exhausted all — show letter
-          }}
-          style={{ width: size - 8, height: size - 8, objectFit: "contain",
-            display: tryIndex >= candidates.length ? "none" : "block" }} />
-        {tryIndex >= candidates.length && (
-          <span style={{ fontFamily: "var(--font-mono)", fontWeight: 900,
-            fontSize: size * 0.4, color }}>{(company || "?")[0].toUpperCase()}</span>
-        )}
+      <div style={{ ...style, background: "var(--bg-card)" }}>
+        <img src={logoUrl} alt={company} onError={() => setFailed(true)}
+          style={{ width: size - 8, height: size - 8, objectFit: "contain" }} />
       </div>
     );
   }
   return (
     <div style={{ ...style, background: `linear-gradient(135deg, ${color}30, ${color}15)`,
-      borderColor: `${color}40`, display: "flex", alignItems: "center",
-      justifyContent: "center", fontFamily: "var(--font-mono)",
+      borderColor: `${color}40`, fontFamily: "var(--font-mono)",
       fontWeight: 900, fontSize: size * 0.4, color }}>
       {(company || "?")[0].toUpperCase()}
     </div>
