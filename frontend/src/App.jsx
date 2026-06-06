@@ -735,6 +735,14 @@ function DealDetail({ dealId, onBack, onUpdate, onDelete }) {
   const [competitors, setCompetitors]       = useState([]);
   const [newCompetitor, setNewCompetitor]   = useState("");
   const [analyzingComp, setAnalyzingComp]   = useState(null);
+  const [showMoreTabs, setShowMoreTabs]     = useState(false);
+
+  useEffect(() => {
+    if (!showMoreTabs) return;
+    const close = () => setShowMoreTabs(false);
+    document.addEventListener("click", close, { once: true });
+    return () => document.removeEventListener("click", close);
+  }, [showMoreTabs]);
 
   useEffect(() => {
     setLoading(true);
@@ -978,10 +986,23 @@ function DealDetail({ dealId, onBack, onUpdate, onDelete }) {
       {/* Signals */}
       {signals.length > 0 ? (
         <div style={{ marginBottom: 24 }}>
-          <div style={{ fontFamily: "var(--font-mono)", fontSize: 10, letterSpacing: "0.1em",
-            color: "var(--text-3)", marginBottom: 10, display: "flex", justifyContent: "space-between" }}>
-            <span>SIGNALS ({signals.length})</span>
-            <span style={{ color: "var(--text-muted)" }}>SENTIMENT</span>
+          <div style={{ display: "flex", justifyContent: "space-between",
+            alignItems: "center", marginBottom: 10 }}>
+            <span style={{ fontFamily: "var(--font-mono)", fontSize: 10,
+              letterSpacing: "0.1em", color: "var(--text-3)" }}>
+              SIGNALS ({signals.length})
+            </span>
+            <div style={{ display: "flex", gap: 6, alignItems: "center" }}>
+              <button onClick={syncLinkedIn} disabled={syncingLinkedIn} className="btn-sm"
+                style={{ fontSize: 11, color: "var(--text-3)", display: "flex", alignItems: "center", gap: 4 }}>
+                {syncingLinkedIn ? <><span className="dot"/><span className="dot"/></> :
+                  <><span style={{ color: "#0a66c2", fontWeight: 700 }}>in</span> Sync</>}
+              </button>
+              <button onClick={syncGmail} disabled={syncing} className="btn-sm"
+                style={{ fontSize: 11, color: "var(--text-3)", display: "flex", alignItems: "center", gap: 4 }}>
+                {syncing ? <><span className="dot"/><span className="dot"/></> : <>✉ Sync</>}
+              </button>
+            </div>
           </div>
           {signals.slice(0, 6).map((sig, i) => (
             <div key={i} className={`signal-card ${sig.sentiment || "neutral"}`}>
@@ -1036,24 +1057,45 @@ function DealDetail({ dealId, onBack, onUpdate, onDelete }) {
       {/* Tabs + action row */}
       <div style={{ display: "flex", justifyContent: "space-between",
         alignItems: "center", borderBottom: "1px solid var(--border)", marginBottom: 16 }}>
-        <div style={{ display: "flex" }}>
-          {[["insights","💡","Insights"],["action","🎯","Next Action"],["draft","✉️","Draft Email"],["prep","📋","Meeting Prep"],["objection","🛡️","Objections"],["intel","🔎","Competitor Intel"],["timeline","🕐","Timeline"]].map(([t, icon, label]) => (
+        {/* Primary tabs — always visible */}
+        <div style={{ display: "flex", alignItems: "center" }}>
+          {[["insights","💡","Insights"],["action","🎯","Next Action"],["draft","✉️","Draft Email"],["prep","📋","Meeting Prep"]].map(([t, icon, label]) => (
             <button key={t} className={`tab-btn ${tab === t ? "active" : ""}`}
               onClick={() => setTab(t)}>
               <span className="tab-icon">{icon}</span>{label}
             </button>
           ))}
+          {/* More dropdown */}
+          <div style={{ position: "relative" }}>
+            <button
+              className={`tab-btn ${["objection","intel","timeline"].includes(tab) ? "active" : ""}`}
+              onClick={() => setShowMoreTabs(v => !v)}
+              style={{ display: "flex", alignItems: "center", gap: 4 }}>
+              More
+              <span style={{ fontSize: 10 }}>▾</span>
+            </button>
+            {showMoreTabs && (
+              <div style={{ position: "absolute", top: "calc(100% + 4px)", left: 0, zIndex: 50,
+                background: "var(--bg-card)", border: "1px solid var(--border)",
+                borderRadius: 10, padding: "6px", minWidth: 170,
+                boxShadow: "0 8px 24px rgba(0,0,0,0.3)" }}>
+                {[["objection","🛡️","Objections"],["intel","🔎","Competitor Intel"],["timeline","🕐","Timeline"]].map(([t, icon, label]) => (
+                  <button key={t}
+                    onClick={() => { setTab(t); setShowMoreTabs(false); }}
+                    style={{ display: "flex", alignItems: "center", gap: 8, width: "100%",
+                      padding: "9px 12px", borderRadius: 7, border: "none", cursor: "pointer",
+                      background: tab === t ? "var(--bg-hover)" : "transparent",
+                      color: tab === t ? "var(--text-1)" : "var(--text-2)",
+                      fontSize: 13, fontWeight: tab === t ? 600 : 400, textAlign: "left" }}>
+                    <span>{icon}</span>{label}
+                  </button>
+                ))}
+              </div>
+            )}
+          </div>
         </div>
-        <div style={{ display: "flex", gap: 8, paddingBottom: 4, alignItems: "center" }}>
-          <button onClick={syncLinkedIn} disabled={syncingLinkedIn} className="btn-sm"
-            style={{ color: "var(--text-3)", fontSize: 12, display: "flex", alignItems: "center", gap: 4 }}>
-            {syncingLinkedIn ? <><span className="dot"/><span className="dot"/></> :
-              <><span style={{ color: "#0a66c2", fontWeight: 700 }}>in</span> LinkedIn</>}
-          </button>
-          <button onClick={syncGmail} disabled={syncing} className="btn-sm"
-            style={{ color: "var(--text-3)", fontSize: 12, display: "flex", alignItems: "center", gap: 4 }}>
-            {syncing ? <><span className="dot"/><span className="dot"/></> : <>✉ Gmail</>}
-          </button>
+        {/* Analyze CTA */}
+        <div style={{ paddingBottom: 4 }}>
           <button onClick={runAnalysis} disabled={analyzing} className="btn-analyze">
             {analyzing
               ? <span style={{ display: "flex", alignItems: "center", gap: 6 }}>
