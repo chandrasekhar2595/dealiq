@@ -192,4 +192,74 @@ Return JSON:
   return JSON.parse(raw.replace(/```json|```/g, "").trim());
 }
 
-module.exports = { analyzeDeal, generateMeetingPrep, handleObjection, suggestStageUpdate };
+async function generateContactInsights(deal, signals, analyses, events) {
+  const signalText = signals.map(s => `[${s.source}] ${s.summary} (${s.sentiment})`).join("\n") || "No signals.";
+  const latestAnalysis = analyses?.[0];
+  const eventText = events?.slice(0, 8).map(e => `${e.event_type}: ${e.description}`).join("\n") || "No events.";
+
+  // Compute basic metrics from signals
+  const emailSignals = signals.filter(s => s.source === "gmail");
+  const positiveSignals = signals.filter(s => s.sentiment === "positive").length;
+  const negativeSignals = signals.filter(s => s.sentiment === "negative").length;
+  const totalSignals = signals.length || 1;
+  const engagementScore = Math.round((positiveSignals / totalSignals) * 100);
+
+  const response = await client.messages.create({
+    model: "claude-sonnet-4-6",
+    max_tokens: 1200,
+    system: `You are an elite B2B sales intelligence analyst. Return JSON only, no markdown.`,
+    messages: [{
+      role: "user",
+      content: `Generate a comprehensive contact intelligence profile for this B2B sales contact.
+
+Contact: ${deal.contact_name} (${deal.contact_role || "Unknown role"})
+Company: ${deal.company}
+Deal: $${Number(deal.value || 0).toLocaleString()} | ${deal.stage} | ${deal.days_stale}d stale
+Current Risk: ${latestAnalysis?.risk_level || "unanalyzed"} | Score: ${latestAnalysis?.close_score || "N/A"}
+
+Signals (${signals.length} total):
+${signalText}
+
+Recent Events:
+${eventText}
+
+Return JSON:
+{
+  "executive_summary": "<3-4 sentence executive summary of this contact's status, priorities, and deal impact>",
+  "engagement_trend": "growing" | "stable" | "declining",
+  "relationship_score": <0-100 integer based on engagement and response patterns>,
+  "influence_score": <0-100 integer based on role seniority and deal involvement>,
+  "decision_power": "high" | "medium" | "low",
+  "communication_style": "<2-4 words: e.g. Direct and concise>",
+  "decision_style": "<2-4 words: e.g. Consensus driven>",
+  "risk_tolerance": "high" | "medium" | "low",
+  "buying_style": "<2-4 words: e.g. Data-focused>",
+  "preferred_channel": "email" | "phone" | "linkedin" | "in-person",
+  "recommended_actions": [
+    {
+      "action": "<specific action to take>",
+      "impact": "<expected outcome e.g. +15% close probability>",
+      "confidence": <0-100>,
+      "reasoning": "<1 sentence why>"
+    }
+  ],
+  "talking_points": ["<point 1>", "<point 2>", "<point 3>"],
+  "risks": ["<risk 1>", "<risk 2>"],
+  "confidence": <0-100 overall AI confidence>
+}`
+    }],
+  });
+
+  const raw = response.content.filter(b => b.type === "text").map(b => b.text).join("");
+  const insights = JSON.parse(raw.replace(/```json|```/g, "").trim());
+
+  // Attach computed metrics
+  insights.email_count = emailSignals.length;
+  insights.positive_signals = positiveSignals;
+  insights.negative_signals = negativeSignals;
+  insights.engagement_score = engagementScore;
+
+  return insights;
+}
+
+module.exports = { analyzeDeal, generateMeetingPrep, handleObjection, suggestStageUpdate, generateContactInsights };

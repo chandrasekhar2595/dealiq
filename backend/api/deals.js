@@ -2,7 +2,7 @@
 const express = require("express");
 const router = express.Router();
 const { supabaseAdmin: supabase } = require("../lib/supabase");
-const { analyzeDeal, generateMeetingPrep, handleObjection, suggestStageUpdate } = require("../services/analyzer");
+const { analyzeDeal, generateMeetingPrep, handleObjection, suggestStageUpdate, generateContactInsights } = require("../services/analyzer");
 const { sendSlackAlert }          = require("../services/slack");
 const { fetchEmailsForContact, extractSignals, refreshAccessToken } = require("../services/gmail");
 const { fetchContactNews, extractLinkedInSignals } = require("../services/linkedin");
@@ -492,6 +492,29 @@ router.post("/:id/competitors/:name/analyze", async (req, res) => {
 
     await logEvent(id, "signal", `Competitor intel: ${competitorName} — ${analysis.threat_level?.toUpperCase()} threat. ${analysis.threat_reason}`, { competitor: competitorName });
     res.json({ competitor: data });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+// GET /api/deals/:id/contact-profile — full contact intelligence profile
+router.get("/:id/contact-profile", async (req, res) => {
+  const { id } = req.params;
+  const userId = req.user.id;
+
+  const { data: deal } = await supabase.from("deals").select("*").eq("id", id).eq("user_id", userId).single();
+  if (!deal) return res.status(404).json({ error: "Deal not found" });
+
+  const [{ data: signals }, { data: analyses }, { data: events }, { data: competitors }] = await Promise.all([
+    supabase.from("signals").select("*").eq("deal_id", id).order("detected_at", { ascending: false }),
+    supabase.from("analyses").select("*").eq("deal_id", id).order("analyzed_at", { ascending: false }).limit(5),
+    supabase.from("deal_events").select("*").eq("deal_id", id).order("created_at", { ascending: false }).limit(20),
+    supabase.from("deal_competitors").select("*").eq("deal_id", id),
+  ]);
+
+  try {
+    const insights = await generateContactInsights(deal, signals || [], analyses || [], events || []);
+    res.json({ deal, signals: signals || [], analyses: analyses || [], events: events || [], competitors: competitors || [], insights });
   } catch (err) {
     res.status(500).json({ error: err.message });
   }
