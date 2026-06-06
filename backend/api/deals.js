@@ -7,6 +7,13 @@ const { sendSlackAlert }          = require("../services/slack");
 const { fetchEmailsForContact, extractSignals, refreshAccessToken } = require("../services/gmail");
 const { fetchContactNews, extractLinkedInSignals } = require("../services/linkedin");
 
+// ── EVENT LOGGER ─────────────────────────────────────────────
+async function logEvent(dealId, eventType, description, metadata = {}) {
+  try {
+    await supabase.from("deal_events").insert({ deal_id: dealId, event_type: eventType, description, metadata });
+  } catch (e) { /* non-blocking */ }
+}
+
 // GET /api/deals — list all deals for user
 router.get("/", async (req, res) => {
   const userId = req.user.id;
@@ -85,6 +92,7 @@ router.post("/", async (req, res) => {
     .single();
 
   if (error) return res.status(500).json({ error: error.message });
+  await logEvent(data.id, "created", `Deal added to pipeline — ${data.stage} stage, $${Number(data.value||0).toLocaleString()} opportunity`);
   res.status(201).json({ deal: data });
 });
 
@@ -93,6 +101,9 @@ router.put("/:id", async (req, res) => {
   const { id } = req.params;
   const userId = req.user.id;
   const updates = req.body;
+
+  // Fetch current deal to detect stage change
+  const { data: before } = await supabase.from("deals").select("stage").eq("id", id).single();
 
   const { data, error } = await supabase
     .from("deals")
@@ -103,6 +114,11 @@ router.put("/:id", async (req, res) => {
     .single();
 
   if (error) return res.status(500).json({ error: error.message });
+
+  if (before?.stage && updates.stage && before.stage !== updates.stage) {
+    await logEvent(id, "stage_change", `Stage moved from ${before.stage} → ${updates.stage}`, { from: before.stage, to: updates.stage });
+  }
+
   res.json({ deal: data });
 });
 
@@ -203,6 +219,12 @@ router.post("/:id/analyze", async (req, res) => {
       }
     }
 
+    const scoreChange = previousAnalysis ? ` (${result.close_score > previousAnalysis.close_score ? "+" : ""}${result.close_score - previousAnalysis.close_score} from ${previousAnalysis.close_score})` : "";
+    await logEvent(id, "analyzed",
+      `Deal analyzed — ${result.close_score}/100 close score, ${result.risk_level.toUpperCase()} RISK${scoreChange}`,
+      { score: result.close_score, risk_level: result.risk_level, urgency: result.urgency }
+    );
+
     res.json({ analysis, previousScore: previousAnalysis?.close_score || null });
   } catch (err) {
     res.status(500).json({ error: err.message });
@@ -278,6 +300,7 @@ router.post("/:id/sync-gmail", async (req, res) => {
       .update({ updated_at: new Date().toISOString() })
       .eq("id", id);
 
+    await logEvent(id, "gmail_sync", `Gmail synced — ${inserted?.length || 0} email signal${inserted?.length !== 1 ? "s" : ""} detected`, { count: inserted?.length || 0 });
     res.json({ synced: inserted?.length || 0, signals: inserted });
   } catch (err) {
     console.error("Gmail sync error:", err.message);
@@ -309,6 +332,11 @@ router.post("/:id/sync-linkedin", async (req, res) => {
       .insert(newSignals.map(s => ({ ...s, deal_id: id })))
       .select();
 
+    const featuredNews = newSignals.find(s => ["job_change","funding","company_growth"].includes(s.type));
+    const desc = featuredNews
+      ? `LinkedIn sync — news detected: "${featuredNews.summary.slice(0, 80)}"`
+      : `LinkedIn sync — ${inserted?.length || 0} news signal${inserted?.length !== 1 ? "s" : ""} found`;
+    await logEvent(id, "linkedin_sync", desc, { count: inserted?.length || 0 });
     res.json({ synced: inserted?.length || 0, signals: inserted });
   } catch (err) {
     console.error("LinkedIn sync error:", err.message);
@@ -372,6 +400,24 @@ router.post("/:id/suggest-stage", async (req, res) => {
   } catch (err) {
     res.status(500).json({ error: err.message });
   }
+});
+
+// GET /api/deals/:id/timeline — fetch deal event history
+router.get("/:id/timeline", async (req, res) => {
+  const { id } = req.params;
+  const userId = req.user.id;
+
+  const { data: deal } = await supabase.from("deals").select("id").eq("id", id).eq("user_id", userId).single();
+  if (!deal) return res.status(404).json({ error: "Deal not found" });
+
+  const { data: events, error } = await supabase
+    .from("deal_events")
+    .select("*")
+    .eq("deal_id", id)
+    .order("created_at", { ascending: false });
+
+  if (error) return res.status(500).json({ error: error.message });
+  res.json({ events: events || [] });
 });
 
 // Mock signals for deals with no real data yet

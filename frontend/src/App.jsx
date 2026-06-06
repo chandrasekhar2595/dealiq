@@ -731,12 +731,14 @@ function DealDetail({ dealId, onBack, onUpdate, onDelete }) {
   const [objectionResult, setObjectionResult] = useState(null);
   const [loadingObjection, setLoadingObjection] = useState(false);
   const [stageSuggestion, setStageSuggestion] = useState(null);
+  const [timeline, setTimeline]             = useState([]);
 
   useEffect(() => {
     setLoading(true);
     api(`/deals/${dealId}`).then(({ deal, signals, latest_analysis }) => {
       setDeal(deal); setSignals(signals); setAnalysis(latest_analysis);
     }).catch(console.error).finally(() => setLoading(false));
+    api(`/deals/${dealId}/timeline`).then(({ events }) => setTimeline(events || [])).catch(() => {});
   }, [dealId]);
 
   async function runAnalysis() {
@@ -747,6 +749,7 @@ function DealDetail({ dealId, onBack, onUpdate, onDelete }) {
       setAnalysis(a); setTab("insights");
       onUpdate({ id: dealId, latest_analysis: a });
       checkStageSuggestion();
+      api(`/deals/${dealId}/timeline`).then(({ events }) => setTimeline(events || [])).catch(() => {});
     } catch (err) {
       alert(friendlyError(err.message));
     } finally { setAnalyzing(false); }
@@ -1028,7 +1031,7 @@ function DealDetail({ dealId, onBack, onUpdate, onDelete }) {
       <div style={{ display: "flex", justifyContent: "space-between",
         alignItems: "center", borderBottom: "1px solid var(--border)", marginBottom: 16 }}>
         <div style={{ display: "flex" }}>
-          {[["insights","💡","Insights"],["action","🎯","Next Action"],["draft","✉️","Draft Email"],["prep","📋","Meeting Prep"],["objection","🛡️","Objections"]].map(([t, icon, label]) => (
+          {[["insights","💡","Insights"],["action","🎯","Next Action"],["draft","✉️","Draft Email"],["prep","📋","Meeting Prep"],["objection","🛡️","Objections"],["timeline","🕐","Timeline"]].map(([t, icon, label]) => (
             <button key={t} className={`tab-btn ${tab === t ? "active" : ""}`}
               onClick={() => setTab(t)}>
               <span className="tab-icon">{icon}</span>{label}
@@ -1321,6 +1324,75 @@ function DealDetail({ dealId, onBack, onUpdate, onDelete }) {
               </div>
             )}
           </>
+        )}
+
+        {/* Timeline tab — always visible, no analysis required */}
+        {tab === "timeline" && (
+          <div>
+            {timeline.length === 0 ? (
+              <div style={{ textAlign: "center", padding: "40px 0" }}>
+                <div style={{ fontSize: 28, marginBottom: 10 }}>🕐</div>
+                <div style={{ fontSize: 14, color: "var(--text-2)", fontWeight: 600, marginBottom: 6 }}>
+                  No activity yet
+                </div>
+                <div style={{ fontSize: 13, color: "var(--text-3)" }}>
+                  Events will appear here as you sync signals and run analyses
+                </div>
+              </div>
+            ) : (
+              <div style={{ position: "relative" }}>
+                {/* Vertical line */}
+                <div style={{ position: "absolute", left: 15, top: 8, bottom: 8,
+                  width: 2, background: "var(--border)", borderRadius: 1 }} />
+                {timeline.map((event) => {
+                  const icons = {
+                    created:       { icon: "🎯", color: "var(--blue)" },
+                    analyzed:      { icon: "⚡", color: "var(--accent)" },
+                    stage_change:  { icon: "📋", color: "#8b5cf6" },
+                    gmail_sync:    { icon: "✉️", color: "#22c55e" },
+                    linkedin_sync: { icon: "💼", color: "#0a66c2" },
+                    signal:        { icon: "📡", color: "var(--risk-med)" },
+                    stale:         { icon: "⏰", color: "var(--risk-high)" },
+                  };
+                  const { icon, color } = icons[event.event_type] || { icon: "·", color: "var(--text-3)" };
+                  const timeAgo = (() => {
+                    const mins = Math.floor((Date.now() - new Date(event.created_at)) / 60000);
+                    if (mins < 1)   return "just now";
+                    if (mins < 60)  return `${mins}m ago`;
+                    const hrs = Math.floor(mins / 60);
+                    if (hrs < 24)   return `${hrs}h ago`;
+                    const days = Math.floor(hrs / 24);
+                    if (days < 7)   return `${days}d ago`;
+                    return new Date(event.created_at).toLocaleDateString("en-US", { month: "short", day: "numeric" });
+                  })();
+
+                  return (
+                    <div key={event.id} style={{ display: "flex", gap: 16, marginBottom: 20,
+                      position: "relative" }}>
+                      {/* Icon bubble */}
+                      <div style={{ width: 32, height: 32, borderRadius: "50%", flexShrink: 0,
+                        background: "var(--bg-card)", border: `2px solid ${color}40`,
+                        display: "flex", alignItems: "center", justifyContent: "center",
+                        fontSize: 14, zIndex: 1 }}>
+                        {icon}
+                      </div>
+                      {/* Content */}
+                      <div style={{ flex: 1, paddingTop: 4 }}>
+                        <div style={{ fontSize: 13, color: "var(--text-1)", fontWeight: 500,
+                          lineHeight: 1.5, marginBottom: 3 }}>
+                          {event.description}
+                        </div>
+                        <div style={{ fontSize: 11, color: "var(--text-3)",
+                          fontFamily: "var(--font-mono)" }}>
+                          {timeAgo}
+                        </div>
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+            )}
+          </div>
         )}
       </div>
 

@@ -47,6 +47,21 @@ create table signals (
   detected_at timestamptz default now()
 );
 
+-- ── DEAL EVENTS (Timeline) ─────────────────────────────────
+create table deal_events (
+  id uuid primary key default uuid_generate_v4(),
+  deal_id uuid references deals(id) on delete cascade,
+  event_type text not null, -- created | analyzed | stage_change | gmail_sync | linkedin_sync | signal | stale
+  description text not null,
+  metadata jsonb,
+  created_at timestamptz default now()
+);
+create index idx_deal_events_deal_id on deal_events(deal_id);
+create policy "events_own_data" on deal_events for all using (
+  deal_id in (select id from deals where user_id = auth.uid())
+);
+alter table deal_events enable row level security;
+
 -- ── ANALYSES ───────────────────────────────────────────────
 create table analyses (
   id uuid primary key default uuid_generate_v4(),
