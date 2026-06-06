@@ -740,8 +740,8 @@ function DealDetail({ dealId, onBack, onUpdate, onDelete }) {
   useEffect(() => {
     if (!showMoreTabs) return;
     const close = () => setShowMoreTabs(false);
-    document.addEventListener("click", close, { once: true });
-    return () => document.removeEventListener("click", close);
+    const timer = setTimeout(() => document.addEventListener("click", close, { once: true }), 0);
+    return () => { clearTimeout(timer); document.removeEventListener("click", close); };
   }, [showMoreTabs]);
 
   useEffect(() => {
