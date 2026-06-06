@@ -111,14 +111,12 @@ function ScoreRing({ score, size = 80, riskLevel }) {
   const circ = 2 * Math.PI * r;
   const offset = circ - (score / 100) * circ;
   const color = riskLevel === "high" ? "#ef4444" : riskLevel === "medium" ? "#f59e0b" : riskLevel === "low" ? "#22c55e" : (score >= 70 ? "#22c55e" : score >= 50 ? "#f59e0b" : "#ef4444");
-  const glowColor = riskLevel === "high" ? "rgba(239,68,68,0.5)" : riskLevel === "medium" ? "rgba(245,158,11,0.5)" : riskLevel === "low" ? "rgba(34,197,94,0.5)" : "rgba(156,163,175,0.3)";
   const cx = size / 2, cy = size / 2;
   return (
     <svg width={size} height={size}
-      style={{ transform: "rotate(-90deg)", flexShrink: 0,
-        filter: `drop-shadow(0 0 ${size * 0.1}px ${glowColor})` }}>
-      <circle cx={cx} cy={cy} r={r} fill="none" stroke="var(--border)" strokeWidth="6" />
-      <circle cx={cx} cy={cy} r={r} fill="none" stroke={color} strokeWidth="6"
+      style={{ transform: "rotate(-90deg)", flexShrink: 0 }}>
+      <circle cx={cx} cy={cy} r={r} fill="none" stroke="rgba(255,255,255,0.08)" strokeWidth="8" />
+      <circle cx={cx} cy={cy} r={r} fill="none" stroke={color} strokeWidth="8"
         strokeDasharray={circ} strokeDashoffset={offset} strokeLinecap="round"
         style={{ transition: "stroke-dashoffset 1.2s cubic-bezier(0.4,0,0.2,1)" }} />
       <text x={cx} y={cy} textAnchor="middle" dominantBaseline="middle"
@@ -942,7 +940,7 @@ function DealDetail({ dealId, onBack, onUpdate, onDelete }) {
                 <div style={{ height: "100%", borderRadius: 3, width: `${analysis.close_score}%`,
                   background: r?.color, transition: "width 1.2s cubic-bezier(0.4,0,0.2,1)" }} />
               </div>
-              <div style={{ fontSize: 12, color: "var(--text-3)", lineHeight: 1.6 }}>
+              <div style={{ fontSize: 13, color: "var(--text-2)", lineHeight: 1.6, fontWeight: 500 }}>
                 {analysis.stall_reason}
               </div>
               {analyzedAgo && (
@@ -987,9 +985,20 @@ function DealDetail({ dealId, onBack, onUpdate, onDelete }) {
               <div style={{ flex: 1, fontSize: 13, color: "var(--text-2)", lineHeight: 1.5 }}>
                 {sig.summary}
               </div>
-              <div style={{ fontSize: 13, color: SENT[sig.sentiment || "neutral"]?.color,
-                fontWeight: 700, flexShrink: 0 }}>
-                {SENT[sig.sentiment || "neutral"]?.icon}
+              <div style={{ display: "flex", alignItems: "center", gap: 4,
+                flexShrink: 0, padding: "2px 8px", borderRadius: 4,
+                background: sig.sentiment === "positive" ? "rgba(34,197,94,0.1)" :
+                            sig.sentiment === "negative" ? "rgba(239,68,68,0.1)" : "rgba(255,255,255,0.04)",
+                border: `1px solid ${sig.sentiment === "positive" ? "rgba(34,197,94,0.25)" :
+                         sig.sentiment === "negative" ? "rgba(239,68,68,0.25)" : "rgba(255,255,255,0.06)"}` }}>
+                <span style={{ fontSize: 11, fontWeight: 700,
+                  color: SENT[sig.sentiment || "neutral"]?.color }}>
+                  {SENT[sig.sentiment || "neutral"]?.icon}
+                </span>
+                <span style={{ fontSize: 10, color: SENT[sig.sentiment || "neutral"]?.color,
+                  fontFamily: "var(--font-mono)", letterSpacing: "0.04em" }}>
+                  {sig.sentiment || "neutral"}
+                </span>
               </div>
             </div>
           ))}
@@ -1022,7 +1031,7 @@ function DealDetail({ dealId, onBack, onUpdate, onDelete }) {
           {[["insights","💡","Insights"],["action","🎯","Next Action"],["draft","✉️","Draft Email"],["prep","📋","Meeting Prep"],["objection","🛡️","Objections"]].map(([t, icon, label]) => (
             <button key={t} className={`tab-btn ${tab === t ? "active" : ""}`}
               onClick={() => setTab(t)}>
-              <span>{icon}</span>{label}
+              <span className="tab-icon">{icon}</span>{label}
             </button>
           ))}
         </div>

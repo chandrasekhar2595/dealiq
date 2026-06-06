@@ -182,13 +182,18 @@ body {
   display: flex;
   align-items: center;
   gap: 6px;
+  outline: none;
 }
-.tab-btn:hover  { color: var(--text-2); }
+.tab-btn:focus { outline: none; }
+.tab-btn:hover { color: var(--text-2); }
+.tab-btn .tab-icon { font-size: 14px; opacity: 0.6; transition: opacity 0.15s; }
+.tab-btn:hover .tab-icon { opacity: 0.85; }
 .tab-btn.active {
   color: var(--text-1);
   border-bottom-color: var(--blue);
   font-weight: 600;
 }
+.tab-btn.active .tab-icon { opacity: 1; }
 
 /* ── RISK PULSE ────────────────────────────────────────────── */
 @keyframes risk-pulse {
