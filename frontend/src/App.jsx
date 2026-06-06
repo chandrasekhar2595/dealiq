@@ -841,12 +841,11 @@ function DealDetail({ dealId, onBack, onUpdate, onDelete }) {
   const r = analysis ? RISK[analysis.risk_level] : null;
   const stageCol = STAGE_COLOR[deal.stage] || "var(--text-3)";
   const SENT = {
-    positive: { icon: "↑", color: "#22c55e" },
-    negative: { icon: "↓", color: "#ef4444" },
-    neutral:  { icon: "→", color: "#7dd3fc" },
+    positive: { icon: "↑", color: "var(--risk-low)" },
+    negative: { icon: "↓", color: "var(--risk-high)" },
+    neutral:  { icon: "→", color: "var(--text-3)" },
   };
 
-  // Last analyzed time
   const analyzedAgo = analysis?.analyzed_at
     ? (() => {
         const mins = Math.floor((Date.now() - new Date(analysis.analyzed_at).getTime()) / 60000);
@@ -858,126 +857,99 @@ function DealDetail({ dealId, onBack, onUpdate, onDelete }) {
       })()
     : null;
 
-  // Featured LinkedIn signal (job change, funding, etc.)
   const featuredSignal = signals.find(s =>
     s.source === "linkedin" && ["job_change","funding","company_growth"].includes(s.type)
   );
 
   return (
-    <div className="main-panel" style={{ flex: 1, padding: "32px 36px", overflowY: "auto" }}>
+    <div className="main-panel" style={{ flex: 1, padding: "28px 36px", overflowY: "auto" }}>
 
-      {/* Header row */}
-      <div style={{ display: "flex", alignItems: "center", gap: 12, marginBottom: 4, flexWrap: "wrap" }}>
-        <button onClick={onBack} className="btn-sm btn-ghost">← Back</button>
-        <CompanyAvatar company={deal.company} contactEmail={deal.contact_email} size={40} />
-        <div style={{ fontSize: 22, fontWeight: 700, color: "var(--text-1)", flex: 1 }}>
-          {deal.company}
-        </div>
-        <div style={{ fontFamily: "var(--font-mono)", fontSize: 10, padding: "3px 10px",
-          borderRadius: 20, border: `1px solid ${stageCol}40`,
-          color: stageCol, background: `${stageCol}14` }}>
-          {deal.stage}
-        </div>
-        {r && (
-          <div className={analysis.risk_level === "high" ? "risk-badge-high" : ""}
-            style={{ fontFamily: "var(--font-mono)", fontSize: 10, padding: "3px 10px",
-            borderRadius: 20, background: r.bg, color: r.color,
-            border: `1px solid ${r.border}`, letterSpacing: "0.06em" }}>
-            {analysis.risk_level.toUpperCase()} RISK
+      {/* Header */}
+      <div style={{ display: "flex", alignItems: "flex-start", gap: 14, marginBottom: 24 }}>
+        <button onClick={onBack} className="btn-sm btn-ghost" style={{ marginTop: 4, flexShrink: 0 }}>← Back</button>
+        <CompanyAvatar company={deal.company} contactEmail={deal.contact_email} size={44} />
+        <div style={{ flex: 1, minWidth: 0 }}>
+          <div style={{ fontSize: 26, fontWeight: 800, color: "var(--text-1)",
+            letterSpacing: -0.5, lineHeight: 1.2, marginBottom: 4 }}>
+            {deal.company}
           </div>
-        )}
-        <button onClick={() => setShowEdit(true)} className="btn-sm btn-ghost"
-          style={{ marginLeft: "auto" }}>Edit</button>
-        <button onClick={() => setShowConfirm(true)} className="btn-sm"
-          style={{ background: "#ef444414", border: "1px solid #ef444432",
-            color: "#ef4444", fontFamily: "var(--font-mono)", fontSize: 10,
-            fontWeight: 700, letterSpacing: "0.07em", padding: "6px 14px",
-            borderRadius: 6, cursor: "pointer" }}>Delete</button>
-      </div>
-
-      {/* Meta */}
-      <div style={{ fontSize: 13, color: "var(--text-3)", marginBottom: 24, display: "flex", gap: 6, flexWrap: "wrap" }}>
-        <span>{deal.contact_name}</span>
-        {deal.contact_role && <><span>·</span><span>{deal.contact_role}</span></>}
-        <span>·</span>
-        <span style={{ fontFamily: "var(--font-mono)", color: "var(--blue-light)", fontWeight: 600 }}>
-          ${Number(deal.value || 0).toLocaleString()}
-        </span>
-        {getDaysStale(deal) > 0 && (
-          <>
-            <span>·</span>
-            <span style={{ fontFamily: "var(--font-mono)",
-              color: getDaysStale(deal) > 14 ? "var(--risk-high)" : getDaysStale(deal) > 7 ? "var(--risk-med)" : "var(--text-3)",
-              fontWeight: getDaysStale(deal) > 7 ? 600 : 400 }}>
-              {getDaysStale(deal)}d stale
+          <div style={{ fontSize: 15, fontWeight: 600, color: "var(--accent)", marginBottom: 4 }}>
+            ${Number(deal.value || 0).toLocaleString()} opportunity
+          </div>
+          <div style={{ fontSize: 13, color: "var(--text-3)", display: "flex", gap: 8, flexWrap: "wrap" }}>
+            <span>{deal.contact_name}{deal.contact_role ? ` · ${deal.contact_role}` : ""}</span>
+            <span style={{ color: "var(--border-hi)" }}>·</span>
+            <span style={{ fontFamily: "var(--font-mono)", fontSize: 11, padding: "1px 8px",
+              borderRadius: 4, background: `${stageCol}18`, color: stageCol }}>
+              {deal.stage}
             </span>
-          </>
-        )}
+            {getDaysStale(deal) > 0 && (
+              <span style={{ fontFamily: "var(--font-mono)", fontSize: 11,
+                color: getDaysStale(deal) > 14 ? "var(--risk-high)" : getDaysStale(deal) > 7 ? "var(--risk-med)" : "var(--text-3)" }}>
+                {getDaysStale(deal)}d stale
+              </span>
+            )}
+          </div>
+        </div>
+        <div style={{ display: "flex", gap: 8, flexShrink: 0, marginTop: 4 }}>
+          <button onClick={() => setShowEdit(true)} className="btn-sm btn-ghost">Edit</button>
+          <button onClick={() => setShowConfirm(true)} className="btn-sm"
+            style={{ color: "var(--risk-high)", background: "rgba(239,68,68,0.08)",
+              border: "1px solid rgba(239,68,68,0.2)", borderRadius: 6, padding: "6px 12px",
+              cursor: "pointer", fontSize: 12, fontWeight: 600 }}>Delete</button>
+        </div>
       </div>
 
-      {/* Score hero */}
+      {/* Score hero — redesigned */}
       {analysis && (
         <div className="score-hero" style={{
-          background: "var(--bg-glass)", backdropFilter: "blur(16px)",
-          border: `1px solid ${r?.border || "var(--border)"}`,
-          borderRadius: 14, padding: "24px 28px", marginBottom: 24,
-          boxShadow: `0 8px 40px ${r?.glow || "rgba(0,0,0,0.2)"}30, 0 2px 8px rgba(0,0,0,0.15)` }}>
-
-          {/* Top row: ring + verdict */}
-          <div style={{ display: "flex", gap: 24, alignItems: "center", marginBottom: 20 }}>
-            <ScoreRing score={analysis.close_score} size={104} riskLevel={analysis.risk_level} />
-            <div style={{ flex: 1 }}>
-              <div style={{ fontFamily: "var(--font-mono)", fontSize: 9,
-                color: "var(--text-3)", letterSpacing: "0.15em", marginBottom: 6,
-                display: "flex", alignItems: "center", gap: 8 }}>
+          background: "var(--bg-card)", border: `1px solid var(--border)`,
+          borderRadius: 14, padding: "24px 28px", marginBottom: 20 }}>
+          <div style={{ display: "flex", gap: 32, alignItems: "center" }}>
+            {/* Big ring */}
+            <div style={{ flexShrink: 0, textAlign: "center" }}>
+              <ScoreRing score={analysis.close_score} size={140} riskLevel={analysis.risk_level} />
+              <div style={{ fontFamily: "var(--font-mono)", fontSize: 10,
+                color: "var(--text-3)", letterSpacing: "0.1em", marginTop: 6 }}>
                 CLOSE PROBABILITY
                 {previousScore !== null && previousScore !== analysis.close_score && (
-                  <span style={{ color: analysis.close_score > previousScore ? "#22c55e" : "#ef4444", fontWeight: 700 }}>
+                  <span style={{ marginLeft: 6, color: analysis.close_score > previousScore ? "var(--risk-low)" : "var(--risk-high)", fontWeight: 700 }}>
                     {analysis.close_score > previousScore ? "▲" : "▼"}{Math.abs(analysis.close_score - previousScore)}
                   </span>
                 )}
               </div>
-              <div style={{ fontSize: 22, fontWeight: 800, letterSpacing: -0.3,
-                color: r?.color, marginBottom: 10,
-                textShadow: `0 0 24px ${r?.glow || "transparent"}` }}>
+            </div>
+            {/* Right side */}
+            <div style={{ flex: 1 }}>
+              <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 8 }}>
+                <div className={analysis.risk_level === "high" ? "risk-badge-high" : ""}
+                  style={{ fontSize: 11, fontWeight: 700, padding: "4px 12px",
+                  borderRadius: 6, background: r?.bg, color: r?.color,
+                  border: `1px solid ${r?.border}`, letterSpacing: "0.04em" }}>
+                  {analysis.risk_level === "high" ? "⚠ " : analysis.risk_level === "medium" ? "⚡ " : "✓ "}
+                  {analysis.risk_level.toUpperCase()} RISK
+                </div>
+                <span style={{ fontSize: 11, color: "var(--text-3)", fontFamily: "var(--font-mono)" }}>
+                  {(analysis.urgency || "").replace("_", " ")}
+                </span>
+              </div>
+              <div style={{ fontSize: 20, fontWeight: 700, color: r?.color, marginBottom: 12, letterSpacing: -0.3 }}>
                 {analysis.close_score >= 70 ? "Strong position" :
                  analysis.close_score >= 50 ? "Needs attention" : "At risk of stalling"}
               </div>
-              <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
-                <span style={{ fontFamily: "var(--font-mono)", fontSize: 10, padding: "4px 12px",
-                  borderRadius: 20, background: r?.bg, color: r?.color, border: `1px solid ${r?.border}`,
-                  boxShadow: `0 0 10px ${r?.glow}` }}>
-                  {(analysis.urgency || "").replace("_", " ").toUpperCase()}
-                </span>
-                {signals.length > 0 && (
-                  <span style={{ fontFamily: "var(--font-mono)", fontSize: 10, padding: "4px 12px",
-                    borderRadius: 20, background: "rgba(14,165,233,0.08)",
-                    color: "var(--blue-light)", border: "1px solid rgba(14,165,233,0.2)" }}>
-                    {signals.length} SIGNALS
-                  </span>
-                )}
-                <span style={{ fontFamily: "var(--font-mono)", fontSize: 10, padding: "4px 12px",
-                  borderRadius: 20, background: RISK[analysis.risk_level]?.bg,
-                  color: RISK[analysis.risk_level]?.color,
-                  border: `1px solid ${RISK[analysis.risk_level]?.border}` }}>
-                  {analysis.risk_level?.toUpperCase()} RISK
-                </span>
+              {/* Progress bar */}
+              <div style={{ height: 6, background: "var(--border)", borderRadius: 3, overflow: "hidden", marginBottom: 8 }}>
+                <div style={{ height: "100%", borderRadius: 3, width: `${analysis.close_score}%`,
+                  background: r?.color, transition: "width 1.2s cubic-bezier(0.4,0,0.2,1)" }} />
               </div>
-            </div>
-          </div>
-
-          {/* Score bar */}
-          <div>
-            <div style={{ height: 6, background: "var(--border)", borderRadius: 3, overflow: "hidden" }}>
-              <div style={{ height: "100%", borderRadius: 3,
-                width: `${analysis.close_score}%`,
-                background: `linear-gradient(90deg, ${r?.color}80, ${r?.color})`,
-                boxShadow: `0 0 8px ${r?.glow}`,
-                transition: "width 1.2s cubic-bezier(0.4,0,0.2,1)" }} />
-            </div>
-            <div style={{ display: "flex", justifyContent: "space-between", marginTop: 5 }}>
-              <span style={{ fontFamily: "var(--font-mono)", fontSize: 9, color: "var(--text-muted)" }}>0</span>
-              <span style={{ fontFamily: "var(--font-mono)", fontSize: 9, color: "var(--text-muted)" }}>100</span>
+              <div style={{ fontSize: 12, color: "var(--text-3)", lineHeight: 1.6 }}>
+                {analysis.stall_reason}
+              </div>
+              {analyzedAgo && (
+                <div style={{ fontSize: 11, color: "var(--text-muted)", fontFamily: "var(--font-mono)", marginTop: 8 }}>
+                  Last analyzed {analyzedAgo}
+                </div>
+              )}
             </div>
           </div>
         </div>
@@ -1043,45 +1015,34 @@ function DealDetail({ dealId, onBack, onUpdate, onDelete }) {
         </div>
       )}
 
-      {/* Tabs + analyze */}
+      {/* Tabs + action row */}
       <div style={{ display: "flex", justifyContent: "space-between",
-        alignItems: "center", marginBottom: 12 }}>
-        <div style={{ display: "flex", borderBottom: "1px solid var(--border)", flex: 1 }}>
-          {[["insights","Deal Insights"],["action","Next Action"],["draft","Draft Email"],["prep","Meeting Prep"],["objection","Objections"]].map(([t, label]) => (
+        alignItems: "center", borderBottom: "1px solid var(--border)", marginBottom: 16 }}>
+        <div style={{ display: "flex" }}>
+          {[["insights","💡","Insights"],["action","🎯","Next Action"],["draft","✉️","Draft Email"],["prep","📋","Meeting Prep"],["objection","🛡️","Objections"]].map(([t, icon, label]) => (
             <button key={t} className={`tab-btn ${tab === t ? "active" : ""}`}
-              onClick={() => setTab(t)}>{label}</button>
+              onClick={() => setTab(t)}>
+              <span>{icon}</span>{label}
+            </button>
           ))}
         </div>
-        <div style={{ display: "flex", gap: 6, marginLeft: 12 }}>
-          <button onClick={syncLinkedIn} disabled={syncingLinkedIn} className="btn-sm btn-ghost"
-            title="Sync LinkedIn/news signals for this contact"
-            style={{ fontSize: 10, padding: "7px 12px", display: "flex", alignItems: "center", gap: 5 }}>
-            {syncingLinkedIn
-              ? <><span className="dot" /><span className="dot" /></>
-              : <><span style={{ fontWeight: 700, color: "#0a66c2" }}>in</span> Sync LinkedIn</>}
+        <div style={{ display: "flex", gap: 8, paddingBottom: 4, alignItems: "center" }}>
+          <button onClick={syncLinkedIn} disabled={syncingLinkedIn} className="btn-sm"
+            style={{ color: "var(--text-3)", fontSize: 12, display: "flex", alignItems: "center", gap: 4 }}>
+            {syncingLinkedIn ? <><span className="dot"/><span className="dot"/></> :
+              <><span style={{ color: "#0a66c2", fontWeight: 700 }}>in</span> LinkedIn</>}
           </button>
-          <button onClick={syncGmail} disabled={syncing} className="btn-sm btn-ghost"
-            title="Sync Gmail signals for this contact"
-            style={{ fontSize: 10, padding: "7px 12px", display: "flex", alignItems: "center", gap: 5 }}>
-            {syncing
-              ? <><span className="dot" /><span className="dot" /></>
-              : <><span>✉</span> Sync Gmail</>}
+          <button onClick={syncGmail} disabled={syncing} className="btn-sm"
+            style={{ color: "var(--text-3)", fontSize: 12, display: "flex", alignItems: "center", gap: 4 }}>
+            {syncing ? <><span className="dot"/><span className="dot"/></> : <>✉ Gmail</>}
           </button>
-          <div style={{ display: "flex", flexDirection: "column", alignItems: "flex-end", gap: 2 }}>
-            <button onClick={runAnalysis} disabled={analyzing} className="btn-analyze">
-              {analyzing
-                ? <span style={{ display: "flex", alignItems: "center", gap: 6 }}>
-                    <span className="dot" /><span className="dot" /><span className="dot" />
-                  </span>
-                : "⚡ Analyze"}
-            </button>
-            {analyzedAgo && !analyzing && (
-              <span style={{ fontFamily: "var(--font-mono)", fontSize: 9,
-                color: "var(--text-muted)", letterSpacing: "0.05em" }}>
-                last run {analyzedAgo}
-              </span>
-            )}
-          </div>
+          <button onClick={runAnalysis} disabled={analyzing} className="btn-analyze">
+            {analyzing
+              ? <span style={{ display: "flex", alignItems: "center", gap: 6 }}>
+                  <span className="dot"/><span className="dot"/><span className="dot"/>
+                </span>
+              : "⚡ Analyze Deal"}
+          </button>
         </div>
       </div>
 
@@ -1149,13 +1110,64 @@ function DealDetail({ dealId, onBack, onUpdate, onDelete }) {
           <>
             {tab === "insights" && (
               <div>
-                <Section label="Stall Reason" content={analysis.stall_reason} />
-                <Section label="Insight" content={analysis.insight} last />
+                {/* AI Recommendation callout */}
+                <div className="ai-rec">
+                  <div style={{ fontSize: 11, fontWeight: 600, color: "var(--blue)",
+                    letterSpacing: "0.06em", marginBottom: 8 }}>🎯 AI RECOMMENDATION</div>
+                  <div style={{ fontSize: 15, fontWeight: 700, color: "var(--text-1)", marginBottom: 6 }}>
+                    {analysis.recommended_action}
+                  </div>
+                  <div style={{ fontSize: 13, color: "var(--text-2)", lineHeight: 1.6 }}>
+                    {analysis.insight}
+                  </div>
+                </div>
+                {/* 2×2 scannable cards */}
+                <div className="insight-grid">
+                  <div className="insight-card">
+                    <div className="insight-card-icon">⚠️</div>
+                    <div className="insight-card-label">Risk Factor</div>
+                    <div className="insight-card-value">{analysis.stall_reason}</div>
+                  </div>
+                  <div className="insight-card">
+                    <div className="insight-card-icon">📈</div>
+                    <div className="insight-card-label">Close Score</div>
+                    <div className="insight-card-value" style={{ fontSize: 28, fontWeight: 800, color: r?.color }}>
+                      {analysis.close_score}<span style={{ fontSize: 14, fontWeight: 400, color: "var(--text-3)" }}>/100</span>
+                      {previousScore !== null && previousScore !== analysis.close_score && (
+                        <span style={{ fontSize: 13, marginLeft: 8,
+                          color: analysis.close_score > previousScore ? "var(--risk-low)" : "var(--risk-high)" }}>
+                          {analysis.close_score > previousScore ? "▲" : "▼"}{Math.abs(analysis.close_score - previousScore)}
+                        </span>
+                      )}
+                    </div>
+                  </div>
+                  <div className="insight-card">
+                    <div className="insight-card-icon">⚡</div>
+                    <div className="insight-card-label">Urgency</div>
+                    <div className="insight-card-value" style={{ fontWeight: 700, color: r?.color }}>
+                      {analysis.urgency === "immediate" ? "Act today" :
+                       analysis.urgency === "this_week" ? "This week" : "Monitor"}
+                    </div>
+                  </div>
+                  <div className="insight-card">
+                    <div className="insight-card-icon">📡</div>
+                    <div className="insight-card-label">Signals Detected</div>
+                    <div className="insight-card-value" style={{ fontSize: 24, fontWeight: 800, color: "var(--blue)" }}>
+                      {signals.length}<span style={{ fontSize: 13, fontWeight: 400, color: "var(--text-3)", marginLeft: 4 }}>signals</span>
+                    </div>
+                  </div>
+                </div>
               </div>
             )}
             {tab === "action" && (
               <div>
-                <Section label="Recommended Action" content={analysis.recommended_action} last />
+                <div className="ai-rec" style={{ marginBottom: 0 }}>
+                  <div style={{ fontSize: 11, fontWeight: 600, color: "var(--blue)",
+                    letterSpacing: "0.06em", marginBottom: 8 }}>🎯 NEXT ACTION</div>
+                  <div style={{ fontSize: 15, fontWeight: 600, color: "var(--text-1)", lineHeight: 1.7 }}>
+                    {analysis.recommended_action}
+                  </div>
+                </div>
               </div>
             )}
             {tab === "prep" && (
@@ -1629,19 +1641,17 @@ function Dashboard({ user, onLogout, openSettings = false, slackChannel = "", gm
           <Logo size={44} />
         </div>
 
-        {/* Pipeline stats */}
-        <div className="header-stats" style={{ display: "flex", gap: 6, alignItems: "center" }}>
+        {/* Pipeline KPI stats */}
+        <div className="header-stats" style={{ display: "flex", gap: 2, alignItems: "center" }}>
           {[
-            { label: "Pipeline", value: `$${totalValue.toLocaleString()}`, color: "var(--blue-light)", glow: "rgba(125,211,252,0.4)" },
-            { label: "Deals",    value: deals.length, color: "var(--text-2)", glow: null },
-            { label: "At Risk",  value: atRisk, color: atRisk > 0 ? "var(--risk-high)" : "var(--text-3)", glow: atRisk > 0 ? "rgba(239,68,68,0.4)" : null },
-          ].map(({ label, value, color, glow }) => (
-            <div key={label} style={{ textAlign: "center", padding: "6px 16px",
-              background: "rgba(255,255,255,0.03)", borderRadius: 8,
-              border: "1px solid rgba(255,255,255,0.05)" }}>
-              <div style={{ fontFamily: "var(--font-mono)", fontSize: 17, fontWeight: 700,
-                color, textShadow: glow ? `0 0 16px ${glow}` : "none" }}>{value}</div>
-              <div style={{ fontSize: 10, color: "var(--text-3)", marginTop: 1 }}>{label}</div>
+            { label: "Pipeline",   value: `$${totalValue >= 1000 ? (totalValue/1000).toFixed(0)+"K" : totalValue.toLocaleString()}`, color: "var(--text-1)" },
+            { label: "Open Deals", value: deals.length, color: "var(--text-1)" },
+            { label: "At Risk",    value: atRisk, color: atRisk > 0 ? "var(--risk-high)" : "var(--text-3)" },
+          ].map(({ label, value, color }) => (
+            <div key={label} style={{ textAlign: "center", padding: "6px 18px",
+              borderRight: "1px solid var(--border)" }}>
+              <div style={{ fontSize: 18, fontWeight: 800, color, letterSpacing: -0.5 }}>{value}</div>
+              <div style={{ fontSize: 11, color: "var(--text-3)", marginTop: 1, fontWeight: 500 }}>{label}</div>
             </div>
           ))}
         </div>
@@ -1766,40 +1776,36 @@ function Dashboard({ user, onLogout, openSettings = false, slackChannel = "", gm
             return (
               <div key={deal.id} onClick={() => setSelectedId(deal.id)}
                 className={`deal-card ${rk ? `risk-${rk}` : ""} ${selectedId === deal.id ? "selected" : ""}`}>
-                <div style={{ display: "flex", justifyContent: "space-between",
-                  alignItems: "flex-start", marginBottom: 8 }}>
-                  <div>
-                    <div style={{ fontSize: 13, fontWeight: 600,
-                      color: "var(--text-1)", marginBottom: 2 }}>{deal.company}</div>
-                    <div style={{ fontSize: 11, color: "var(--text-3)" }}>{deal.contact_name}</div>
-                  </div>
-                  {rk && (
-                    <div style={{ fontFamily: "var(--font-mono)", fontSize: 9,
-                      padding: "2px 8px", borderRadius: 20,
-                      background: RISK[rk].bg, color: RISK[rk].color,
-                      border: `1px solid ${RISK[rk].border}`, letterSpacing: "0.06em",
-                      flexShrink: 0 }}>
-                      {rk.toUpperCase()}
+                <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start" }}>
+                  <div style={{ flex: 1, minWidth: 0 }}>
+                    <div style={{ fontSize: 14, fontWeight: 700, color: "var(--text-1)",
+                      marginBottom: 2, whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>
+                      {deal.company}
                     </div>
-                  )}
-                </div>
-                <div style={{ display: "flex", justifyContent: "space-between",
-                  alignItems: "center" }}>
-                  <div>
-                    <div style={{ fontFamily: "var(--font-mono)", fontSize: 14,
-                      fontWeight: 700, color: "var(--blue-light)" }}>
+                    <div style={{ fontSize: 12, fontWeight: 600, color: "var(--accent)", marginBottom: 4 }}>
                       ${Number(deal.value || 0).toLocaleString()}
                     </div>
-                    <div style={{ fontFamily: "var(--font-mono)", fontSize: 9,
-                      color: "var(--text-muted)", marginTop: 3 }}>
-                      {deal.stage} · {getDaysStale(deal) === 0 ? "active today" : `${getDaysStale(deal)}d stale`}
+                    <div style={{ fontSize: 11, color: "var(--text-3)" }}>
+                      {deal.contact_name}
+                      {getDaysStale(deal) > 0 && (
+                        <span style={{ marginLeft: 6, color: getDaysStale(deal) > 14 ? "var(--risk-high)" : getDaysStale(deal) > 7 ? "var(--risk-med)" : "var(--text-3)" }}>
+                          · {getDaysStale(deal)}d stale
+                        </span>
+                      )}
                     </div>
                   </div>
-                  {a
-                    ? <ScoreRing score={a.close_score} size={60} riskLevel={a.risk_level} />
-                    : <div style={{ fontFamily: "var(--font-mono)", fontSize: 9,
-                        color: "var(--text-muted)", padding: "8px 0" }}>NO SCORE</div>
-                  }
+                  <div style={{ display: "flex", flexDirection: "column", alignItems: "flex-end", gap: 6, flexShrink: 0 }}>
+                    {rk && (
+                      <div style={{ fontSize: 10, fontWeight: 700, padding: "2px 8px",
+                        borderRadius: 5, background: RISK[rk].bg, color: RISK[rk].color }}>
+                        {rk.toUpperCase()}
+                      </div>
+                    )}
+                    {a
+                      ? <ScoreRing score={a.close_score} size={52} riskLevel={a.risk_level} />
+                      : <div style={{ fontSize: 10, color: "var(--text-muted)", fontFamily: "var(--font-mono)" }}>NO SCORE</div>
+                    }
+                  </div>
                 </div>
               </div>
             );
