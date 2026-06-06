@@ -6,7 +6,7 @@ const { analyzeDeal, generateMeetingPrep, handleObjection, suggestStageUpdate } 
 const { sendSlackAlert }          = require("../services/slack");
 const { fetchEmailsForContact, extractSignals, refreshAccessToken } = require("../services/gmail");
 const { fetchContactNews, extractLinkedInSignals } = require("../services/linkedin");
-const { fetchCompetitorNews, analyzeCompetitor }   = require("../services/competitors");
+const { fetchCompetitorNews, analyzeCompetitor, detectCompetitors } = require("../services/competitors");
 
 // ── EVENT LOGGER ─────────────────────────────────────────────
 async function logEvent(dealId, eventType, description, metadata = {}) {
@@ -302,6 +302,22 @@ router.post("/:id/sync-gmail", async (req, res) => {
       .eq("id", id);
 
     await logEvent(id, "gmail_sync", `Gmail synced — ${inserted?.length || 0} email signal${inserted?.length !== 1 ? "s" : ""} detected`, { count: inserted?.length || 0 });
+
+    // Auto-detect competitors from email signals
+    if (inserted?.length) {
+      try {
+        const detected = await detectCompetitors(deal, inserted);
+        for (const comp of detected) {
+          await supabase.from("deal_competitors").upsert({
+            deal_id: id, name: comp.name,
+            analysis: { auto_detected: true, confidence: comp.confidence, evidence: comp.evidence, source: comp.source }
+          }, { onConflict: "deal_id,name", ignoreDuplicates: true });
+          if (comp.confidence === "high") {
+            await logEvent(id, "signal", `Competitor detected in emails: ${comp.name} — "${comp.evidence}"`, { competitor: comp.name, confidence: comp.confidence });
+          }
+        }
+      } catch (e) { /* non-blocking */ }
+    }
     res.json({ synced: inserted?.length || 0, signals: inserted });
   } catch (err) {
     console.error("Gmail sync error:", err.message);
@@ -338,6 +354,22 @@ router.post("/:id/sync-linkedin", async (req, res) => {
       ? `LinkedIn sync — news detected: "${featuredNews.summary.slice(0, 80)}"`
       : `LinkedIn sync — ${inserted?.length || 0} news signal${inserted?.length !== 1 ? "s" : ""} found`;
     await logEvent(id, "linkedin_sync", desc, { count: inserted?.length || 0 });
+
+    // Auto-detect competitors from LinkedIn/news signals
+    if (inserted?.length) {
+      try {
+        const detected = await detectCompetitors(deal, inserted);
+        for (const comp of detected) {
+          await supabase.from("deal_competitors").upsert({
+            deal_id: id, name: comp.name,
+            analysis: { auto_detected: true, confidence: comp.confidence, evidence: comp.evidence, source: comp.source }
+          }, { onConflict: "deal_id,name", ignoreDuplicates: true });
+          if (comp.confidence === "high") {
+            await logEvent(id, "signal", `Competitor spotted in news: ${comp.name} — "${comp.evidence}"`, { competitor: comp.name, confidence: comp.confidence });
+          }
+        }
+      } catch (e) { /* non-blocking */ }
+    }
     res.json({ synced: inserted?.length || 0, signals: inserted });
   } catch (err) {
     console.error("LinkedIn sync error:", err.message);

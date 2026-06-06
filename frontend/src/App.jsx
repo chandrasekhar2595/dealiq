@@ -776,6 +776,7 @@ function DealDetail({ dealId, onBack, onUpdate, onDelete }) {
       if (synced > 0) {
         setSignals(prev => [...prev.filter(s => s.source !== "gmail"), ...newSignals]);
         runAnalysis();
+        api(`/deals/${dealId}/competitors`).then(({ competitors }) => setCompetitors(competitors || [])).catch(() => {});
       } else {
         alert("No new signals found for this contact.");
       }
@@ -796,6 +797,7 @@ function DealDetail({ dealId, onBack, onUpdate, onDelete }) {
       if (synced > 0) {
         setSignals(prev => [...prev.filter(s => s.source !== "linkedin"), ...newSignals]);
         runAnalysis();
+        api(`/deals/${dealId}/competitors`).then(({ competitors }) => setCompetitors(competitors || [])).catch(() => {});
       } else {
         alert("No news signals found for this contact or company.");
       }
@@ -1390,10 +1392,28 @@ function DealDetail({ dealId, onBack, onUpdate, onDelete }) {
                         <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
                           <CompanyAvatar company={comp.name} contactEmail={`info@${comp.name.toLowerCase().replace(/\s+/g,"")}.com`} size={32} />
                           <div>
-                            <div style={{ fontSize: 15, fontWeight: 700, color: "var(--text-1)" }}>{comp.name}</div>
-                            {comp.threat_level && (
+                            <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+                              <div style={{ fontSize: 15, fontWeight: 700, color: "var(--text-1)" }}>{comp.name}</div>
+                              {comp.analysis?.auto_detected && (
+                                <span style={{ fontSize: 10, fontWeight: 700, padding: "1px 7px",
+                                  borderRadius: 4, background: "rgba(245,158,11,0.12)",
+                                  border: "1px solid rgba(245,158,11,0.3)", color: "var(--risk-med)" }}>
+                                  AUTO-DETECTED
+                                </span>
+                              )}
+                            </div>
+                            {comp.threat_level ? (
                               <div style={{ fontSize: 11, fontWeight: 700, color: threatColor, marginTop: 2 }}>
                                 {comp.threat_level.toUpperCase()} THREAT
+                              </div>
+                            ) : comp.analysis?.evidence ? (
+                              <div style={{ fontSize: 11, color: "var(--text-3)", marginTop: 2,
+                                maxWidth: 280, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
+                                "{comp.analysis.evidence}"
+                              </div>
+                            ) : (
+                              <div style={{ fontSize: 11, color: "var(--text-3)", marginTop: 2 }}>
+                                Click ⚡ Analyze to get intelligence
                               </div>
                             )}
                           </div>

@@ -65,4 +65,51 @@ Return JSON:
   return JSON.parse(raw.replace(/```json|```/g, "").trim());
 }
 
-module.exports = { fetchCompetitorNews, analyzeCompetitor };
+async function detectCompetitors(deal, signals) {
+  if (!signals.length) return [];
+
+  const signalText = signals
+    .map(s => `- [${s.source?.toUpperCase()}] ${s.summary}`)
+    .join("\n");
+
+  const response = await client.messages.create({
+    model: "claude-sonnet-4-6",
+    max_tokens: 300,
+    system: `You are a B2B sales intelligence analyst. Return JSON only, no markdown.`,
+    messages: [{
+      role: "user",
+      content: `Analyze these signals from a B2B sales deal and detect any competitor products or companies the prospect might be evaluating.
+
+Deal: ${deal.company} | ${deal.contact_name} | ${deal.stage} | $${Number(deal.value||0).toLocaleString()}
+
+Signals:
+${signalText}
+
+Look for:
+- Competitor names mentioned directly in emails
+- References to "evaluating other options", "comparing solutions", "other vendors"
+- Industry-specific competitors (CRM, sales tools, etc.)
+- Any hint the prospect is in multiple vendor conversations
+
+Return JSON:
+{
+  "detected": [
+    {
+      "name": "<competitor name>",
+      "source": "<which signal revealed this>",
+      "confidence": "high" | "medium" | "low",
+      "evidence": "<quote or paraphrase from the signal that indicates this>"
+    }
+  ]
+}
+
+If no competitors are detectable, return { "detected": [] }.`
+    }],
+  });
+
+  const raw = response.content.filter(b => b.type === "text").map(b => b.text).join("");
+  const result = JSON.parse(raw.replace(/```json|```/g, "").trim());
+  return result.detected || [];
+}
+
+module.exports = { fetchCompetitorNews, analyzeCompetitor, detectCompetitors };
