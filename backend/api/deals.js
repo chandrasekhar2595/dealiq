@@ -6,6 +6,7 @@ const { analyzeDeal, generateMeetingPrep, handleObjection, suggestStageUpdate } 
 const { sendSlackAlert }          = require("../services/slack");
 const { fetchEmailsForContact, extractSignals, refreshAccessToken } = require("../services/gmail");
 const { fetchContactNews, extractLinkedInSignals } = require("../services/linkedin");
+const { fetchCompetitorNews, analyzeCompetitor }   = require("../services/competitors");
 
 // ── EVENT LOGGER ─────────────────────────────────────────────
 async function logEvent(dealId, eventType, description, metadata = {}) {
@@ -397,6 +398,68 @@ router.post("/:id/suggest-stage", async (req, res) => {
   try {
     const suggestion = await suggestStageUpdate(deal, signals || []);
     res.json({ suggestion });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+// GET /api/deals/:id/competitors — list competitors for a deal
+router.get("/:id/competitors", async (req, res) => {
+  const { id } = req.params;
+  const userId = req.user.id;
+  const { data: deal } = await supabase.from("deals").select("id").eq("id", id).eq("user_id", userId).single();
+  if (!deal) return res.status(404).json({ error: "Deal not found" });
+  const { data: competitors } = await supabase.from("deal_competitors").select("*").eq("deal_id", id).order("created_at");
+  res.json({ competitors: competitors || [] });
+});
+
+// POST /api/deals/:id/competitors — add a competitor
+router.post("/:id/competitors", async (req, res) => {
+  const { id } = req.params;
+  const userId = req.user.id;
+  const { name } = req.body;
+  if (!name?.trim()) return res.status(400).json({ error: "Competitor name required" });
+
+  const { data: deal } = await supabase.from("deals").select("*").eq("id", id).eq("user_id", userId).single();
+  if (!deal) return res.status(404).json({ error: "Deal not found" });
+
+  const { data, error } = await supabase.from("deal_competitors")
+    .upsert({ deal_id: id, name: name.trim() }, { onConflict: "deal_id,name" })
+    .select().single();
+  if (error) return res.status(500).json({ error: error.message });
+  res.json({ competitor: data });
+});
+
+// DELETE /api/deals/:id/competitors/:name — remove a competitor
+router.delete("/:id/competitors/:name", async (req, res) => {
+  const { id, name } = req.params;
+  const userId = req.user.id;
+  const { data: deal } = await supabase.from("deals").select("id").eq("id", id).eq("user_id", userId).single();
+  if (!deal) return res.status(404).json({ error: "Deal not found" });
+  await supabase.from("deal_competitors").delete().eq("deal_id", id).eq("name", decodeURIComponent(name));
+  res.json({ success: true });
+});
+
+// POST /api/deals/:id/competitors/:name/analyze — fetch news + analyze one competitor
+router.post("/:id/competitors/:name/analyze", async (req, res) => {
+  const { id, name } = req.params;
+  const userId = req.user.id;
+  const competitorName = decodeURIComponent(name);
+
+  const { data: deal } = await supabase.from("deals").select("*").eq("id", id).eq("user_id", userId).single();
+  if (!deal) return res.status(404).json({ error: "Deal not found" });
+
+  try {
+    const newsItems = await fetchCompetitorNews(competitorName);
+    const analysis  = await analyzeCompetitor(deal, competitorName, newsItems);
+
+    const { data } = await supabase.from("deal_competitors")
+      .upsert({ deal_id: id, name: competitorName, threat_level: analysis.threat_level,
+        analysis, synced_at: new Date().toISOString() }, { onConflict: "deal_id,name" })
+      .select().single();
+
+    await logEvent(id, "signal", `Competitor intel: ${competitorName} — ${analysis.threat_level?.toUpperCase()} threat. ${analysis.threat_reason}`, { competitor: competitorName });
+    res.json({ competitor: data });
   } catch (err) {
     res.status(500).json({ error: err.message });
   }

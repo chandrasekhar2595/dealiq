@@ -732,6 +732,9 @@ function DealDetail({ dealId, onBack, onUpdate, onDelete }) {
   const [loadingObjection, setLoadingObjection] = useState(false);
   const [stageSuggestion, setStageSuggestion] = useState(null);
   const [timeline, setTimeline]             = useState([]);
+  const [competitors, setCompetitors]       = useState([]);
+  const [newCompetitor, setNewCompetitor]   = useState("");
+  const [analyzingComp, setAnalyzingComp]   = useState(null);
 
   useEffect(() => {
     setLoading(true);
@@ -739,6 +742,7 @@ function DealDetail({ dealId, onBack, onUpdate, onDelete }) {
       setDeal(deal); setSignals(signals); setAnalysis(latest_analysis);
     }).catch(console.error).finally(() => setLoading(false));
     api(`/deals/${dealId}/timeline`).then(({ events }) => setTimeline(events || [])).catch(() => {});
+    api(`/deals/${dealId}/competitors`).then(({ competitors }) => setCompetitors(competitors || [])).catch(() => {});
   }, [dealId]);
 
   async function runAnalysis() {
@@ -1031,7 +1035,7 @@ function DealDetail({ dealId, onBack, onUpdate, onDelete }) {
       <div style={{ display: "flex", justifyContent: "space-between",
         alignItems: "center", borderBottom: "1px solid var(--border)", marginBottom: 16 }}>
         <div style={{ display: "flex" }}>
-          {[["insights","💡","Insights"],["action","🎯","Next Action"],["draft","✉️","Draft Email"],["prep","📋","Meeting Prep"],["objection","🛡️","Objections"],["timeline","🕐","Timeline"]].map(([t, icon, label]) => (
+          {[["insights","💡","Insights"],["action","🎯","Next Action"],["draft","✉️","Draft Email"],["prep","📋","Meeting Prep"],["objection","🛡️","Objections"],["intel","🔎","Competitor Intel"],["timeline","🕐","Timeline"]].map(([t, icon, label]) => (
             <button key={t} className={`tab-btn ${tab === t ? "active" : ""}`}
               onClick={() => setTab(t)}>
               <span className="tab-icon">{icon}</span>{label}
@@ -1324,6 +1328,185 @@ function DealDetail({ dealId, onBack, onUpdate, onDelete }) {
               </div>
             )}
           </>
+        )}
+
+        {/* Competitor Intel tab */}
+        {tab === "intel" && (
+          <div>
+            {/* Add competitor input */}
+            <div style={{ display: "flex", gap: 8, marginBottom: 20 }}>
+              <input
+                value={newCompetitor}
+                onChange={e => setNewCompetitor(e.target.value)}
+                onKeyDown={async e => {
+                  if (e.key === "Enter" && newCompetitor.trim()) {
+                    await api(`/deals/${dealId}/competitors`, { method: "POST", body: { name: newCompetitor.trim() } });
+                    const { competitors: updated } = await api(`/deals/${dealId}/competitors`);
+                    setCompetitors(updated || []);
+                    setNewCompetitor("");
+                  }
+                }}
+                placeholder="Add competitor (e.g. Salesforce, HubSpot)..."
+                className="field-input"
+                style={{ margin: 0, flex: 1 }}
+              />
+              <button className="btn-analyze" style={{ flexShrink: 0 }}
+                onClick={async () => {
+                  if (!newCompetitor.trim()) return;
+                  await api(`/deals/${dealId}/competitors`, { method: "POST", body: { name: newCompetitor.trim() } });
+                  const { competitors: updated } = await api(`/deals/${dealId}/competitors`);
+                  setCompetitors(updated || []);
+                  setNewCompetitor("");
+                }}>
+                + Add
+              </button>
+            </div>
+
+            {competitors.length === 0 ? (
+              <div style={{ textAlign: "center", padding: "40px 0" }}>
+                <div style={{ fontSize: 28, marginBottom: 10 }}>🔎</div>
+                <div style={{ fontSize: 14, fontWeight: 600, color: "var(--text-2)", marginBottom: 6 }}>
+                  No competitors tracked yet
+                </div>
+                <div style={{ fontSize: 13, color: "var(--text-3)" }}>
+                  Add competitors above to get real-time intelligence and counter-messaging
+                </div>
+              </div>
+            ) : (
+              <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
+                {competitors.map(comp => {
+                  const a = comp.analysis;
+                  const threatColor = comp.threat_level === "high" ? "var(--risk-high)" :
+                                      comp.threat_level === "medium" ? "var(--risk-med)" : "var(--risk-low)";
+                  const threatBg    = comp.threat_level === "high" ? "rgba(239,68,68,0.08)" :
+                                      comp.threat_level === "medium" ? "rgba(245,158,11,0.08)" : "rgba(34,197,94,0.08)";
+                  return (
+                    <div key={comp.id} style={{ background: "var(--bg-card)",
+                      border: "1px solid var(--border)", borderRadius: 12, overflow: "hidden" }}>
+                      {/* Header */}
+                      <div style={{ padding: "14px 18px", display: "flex",
+                        alignItems: "center", justifyContent: "space-between",
+                        borderBottom: comp.analysis ? "1px solid var(--border)" : "none" }}>
+                        <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
+                          <CompanyAvatar company={comp.name} contactEmail={`info@${comp.name.toLowerCase().replace(/\s+/g,"")}.com`} size={32} />
+                          <div>
+                            <div style={{ fontSize: 15, fontWeight: 700, color: "var(--text-1)" }}>{comp.name}</div>
+                            {comp.threat_level && (
+                              <div style={{ fontSize: 11, fontWeight: 700, color: threatColor, marginTop: 2 }}>
+                                {comp.threat_level.toUpperCase()} THREAT
+                              </div>
+                            )}
+                          </div>
+                        </div>
+                        <div style={{ display: "flex", gap: 8, alignItems: "center" }}>
+                          <button className="btn-sm btn-ghost"
+                            style={{ fontSize: 12, display: "flex", alignItems: "center", gap: 5 }}
+                            disabled={analyzingComp === comp.name}
+                            onClick={async () => {
+                              setAnalyzingComp(comp.name);
+                              try {
+                                const { competitor } = await api(
+                                  `/deals/${dealId}/competitors/${encodeURIComponent(comp.name)}/analyze`,
+                                  { method: "POST" }
+                                );
+                                setCompetitors(prev => prev.map(c => c.id === competitor.id ? competitor : c));
+                              } catch (err) { alert(err.message); }
+                              finally { setAnalyzingComp(null); }
+                            }}>
+                            {analyzingComp === comp.name
+                              ? <><span className="dot"/><span className="dot"/><span className="dot"/></>
+                              : "⚡ Analyze"}
+                          </button>
+                          <button className="btn-sm" style={{ color: "var(--risk-high)", fontSize: 12 }}
+                            onClick={async () => {
+                              await api(`/deals/${dealId}/competitors/${encodeURIComponent(comp.name)}`, { method: "DELETE" });
+                              setCompetitors(prev => prev.filter(c => c.id !== comp.id));
+                            }}>✕</button>
+                        </div>
+                      </div>
+
+                      {/* Analysis */}
+                      {a && (
+                        <div style={{ padding: "16px 18px" }}>
+                          {/* Threat reason */}
+                          <div style={{ fontSize: 13, color: "var(--text-2)", marginBottom: 16,
+                            lineHeight: 1.6, padding: "10px 14px", borderRadius: 8,
+                            background: threatBg, border: `1px solid ${threatColor}25` }}>
+                            {a.threat_reason}
+                          </div>
+
+                          {/* Recent moves */}
+                          {a.recent_moves?.length > 0 && (
+                            <div style={{ marginBottom: 16 }}>
+                              <div style={{ fontSize: 11, fontFamily: "var(--font-mono)",
+                                letterSpacing: "0.08em", color: "var(--text-3)", marginBottom: 8 }}>
+                                RECENT MOVES
+                              </div>
+                              {a.recent_moves.map((move, i) => (
+                                <div key={i} style={{ display: "flex", gap: 8, marginBottom: 5,
+                                  fontSize: 13, color: "var(--text-2)" }}>
+                                  <span style={{ color: "var(--text-3)", flexShrink: 0 }}>•</span>{move}
+                                </div>
+                              ))}
+                            </div>
+                          )}
+
+                          {/* Likely objection */}
+                          {a.likely_objection && (
+                            <div style={{ marginBottom: 16, padding: "12px 14px", borderRadius: 8,
+                              background: "rgba(239,68,68,0.06)", border: "1px solid rgba(239,68,68,0.15)" }}>
+                              <div style={{ fontSize: 10, fontFamily: "var(--font-mono)",
+                                letterSpacing: "0.08em", color: "var(--risk-high)", marginBottom: 6 }}>
+                                LIKELY BUYER OBJECTION
+                              </div>
+                              <div style={{ fontSize: 13, color: "var(--text-1)", fontStyle: "italic" }}>
+                                "{a.likely_objection}"
+                              </div>
+                            </div>
+                          )}
+
+                          {/* Counter message */}
+                          {a.counter_message && (
+                            <div style={{ marginBottom: 12, padding: "12px 14px", borderRadius: 8,
+                              background: "rgba(34,197,94,0.06)", border: "1px solid rgba(34,197,94,0.15)" }}>
+                              <div style={{ fontSize: 10, fontFamily: "var(--font-mono)",
+                                letterSpacing: "0.08em", color: "var(--risk-low)", marginBottom: 6 }}>
+                                YOUR COUNTER-MESSAGE
+                              </div>
+                              <div style={{ fontSize: 13, color: "var(--text-1)", lineHeight: 1.6 }}>
+                                {a.counter_message}
+                              </div>
+                            </div>
+                          )}
+
+                          {/* Win angle */}
+                          {a.win_angle && (
+                            <div style={{ padding: "12px 14px", borderRadius: 8,
+                              background: "rgba(59,130,246,0.06)", border: "1px solid rgba(59,130,246,0.15)" }}>
+                              <div style={{ fontSize: 10, fontFamily: "var(--font-mono)",
+                                letterSpacing: "0.08em", color: "var(--blue)", marginBottom: 6 }}>
+                                WIN ANGLE
+                              </div>
+                              <div style={{ fontSize: 13, color: "var(--text-1)", lineHeight: 1.6 }}>
+                                {a.win_angle}
+                              </div>
+                            </div>
+                          )}
+
+                          {comp.synced_at && (
+                            <div style={{ fontSize: 11, color: "var(--text-muted)",
+                              fontFamily: "var(--font-mono)", marginTop: 12 }}>
+                              Last updated {new Date(comp.synced_at).toLocaleDateString("en-US", { month: "short", day: "numeric" })}
+                            </div>
+                          )}
+                        </div>
+                      )}
+                    </div>
+                  );
+                })}
+              </div>
+            )}
+          </div>
         )}
 
         {/* Timeline tab — always visible, no analysis required */}

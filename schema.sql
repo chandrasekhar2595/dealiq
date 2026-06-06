@@ -47,6 +47,23 @@ create table signals (
   detected_at timestamptz default now()
 );
 
+-- ── COMPETITOR INTELLIGENCE ────────────────────────────────
+create table deal_competitors (
+  id uuid primary key default uuid_generate_v4(),
+  deal_id uuid references deals(id) on delete cascade,
+  name text not null,
+  threat_level text,
+  analysis jsonb,
+  synced_at timestamptz,
+  created_at timestamptz default now(),
+  unique(deal_id, name)
+);
+create index idx_deal_competitors_deal_id on deal_competitors(deal_id);
+alter table deal_competitors enable row level security;
+create policy "competitors_own_data" on deal_competitors for all using (
+  deal_id in (select id from deals where user_id = auth.uid())
+);
+
 -- ── DEAL EVENTS (Timeline) ─────────────────────────────────
 create table deal_events (
   id uuid primary key default uuid_generate_v4(),
