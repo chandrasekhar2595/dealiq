@@ -22,18 +22,26 @@
 }
 
 :root[data-theme="light"] {
-  --bg:         #f0f4f8;
-  --bg-card:    #ffffff;
-  --bg-hover:   #e8edf4;
-  --bg-glass:   rgba(255,255,255,0.95);
-  --border:     #e0e8f0;
-  --border-hi:  #c8d4e0;
-  --text-1:     #0d1626;
-  --text-2:     #3d5068;
-  --text-3:     #7a90a4;
-  --text-muted: #c0ccd8;
-  --blue:       #2563eb;
+  --bg:         #eef1f6;
+  --bg-card:    #f8fafc;
+  --bg-hover:   #e4e9f0;
+  --bg-glass:   rgba(248,250,252,0.96);
+  --border:     #d4dbe6;
+  --border-hi:  #b8c4d4;
+  --text-1:     #0a1628;
+  --text-2:     #2d4258;
+  --text-3:     #5a7080;
+  --text-muted: #a8b8c8;
+  --accent:     #e08a10;
+  --blue:       #1d4ed8;
+  --risk-high:  #dc2626;
+  --risk-med:   #d97706;
+  --risk-low:   #16a34a;
 }
+
+:root[data-theme="light"] body { background-image: none; }
+:root[data-theme="light"] .deals-sidebar { background: var(--bg-card); box-shadow: 1px 0 0 var(--border); }
+:root[data-theme="light"] .deal-card.selected { background: #ffffff; box-shadow: 0 2px 8px rgba(0,0,0,0.08); }
 
 *, *::before, *::after { box-sizing: border-box; }
 
