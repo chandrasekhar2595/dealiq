@@ -1401,23 +1401,60 @@ function DealDetail({ dealId, onBack, onUpdate, onDelete }) {
           ))}
         </div>
       ) : (
-        <div style={{ marginBottom: 24, padding: "24px", borderRadius: 12,
-          border: "1px dashed var(--border)", textAlign: "center" }}>
-          <div style={{ fontSize: 24, marginBottom: 8 }}>📡</div>
-          <div style={{ fontSize: 13, fontWeight: 600, color: "var(--text-2)", marginBottom: 6 }}>
-            No signals yet
+        <div style={{ marginBottom: 24 }}>
+          <div style={{ fontSize: 11, fontFamily: "var(--font-mono)", letterSpacing: "0.08em",
+            color: "var(--text-3)", marginBottom: 12 }}>INTELLIGENCE FEED</div>
+          {/* Setup checklist — compact, not a big empty state */}
+          {[
+            { done: true, label: "Deal added to pipeline", icon: "✓" },
+            { done: !!analysis, label: "AI analysis", icon: analysis ? "✓" : "○",
+              action: !analysis ? <button onClick={runAnalysis} className="btn-sm btn-ghost"
+                style={{ fontSize: 11, marginLeft: 8 }}>Run now</button> : null },
+            { done: false, label: "Gmail signals", icon: "○",
+              action: <button onClick={syncGmail} disabled={syncing} className="btn-sm btn-ghost"
+                style={{ fontSize: 11, marginLeft: 8 }}>
+                {syncing ? <><span className="dot"/><span className="dot"/></> : "Sync Gmail"}
+              </button> },
+            { done: false, label: "LinkedIn news signals", icon: "○",
+              action: <button onClick={syncLinkedIn} disabled={syncingLinkedIn} className="btn-sm btn-ghost"
+                style={{ fontSize: 11, marginLeft: 8 }}>
+                {syncingLinkedIn ? <><span className="dot"/><span className="dot"/></> : "Sync LinkedIn"}
+              </button> },
+            { done: false, label: "Competitor tracking", icon: "○",
+              action: <button onClick={() => setTab("intel")} className="btn-sm btn-ghost"
+                style={{ fontSize: 11, marginLeft: 8 }}>Add competitors</button> },
+          ].map(({ done, label, icon, action }) => (
+            <div key={label} style={{ display: "flex", alignItems: "center",
+              padding: "9px 0", borderBottom: "1px solid var(--border)" }}>
+              <span style={{ width: 20, fontSize: 12, fontWeight: 700, flexShrink: 0,
+                color: done ? "var(--risk-low)" : "var(--text-muted)" }}>{icon}</span>
+              <span style={{ fontSize: 13, color: done ? "var(--text-2)" : "var(--text-3)",
+                textDecoration: done ? "none" : "none" }}>{label}</span>
+              {action}
+            </div>
+          ))}
+        </div>
+      )}
+
+      {/* Next Best Action — always visible when analysis exists */}
+      {analysis && !analyzing && (
+        <div style={{ marginBottom: 16, padding: "16px 20px", borderRadius: 12,
+          background: "linear-gradient(135deg, rgba(59,130,246,0.07), rgba(59,130,246,0.03))",
+          border: "1px solid rgba(59,130,246,0.18)", display: "flex",
+          alignItems: "flex-start", gap: 14 }}>
+          <div style={{ fontSize: 22, flexShrink: 0, marginTop: 1 }}>🎯</div>
+          <div style={{ flex: 1 }}>
+            <div style={{ fontSize: 11, fontWeight: 700, color: "var(--blue)",
+              letterSpacing: "0.06em", marginBottom: 6 }}>NEXT BEST ACTION</div>
+            <div style={{ fontSize: 14, fontWeight: 600, color: "var(--text-1)",
+              lineHeight: 1.5 }}>{analysis.recommended_action}</div>
           </div>
-          <div style={{ fontSize: 12, color: "var(--text-3)", marginBottom: 16 }}>
-            Sync Gmail or LinkedIn to pull real signals for this deal
-          </div>
-          <div style={{ display: "flex", gap: 8, justifyContent: "center" }}>
-            <button onClick={syncGmail} className="btn-sm btn-ghost" style={{ fontSize: 11 }}>
-              ✉ Sync Gmail
-            </button>
-            <button onClick={syncLinkedIn} className="btn-sm btn-ghost" style={{ fontSize: 11 }}>
-              <span style={{ color: "#0a66c2", fontWeight: 700 }}>in</span> Sync LinkedIn
-            </button>
-          </div>
+          <button onClick={() => setTab("draft")}
+            style={{ flexShrink: 0, padding: "7px 14px", borderRadius: 7,
+              background: "var(--blue)", color: "#fff", border: "none",
+              fontSize: 12, fontWeight: 600, cursor: "pointer", whiteSpace: "nowrap" }}>
+            Draft Email →
+          </button>
         </div>
       )}
 
@@ -2319,6 +2356,10 @@ function Dashboard({ user, onLogout, openSettings = false, slackChannel = "", gm
 
   const totalValue = deals.reduce((s, d) => s + Number(d.value || 0), 0);
   const atRisk = deals.filter(d => d.latest_analysis?.risk_level === "high").length;
+  const forecast = deals.reduce((s, d) => {
+    const score = d.latest_analysis?.close_score;
+    return s + (score ? (Number(d.value || 0) * score / 100) : 0);
+  }, 0);
 
   return (
     <div style={{ minHeight: "100vh", background: "var(--bg)", display: "flex",
@@ -2338,6 +2379,7 @@ function Dashboard({ user, onLogout, openSettings = false, slackChannel = "", gm
         <div className="header-stats" style={{ display: "flex", gap: 2, alignItems: "center" }}>
           {[
             { label: "Pipeline",   value: `$${totalValue >= 1000 ? (totalValue/1000).toFixed(0)+"K" : totalValue.toLocaleString()}`, color: "var(--text-1)" },
+            { label: "Forecast",   value: `$${forecast >= 1000 ? (forecast/1000).toFixed(0)+"K" : Math.round(forecast).toLocaleString()}`, color: "var(--risk-low)" },
             { label: "Open Deals", value: deals.length, color: "var(--text-1)" },
             { label: "At Risk",    value: atRisk, color: atRisk > 0 ? "var(--risk-high)" : "var(--text-3)" },
           ].map(({ label, value, color }) => (
