@@ -759,9 +759,16 @@ function ContactProfile({ dealId, onBack }) {
         borderBottom: "1px solid var(--border)" }}>
         <button onClick={onBack} className="btn-sm btn-ghost" style={{ marginBottom: 24 }}>← Back to Deal</button>
         <div style={{ display: "flex", gap: 24, alignItems: "flex-start", paddingBottom: 28 }}>
-          {/* Avatar */}
+          {/* Avatar — person initials from contact name */}
           <div style={{ position: "relative", flexShrink: 0 }}>
-            <CompanyAvatar company={deal.contact_name} contactEmail={deal.contact_email} size={72} />
+            <div style={{ width: 72, height: 72, borderRadius: 18, flexShrink: 0,
+              background: `linear-gradient(135deg, #3b82f620, #8b5cf620)`,
+              border: "2px solid rgba(59,130,246,0.3)",
+              display: "flex", alignItems: "center", justifyContent: "center",
+              fontFamily: "var(--font-mono)", fontWeight: 900, fontSize: 24,
+              color: "#3b82f6" }}>
+              {deal.contact_name.split(" ").map(n => n[0]).slice(0, 2).join("").toUpperCase()}
+            </div>
             <div style={{ position: "absolute", bottom: -4, right: -4, width: 20, height: 20,
               borderRadius: "50%", background: "#22c55e", border: "2px solid var(--bg-card)",
               display: "flex", alignItems: "center", justifyContent: "center", fontSize: 10 }}>✓</div>
