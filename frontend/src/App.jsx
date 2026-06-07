@@ -713,19 +713,25 @@ function PipelineSummary({ deals }) {
 
 // ── CONTACT PROFILE PAGE ─────────────────────────────────────
 function ContactProfile({ dealId, onBack }) {
-  const [data, setData]       = useState(null);
+  const [data, setData]   = useState(null);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
 
   useEffect(() => {
-    setLoading(true);
+    setLoading(true); setError(null);
     api(`/deals/${dealId}/contact-profile`)
       .then(d => setData(d))
-      .catch(console.error)
+      .catch(err => setError(err?.message || "Failed to load profile"))
       .finally(() => setLoading(false));
   }, [dealId]);
 
   if (loading) return (
     <div className="main-panel" style={{ flex: 1, padding: "40px 48px", overflowY: "auto" }}>
+      <button onClick={onBack} className="btn-sm btn-ghost" style={{ marginBottom: 24 }}>← Back to Deal</button>
+      <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 32 }}>
+        <span className="dot"/><span className="dot"/><span className="dot"/>
+        <span style={{ fontSize: 13, color: "var(--text-3)" }}>Generating contact intelligence…</span>
+      </div>
       <Skeleton w="120px" h={16} mb={32} />
       <div style={{ display: "flex", gap: 24, marginBottom: 32 }}>
         <Skeleton w="80px" h={80} />
@@ -735,15 +741,32 @@ function ContactProfile({ dealId, onBack }) {
     </div>
   );
 
+  if (error) return (
+    <div className="main-panel" style={{ flex: 1, padding: "40px 48px", overflowY: "auto" }}>
+      <button onClick={onBack} className="btn-sm btn-ghost" style={{ marginBottom: 24 }}>← Back to Deal</button>
+      <div style={{ padding: "32px", background: "var(--bg-card)", borderRadius: 14,
+        border: "1px solid var(--border)", textAlign: "center" }}>
+        <div style={{ fontSize: 28, marginBottom: 12 }}>⚠️</div>
+        <div style={{ fontSize: 15, fontWeight: 600, color: "var(--text-1)", marginBottom: 8 }}>
+          Could not generate profile
+        </div>
+        <div style={{ fontSize: 13, color: "var(--text-3)", marginBottom: 20 }}>{error}</div>
+        <button onClick={() => { setError(null); setLoading(true);
+          api(`/deals/${dealId}/contact-profile`).then(setData).catch(err => setError(err?.message)).finally(() => setLoading(false));
+        }} className="btn-analyze">Try Again</button>
+      </div>
+    </div>
+  );
+
   if (!data) return null;
-  const { deal, signals, analyses, events, competitors, insights } = data;
+  const { deal, signals = [], analyses = [], events = [], competitors = [], insights = {} } = data;
   const latest = analyses?.[0];
   const RISK = { high: { color: "#ef4444", bg: "rgba(239,68,68,0.1)", border: "rgba(239,68,68,0.25)" },
                  medium: { color: "#f59e0b", bg: "rgba(245,158,11,0.1)", border: "rgba(245,158,11,0.25)" },
                  low: { color: "#22c55e", bg: "rgba(34,197,94,0.1)", border: "rgba(34,197,94,0.25)" } };
 
-  const trendIcon = insights.engagement_trend === "growing" ? "↗" : insights.engagement_trend === "declining" ? "↘" : "→";
-  const trendColor = insights.engagement_trend === "growing" ? "#22c55e" : insights.engagement_trend === "declining" ? "#ef4444" : "#f59e0b";
+  const trendIcon = insights?.engagement_trend === "growing" ? "↗" : insights?.engagement_trend === "declining" ? "↘" : "→";
+  const trendColor = insights?.engagement_trend === "growing" ? "#22c55e" : insights?.engagement_trend === "declining" ? "#ef4444" : "#f59e0b";
 
   const scoreBar = (score, color) => (
     <div style={{ height: 4, background: "var(--border)", borderRadius: 2, overflow: "hidden", marginTop: 6 }}>
