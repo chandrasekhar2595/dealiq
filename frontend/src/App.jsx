@@ -1832,11 +1832,14 @@ function DealDetail({ dealId, onBack, onUpdate, onDelete }) {
                   {(analysis.urgency || "").replace("_", " ")}
                 </span>
               </div>
-              {/* Forecast narrative */}
+              {/* Forecast narrative — ring shows the number, text shows timing + confidence */}
               <div style={{ marginBottom: 10 }}>
                 <span style={{ fontSize: 20, fontWeight: 700, color: r?.color, letterSpacing: -0.3 }}>
-                  {analysis.close_score}% likely to close
-                  {deal.close_timeline ? ` ${deal.close_timeline.replace(/_/g, " ")}` : ""}
+                  {deal.close_timeline
+                    ? `Closes ${deal.close_timeline.replace(/_/g, " ")}`
+                    : analysis.close_score >= 70 ? "On track to close"
+                    : analysis.close_score >= 50 ? "Needs attention"
+                    : "At risk of stalling"}
                 </span>
                 {analysis.forecast_confidence && (
                   <span style={{ fontSize: 13, fontWeight: 500, color: "var(--text-3)", marginLeft: 8 }}>
