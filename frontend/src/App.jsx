@@ -3202,20 +3202,16 @@ function Dashboard({ user, onLogout, openSettings = false, slackChannel = "", gm
                         </span>
                       )}
                     </div>
-                    {a && (
-                      <div style={{ fontSize: 11, marginTop: 3, fontWeight: 600,
-                        color: rk === "high" ? "var(--risk-high)" : rk === "low" ? "var(--risk-low)" : "var(--risk-med)" }}>
-                        {a.close_score}% likely
+                    {(deal.close_timeline || a?.forecast_confidence) && (
+                      <div style={{ fontSize: 11, marginTop: 3, color: "var(--text-3)" }}>
                         {deal.close_timeline && (
-                          <span style={{ fontWeight: 400, color: deal.close_timeline === "this_week" ? "var(--risk-low)" : "var(--blue)" }}>
-                            {" · "}{deal.close_timeline.replace(/_/g, " ")}
+                          <span style={{ fontWeight: 600,
+                            color: deal.close_timeline === "this_week" ? "var(--risk-low)" : "var(--blue)" }}>
+                            {deal.close_timeline.replace(/_/g, " ")}
                           </span>
                         )}
-                        {a.forecast_confidence && (
-                          <span style={{ fontWeight: 400, color: "var(--text-3)" }}>
-                            {" · "}{a.forecast_confidence} conf
-                          </span>
-                        )}
+                        {deal.close_timeline && a?.forecast_confidence && " · "}
+                        {a?.forecast_confidence && `${a.forecast_confidence} confidence`}
                       </div>
                     )}
                   </div>
