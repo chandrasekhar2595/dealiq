@@ -26,16 +26,20 @@ function cleanAI(text) {
 function formatEmailBody(text) {
   if (!text) return [];
   const cleaned = cleanAI(text);
-  // Split on existing newlines first, then break long sentences at natural points
-  const lines = cleaned.split(/\n+/).filter(Boolean);
-  if (lines.length > 1) return lines;
-  // Single block — split into ~3 sentence paragraphs
-  const sentences = cleaned.match(/[^.!?]+[.!?]+/g) || [cleaned];
-  const paras = [];
-  for (let i = 0; i < sentences.length; i += 3) {
-    paras.push(sentences.slice(i, i + 3).join(" ").trim());
+
+  // Split each newline-delimited chunk into ~3-sentence paragraphs
+  const result = [];
+  for (const chunk of cleaned.split(/\n+/).filter(Boolean)) {
+    const sentences = chunk.match(/[^.!?]+[.!?]+["']?/g) || [chunk];
+    if (sentences.length <= 3) {
+      result.push(chunk.trim());
+    } else {
+      for (let i = 0; i < sentences.length; i += 3) {
+        result.push(sentences.slice(i, i + 3).join(" ").trim());
+      }
+    }
   }
-  return paras;
+  return result;
 }
 
 const ERROR_MAP = {
