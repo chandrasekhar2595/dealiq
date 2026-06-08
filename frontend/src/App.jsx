@@ -10,15 +10,32 @@ function getDaysStale(deal) {
   return deal.days_stale || 0;
 }
 
-// Strip emojis, bullets, leading dashes from AI-generated text
+// Strip emojis, bullets, dashes from AI-generated text
 function cleanAI(text) {
   if (!text) return text;
   return text
     .replace(/[\u{1F000}-\u{1FFFF}\u{2600}-\u{27FF}\u{2B00}-\u{2BFF}]/gu, "")
     .replace(/^[\s\-–—•*#]+/, "")
     .replace(/\s*[•*]\s*/g, " ")
+    .replace(/\s+[–—]\s+/g, ". ")   // em/en dashes mid-sentence → period
     .replace(/\s{2,}/g, " ")
     .trim();
+}
+
+// Format email body into readable paragraphs
+function formatEmailBody(text) {
+  if (!text) return [];
+  const cleaned = cleanAI(text);
+  // Split on existing newlines first, then break long sentences at natural points
+  const lines = cleaned.split(/\n+/).filter(Boolean);
+  if (lines.length > 1) return lines;
+  // Single block — split into ~3 sentence paragraphs
+  const sentences = cleaned.match(/[^.!?]+[.!?]+/g) || [cleaned];
+  const paras = [];
+  for (let i = 0; i < sentences.length; i += 3) {
+    paras.push(sentences.slice(i, i + 3).join(" ").trim());
+  }
+  return paras;
 }
 
 const ERROR_MAP = {
@@ -2038,9 +2055,10 @@ function DealDetail({ dealId, onBack, onUpdate, onDelete }) {
                 <div style={{ borderTop: "1px solid var(--border)", paddingTop: 16 }}>
                   <div style={{ fontFamily: "var(--font-mono)", fontSize: 10,
                     letterSpacing: "0.1em", color: "var(--blue)", marginBottom: 10 }}>BODY</div>
-                  <div style={{ fontSize: 13, lineHeight: 1.8, color: "var(--text-2)",
-                    whiteSpace: "pre-wrap" }}>
-                    {cleanAI(analysis.draft_email_body)}
+                  <div style={{ fontSize: 13, lineHeight: 1.8, color: "var(--text-2)" }}>
+                    {formatEmailBody(analysis.draft_email_body).map((para, i) => (
+                      <p key={i} style={{ margin: "0 0 14px" }}>{para}</p>
+                    ))}
                   </div>
                 </div>
               </div>
