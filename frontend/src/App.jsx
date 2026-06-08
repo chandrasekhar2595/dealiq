@@ -1035,9 +1035,9 @@ function PipelineSummary({ deals }) {
 
 // ── CONTACT PROFILE PAGE ─────────────────────────────────────
 function ContactProfile({ dealId, onBack }) {
-  const [data, setData]   = useState(null);
+  const [data, setData]       = useState(null);
   const [loading, setLoading] = useState(true);
-  const [error, setError] = useState(null);
+  const [error, setError]     = useState(null);
 
   useEffect(() => {
     setLoading(true); setError(null);
@@ -1048,222 +1048,334 @@ function ContactProfile({ dealId, onBack }) {
   }, [dealId]);
 
   if (loading) return (
-    <div className="main-panel" style={{ flex: 1, padding: "40px 48px", overflowY: "auto" }}>
-      <button onClick={onBack} className="btn-sm btn-ghost" style={{ marginBottom: 24 }}>← Back to Deal</button>
-      <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 32 }}>
-        <span className="dot"/><span className="dot"/><span className="dot"/>
-        <span style={{ fontSize: 13, color: "var(--text-3)" }}>Generating contact intelligence…</span>
+    <div className="main-panel" style={{ flex: 1, overflowY: "auto", background: "var(--bg)" }}>
+      <div style={{ padding: "24px 40px" }}>
+        <button onClick={onBack} className="btn-sm btn-ghost" style={{ marginBottom: 24 }}>← Back to Deal</button>
+        <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 32 }}>
+          <span className="dot"/><span className="dot"/><span className="dot"/>
+          <span style={{ fontSize: 13, color: "var(--text-3)" }}>Generating relationship intelligence…</span>
+        </div>
+        <div style={{ display: "flex", gap: 24, marginBottom: 32 }}>
+          <Skeleton w="88px" h={88} />
+          <div style={{ flex: 1 }}>
+            <Skeleton w="50%" h={28} mb={10} /><Skeleton w="40%" h={14} mb={8} /><Skeleton w="60%" h={14} />
+          </div>
+          <div style={{ display: "flex", gap: 16 }}>
+            <Skeleton w="82px" h={82} /><Skeleton w="82px" h={82} /><Skeleton w="82px" h={82} />
+          </div>
+        </div>
+        <Skeleton h={180} mb={16} /><Skeleton h={120} mb={16} /><Skeleton h={200} />
       </div>
-      <Skeleton w="120px" h={16} mb={32} />
-      <div style={{ display: "flex", gap: 24, marginBottom: 32 }}>
-        <Skeleton w="80px" h={80} />
-        <div style={{ flex: 1 }}><Skeleton w="60%" h={24} mb={10} /><Skeleton w="40%" h={14} mb={8} /><Skeleton w="50%" h={14} /></div>
-      </div>
-      <Skeleton h={140} mb={16} /><Skeleton h={100} mb={16} /><Skeleton h={100} />
     </div>
   );
 
   if (error) return (
-    <div className="main-panel" style={{ flex: 1, padding: "40px 48px", overflowY: "auto" }}>
+    <div className="main-panel" style={{ flex: 1, padding: "40px", overflowY: "auto" }}>
       <button onClick={onBack} className="btn-sm btn-ghost" style={{ marginBottom: 24 }}>← Back to Deal</button>
-      <div style={{ padding: "32px", background: "var(--bg-card)", borderRadius: 14,
+      <div style={{ padding: "40px", background: "var(--bg-card)", borderRadius: 16,
         border: "1px solid var(--border)", textAlign: "center" }}>
-        <div style={{ fontSize: 28, marginBottom: 12 }}>⚠️</div>
-        <div style={{ fontSize: 15, fontWeight: 600, color: "var(--text-1)", marginBottom: 8 }}>
+        <div style={{ fontSize: 32, marginBottom: 12 }}>⚠</div>
+        <div style={{ fontSize: 16, fontWeight: 700, color: "var(--text-1)", marginBottom: 8 }}>
           Could not generate profile
         </div>
-        <div style={{ fontSize: 13, color: "var(--text-3)", marginBottom: 20 }}>{error}</div>
-        <button onClick={() => { setError(null); setLoading(true);
-          api(`/deals/${dealId}/contact-profile`).then(setData).catch(err => setError(err?.message)).finally(() => setLoading(false));
+        <div style={{ fontSize: 13, color: "var(--text-3)", marginBottom: 24 }}>{error}</div>
+        <button onClick={() => {
+          setError(null); setLoading(true);
+          api(`/deals/${dealId}/contact-profile`).then(setData).catch(e => setError(e?.message)).finally(() => setLoading(false));
         }} className="btn-analyze">Try Again</button>
       </div>
     </div>
   );
 
   if (!data) return null;
+
   const { deal, signals = [], analyses = [], events = [], competitors = [], insights = {} } = data;
   const latest = analyses?.[0];
-  const RISK = { high: { color: "#ef4444", bg: "rgba(239,68,68,0.1)", border: "rgba(239,68,68,0.25)" },
-                 medium: { color: "#f59e0b", bg: "rgba(245,158,11,0.1)", border: "rgba(245,158,11,0.25)" },
-                 low: { color: "#22c55e", bg: "rgba(34,197,94,0.1)", border: "rgba(34,197,94,0.25)" } };
+  const riskColors = {
+    high:   { color: "#ef4444", bg: "rgba(239,68,68,0.1)",  border: "rgba(239,68,68,0.25)" },
+    medium: { color: "#f59e0b", bg: "rgba(245,158,11,0.1)", border: "rgba(245,158,11,0.25)" },
+    low:    { color: "#22c55e", bg: "rgba(34,197,94,0.1)",  border: "rgba(34,197,94,0.25)" },
+  };
 
-  const trendIcon = insights?.engagement_trend === "growing" ? "↗" : insights?.engagement_trend === "declining" ? "↘" : "→";
-  const trendColor = insights?.engagement_trend === "growing" ? "#22c55e" : insights?.engagement_trend === "declining" ? "#ef4444" : "#f59e0b";
-
-  const scoreBar = (score, color) => (
-    <div style={{ height: 4, background: "var(--border)", borderRadius: 2, overflow: "hidden", marginTop: 6 }}>
-      <div style={{ height: "100%", width: `${score}%`, background: color,
-        borderRadius: 2, transition: "width 1s ease" }} />
-    </div>
-  );
+  const trendUp    = insights?.engagement_trend === "growing";
+  const trendDown  = insights?.engagement_trend === "declining";
+  const trendColor = trendUp ? "#22c55e" : trendDown ? "#ef4444" : "#f59e0b";
+  const trendIcon  = trendUp ? "↗" : trendDown ? "↘" : "→";
+  const initials   = deal.contact_name.split(" ").map(n => n[0]).slice(0, 2).join("").toUpperCase();
 
   return (
     <div className="main-panel" style={{ flex: 1, overflowY: "auto", background: "var(--bg)" }}>
-      {/* Hero */}
-      <div style={{ padding: "32px 48px 0", background: "var(--bg-card)",
-        borderBottom: "1px solid var(--border)" }}>
-        <button onClick={onBack} className="btn-sm btn-ghost" style={{ marginBottom: 24 }}>← Back to Deal</button>
-        <div style={{ display: "flex", gap: 24, alignItems: "flex-start", paddingBottom: 28 }}>
-          {/* Avatar — person initials from contact name */}
-          <div style={{ position: "relative", flexShrink: 0 }}>
-            <div style={{ width: 72, height: 72, borderRadius: 18, flexShrink: 0,
-              background: `linear-gradient(135deg, #3b82f620, #8b5cf620)`,
-              border: "2px solid rgba(59,130,246,0.3)",
-              display: "flex", alignItems: "center", justifyContent: "center",
-              fontFamily: "var(--font-mono)", fontWeight: 900, fontSize: 24,
-              color: "#3b82f6" }}>
-              {deal.contact_name.split(" ").map(n => n[0]).slice(0, 2).join("").toUpperCase()}
-            </div>
-            <div style={{ position: "absolute", bottom: -4, right: -4, width: 20, height: 20,
-              borderRadius: "50%", background: "#22c55e", border: "2px solid var(--bg-card)",
-              display: "flex", alignItems: "center", justifyContent: "center", fontSize: 10 }}>✓</div>
-          </div>
-          {/* Name + role */}
-          <div style={{ flex: 1 }}>
-            <div style={{ fontSize: 28, fontWeight: 800, color: "var(--text-1)",
-              letterSpacing: -0.5, marginBottom: 4 }}>{deal.contact_name}</div>
-            <div style={{ fontSize: 15, color: "var(--text-2)", marginBottom: 2 }}>
-              {deal.contact_role || "Contact"} · {deal.company}
-            </div>
-            <div style={{ display: "flex", gap: 12, marginTop: 10, flexWrap: "wrap" }}>
-              <span style={{ fontSize: 12, color: "var(--text-3)" }}>✉ {deal.contact_email}</span>
-              {deal.linkedin_url && (
-                <a href={deal.linkedin_url} target="_blank" rel="noreferrer"
-                  style={{ fontSize: 12, color: "var(--blue)", textDecoration: "none" }}>
-                  in LinkedIn Profile
-                </a>
-              )}
-            </div>
-          </div>
-          {/* Score cards */}
-          <div style={{ display: "flex", gap: 10, flexShrink: 0 }}>
-            {[
-              { label: "Relationship", value: insights.relationship_score, color: "#3b82f6" },
-              { label: "Influence", value: insights.influence_score, color: "#8b5cf6" },
-              { label: "Engagement", value: insights.engagement_score, color: trendColor },
-            ].map(({ label, value, color }) => (
-              <div key={label} style={{ textAlign: "center", padding: "14px 18px",
-                background: "var(--bg)", borderRadius: 12, border: "1px solid var(--border)", minWidth: 90 }}>
-                <div style={{ fontSize: 26, fontWeight: 800, color, letterSpacing: -0.5 }}>{value}</div>
-                <div style={{ fontSize: 11, color: "var(--text-3)", marginTop: 2 }}>{label}</div>
-                {scoreBar(value, color)}
+
+      {/* ══ HERO ════════════════════════════════════════════════ */}
+      <div style={{ background: "var(--bg-card)", borderBottom: "1px solid var(--border)",
+        position: "relative", overflow: "hidden" }}>
+        {/* Ambient glows */}
+        <div style={{ position: "absolute", top: -60, left: -40, width: 420, height: 320,
+          borderRadius: "50%", pointerEvents: "none",
+          background: "radial-gradient(ellipse, rgba(59,130,246,0.07) 0%, transparent 65%)" }} />
+        <div style={{ position: "absolute", top: -20, right: 60, width: 300, height: 280,
+          borderRadius: "50%", pointerEvents: "none",
+          background: "radial-gradient(ellipse, rgba(139,92,246,0.05) 0%, transparent 65%)" }} />
+
+        <div style={{ padding: "22px 40px 0", position: "relative" }}>
+          <button onClick={onBack} className="btn-sm btn-ghost"
+            style={{ marginBottom: 20, display: "inline-flex", alignItems: "center", gap: 6 }}>
+            ← Back to Deal
+          </button>
+
+          <div style={{ display: "flex", gap: 28, alignItems: "flex-start", paddingBottom: 24 }}>
+            {/* Avatar */}
+            <div style={{ position: "relative", flexShrink: 0 }}>
+              <div style={{ width: 88, height: 88, borderRadius: 22,
+                background: "linear-gradient(135deg, rgba(59,130,246,0.18), rgba(139,92,246,0.18))",
+                border: "2px solid rgba(100,160,255,0.35)",
+                display: "flex", alignItems: "center", justifyContent: "center",
+                fontFamily: "var(--font-mono)", fontWeight: 900, fontSize: 32, color: "#93c5fd",
+                boxShadow: "0 0 0 5px rgba(59,130,246,0.06), 0 8px 32px rgba(0,0,0,0.35)" }}>
+                {initials}
               </div>
-            ))}
-            <div style={{ textAlign: "center", padding: "14px 18px",
-              background: "var(--bg)", borderRadius: 12, border: "1px solid var(--border)", minWidth: 90 }}>
-              <div style={{ fontSize: 20, fontWeight: 800, color: trendColor }}>{trendIcon}</div>
-              <div style={{ fontSize: 11, color: "var(--text-3)", marginTop: 4 }}>Trend</div>
-              <div style={{ fontSize: 10, fontWeight: 700, color: trendColor, marginTop: 4,
-                textTransform: "uppercase", letterSpacing: "0.05em" }}>{insights.engagement_trend}</div>
+              <div style={{ position: "absolute", bottom: 3, right: 3, width: 16, height: 16,
+                borderRadius: "50%", background: "#22c55e", border: "2px solid var(--bg-card)",
+                boxShadow: "0 0 0 2px rgba(34,197,94,0.25)" }} />
+            </div>
+
+            {/* Identity */}
+            <div style={{ flex: 1, minWidth: 0 }}>
+              <div style={{ fontSize: 30, fontWeight: 800, color: "var(--text-1)",
+                letterSpacing: -0.8, lineHeight: 1.1, marginBottom: 6 }}>
+                {deal.contact_name}
+              </div>
+              <div style={{ fontSize: 15, color: "var(--text-2)", marginBottom: 10, fontWeight: 500 }}>
+                {deal.contact_role || "Contact"}
+                <span style={{ color: "var(--border-hi)", margin: "0 8px" }}>·</span>
+                {deal.company}
+              </div>
+              <div style={{ display: "flex", gap: 8, alignItems: "center", flexWrap: "wrap" }}>
+                <span style={{ fontSize: 12, color: "var(--text-3)" }}>✉ {deal.contact_email}</span>
+                {deal.linkedin_url && (
+                  <a href={deal.linkedin_url} target="_blank" rel="noreferrer" style={{
+                    fontSize: 10, fontWeight: 700, color: "#7dd3fc", textDecoration: "none",
+                    padding: "2px 10px", borderRadius: 20,
+                    background: "rgba(59,130,246,0.1)", border: "1px solid rgba(59,130,246,0.25)",
+                    fontFamily: "var(--font-mono)", letterSpacing: "0.04em"
+                  }}>in LINKEDIN →</a>
+                )}
+              </div>
+              {/* Badges */}
+              <div style={{ display: "flex", gap: 6, marginTop: 14, flexWrap: "wrap" }}>
+                {[
+                  { label: `${(insights.decision_power || "unknown").toUpperCase()} DECISION POWER`,
+                    color: insights.decision_power === "high" ? "#22c55e" : insights.decision_power === "medium" ? "#f59e0b" : "#8fa3b8" },
+                  latest && { label: `${(latest.risk_level || "unknown").toUpperCase()} RISK`,
+                    color: latest.risk_level === "high" ? "#ef4444" : latest.risk_level === "medium" ? "#f59e0b" : "#22c55e" },
+                  { label: deal.stage, color: "#7dd3fc" },
+                  { label: "PRIMARY CONTACT", color: "#f5a623" },
+                ].filter(Boolean).map(({ label, color }) => (
+                  <span key={label} style={{ fontSize: 10, fontWeight: 700, padding: "3px 10px",
+                    borderRadius: 20, letterSpacing: "0.05em", color,
+                    background: `${color}18`, border: `1px solid ${color}35`,
+                    fontFamily: "var(--font-mono)" }}>{label}</span>
+                ))}
+              </div>
+            </div>
+
+            {/* Score Rings */}
+            <div style={{ display: "flex", gap: 20, flexShrink: 0, paddingTop: 4 }}>
+              {[
+                { label: "RELATIONSHIP", value: insights.relationship_score || 0 },
+                { label: "INFLUENCE",    value: insights.influence_score    || 0 },
+                { label: "ENGAGEMENT",   value: insights.engagement_score   || 0,
+                  rl: trendUp ? "low" : trendDown ? "high" : undefined },
+              ].map(({ label, value, rl }) => (
+                <div key={label} style={{ textAlign: "center" }}>
+                  <ScoreRing score={value} size={82} riskLevel={rl} />
+                  <div style={{ fontSize: 9, color: "var(--text-3)", marginTop: 5,
+                    fontFamily: "var(--font-mono)", letterSpacing: "0.08em", fontWeight: 700 }}>
+                    {label}
+                  </div>
+                </div>
+              ))}
             </div>
           </div>
-        </div>
-        {/* Decision power badge */}
-        <div style={{ display: "flex", gap: 8, paddingBottom: 20 }}>
-          {[
-            { label: `Decision Power: ${insights.decision_power?.toUpperCase()}`,
-              color: insights.decision_power === "high" ? "#22c55e" : insights.decision_power === "medium" ? "#f59e0b" : "#ef4444" },
-            { label: latest ? `${latest.risk_level?.toUpperCase()} RISK` : "UNANALYZED",
-              color: latest ? RISK[latest.risk_level]?.color : "var(--text-3)" },
-            { label: `${deal.stage}`, color: "var(--blue)" },
-          ].map(({ label, color }) => (
-            <span key={label} style={{ fontSize: 11, fontWeight: 700, padding: "3px 10px",
-              borderRadius: 5, color, background: `${color}15`, border: `1px solid ${color}30` }}>
-              {label}
-            </span>
-          ))}
         </div>
       </div>
 
-      {/* Body */}
-      <div style={{ padding: "28px 48px", display: "grid",
-        gridTemplateColumns: "1fr 340px", gap: 24 }}>
+      {/* ══ BODY ════════════════════════════════════════════════ */}
+      <div style={{ padding: "24px 40px", display: "grid",
+        gridTemplateColumns: "1fr 308px", gap: 24 }}>
 
-        {/* LEFT column */}
-        <div>
-          {/* AI Executive Summary */}
-          <div style={{ background: "linear-gradient(135deg, rgba(59,130,246,0.08), rgba(59,130,246,0.03))",
-            border: "1px solid rgba(59,130,246,0.2)", borderRadius: 14, padding: "24px",
-            marginBottom: 20 }}>
-            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 14 }}>
-              <div style={{ fontSize: 12, fontWeight: 700, color: "var(--blue)",
-                letterSpacing: "0.06em" }}>🤖 AI EXECUTIVE SUMMARY</div>
-              <span style={{ fontSize: 11, color: "var(--text-3)", fontFamily: "var(--font-mono)" }}>
-                {insights.confidence}% confidence
-              </span>
+        {/* ── LEFT MAIN ─────────────────────────────────────── */}
+        <div style={{ minWidth: 0 }}>
+
+          {/* AI Executive Summary — most dominant card */}
+          <div style={{ background: "linear-gradient(135deg, rgba(59,130,246,0.1) 0%, rgba(59,130,246,0.04) 100%)",
+            border: "1px solid rgba(59,130,246,0.22)", borderRadius: 16, padding: 24,
+            marginBottom: 20, position: "relative", overflow: "hidden" }}>
+            <div style={{ position: "absolute", top: -30, right: -30, width: 200, height: 200,
+              borderRadius: "50%", pointerEvents: "none",
+              background: "radial-gradient(ellipse, rgba(59,130,246,0.08) 0%, transparent 70%)" }} />
+
+            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center",
+              marginBottom: 16, position: "relative" }}>
+              <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+                <div style={{ width: 28, height: 28, borderRadius: 8,
+                  background: "rgba(59,130,246,0.15)", border: "1px solid rgba(59,130,246,0.3)",
+                  display: "flex", alignItems: "center", justifyContent: "center",
+                  fontSize: 11, fontWeight: 800, color: "#7dd3fc", fontFamily: "var(--font-mono)" }}>AI</div>
+                <span style={{ fontSize: 11, fontWeight: 800, color: "#7dd3fc",
+                  letterSpacing: "0.1em", fontFamily: "var(--font-mono)" }}>
+                  RELATIONSHIP INTELLIGENCE
+                </span>
+              </div>
+              <div style={{ display: "flex", gap: 6, alignItems: "center" }}>
+                {insights.confidence && (
+                  <span style={{ fontSize: 10, fontFamily: "var(--font-mono)", fontWeight: 700,
+                    color: "#7dd3fc", padding: "3px 10px", borderRadius: 20,
+                    background: "rgba(59,130,246,0.12)", border: "1px solid rgba(59,130,246,0.25)" }}>
+                    {insights.confidence}% CONFIDENCE
+                  </span>
+                )}
+                <span style={{ fontSize: 11, fontWeight: 700, padding: "3px 10px", borderRadius: 20,
+                  color: trendColor, background: `${trendColor}15`, border: `1px solid ${trendColor}35` }}>
+                  {trendIcon} {(insights.engagement_trend || "stable").toUpperCase()}
+                </span>
+              </div>
             </div>
-            <div style={{ fontSize: 15, color: "var(--text-1)", lineHeight: 1.7,
-              fontWeight: 500, marginBottom: 16 }}>
-              {insights.executive_summary}
+
+            <div style={{ fontSize: 16, color: "var(--text-1)", lineHeight: 1.75, fontWeight: 500,
+              marginBottom: 20, position: "relative" }}>
+              {insights.executive_summary || "Run an analysis to generate AI insights for this contact."}
             </div>
-            <div style={{ display: "flex", gap: 8 }}>
-              <span style={{ fontSize: 11, padding: "3px 10px", borderRadius: 5,
-                background: "rgba(59,130,246,0.1)", color: "var(--blue)", fontWeight: 600 }}>
-                {insights.preferred_channel?.toUpperCase()} preferred
-              </span>
-              <span style={{ fontSize: 11, padding: "3px 10px", borderRadius: 5,
-                background: "rgba(139,92,246,0.1)", color: "#8b5cf6", fontWeight: 600 }}>
-                {insights.communication_style}
-              </span>
-            </div>
+
+            {latest?.recommended_action && (
+              <div style={{ display: "flex", gap: 14, alignItems: "flex-start",
+                background: "rgba(245,166,35,0.08)", border: "1px solid rgba(245,166,35,0.22)",
+                borderRadius: 10, padding: "14px 16px", position: "relative" }}>
+                <span style={{ fontSize: 16, flexShrink: 0, color: "#f5a623" }}>→</span>
+                <div style={{ flex: 1 }}>
+                  <div style={{ fontSize: 10, fontWeight: 800, color: "#f5a623",
+                    letterSpacing: "0.1em", fontFamily: "var(--font-mono)", marginBottom: 4 }}>
+                    RECOMMENDED ACTION
+                  </div>
+                  <div style={{ fontSize: 14, fontWeight: 600, color: "var(--text-1)", lineHeight: 1.5 }}>
+                    {cleanAI(latest.recommended_action)}
+                  </div>
+                </div>
+              </div>
+            )}
           </div>
 
-          {/* AI Recommended Actions */}
-          <div style={{ background: "var(--bg-card)", border: "1px solid var(--border)",
-            borderRadius: 14, padding: "20px 24px", marginBottom: 20 }}>
-            <div style={{ fontSize: 12, fontWeight: 700, color: "var(--text-3)",
-              letterSpacing: "0.08em", marginBottom: 16 }}>🎯 RECOMMENDED ACTIONS</div>
-            {(insights.recommended_actions || []).map((a, i) => (
-              <div key={i} style={{ display: "flex", gap: 14, padding: "14px 0",
-                borderBottom: i < (insights.recommended_actions.length - 1) ? "1px solid var(--border)" : "none" }}>
-                <div style={{ width: 28, height: 28, borderRadius: "50%", flexShrink: 0,
-                  background: "var(--bg)", border: "1px solid var(--border)",
-                  display: "flex", alignItems: "center", justifyContent: "center",
-                  fontSize: 12, fontWeight: 700, color: "var(--text-3)" }}>{i + 1}</div>
-                <div style={{ flex: 1 }}>
-                  <div style={{ fontSize: 14, fontWeight: 600, color: "var(--text-1)",
-                    marginBottom: 4 }}>{a.action}</div>
-                  <div style={{ fontSize: 12, color: "var(--text-3)", lineHeight: 1.5 }}>{a.reasoning}</div>
+          {/* Communication stats row */}
+          <div style={{ display: "grid", gridTemplateColumns: "repeat(4, 1fr)", gap: 10, marginBottom: 20 }}>
+            {[
+              { label: "Email Threads",   value: insights.email_count      || 0, color: "#7dd3fc", icon: "✉" },
+              { label: "Positive",        value: insights.positive_signals  || 0, color: "#22c55e", icon: "↑" },
+              { label: "Negative",        value: insights.negative_signals  || 0, color: "#ef4444", icon: "↓" },
+              { label: "Total Signals",   value: signals.length,                  color: "#8b5cf6", icon: "◎" },
+            ].map(({ label, value, color, icon }) => (
+              <div key={label} style={{ padding: "16px", borderRadius: 12, textAlign: "center",
+                background: "var(--bg-card)", border: "1px solid var(--border)" }}>
+                <div style={{ fontSize: 9, fontWeight: 700, fontFamily: "var(--font-mono)",
+                  color: "var(--text-3)", letterSpacing: "0.08em", marginBottom: 8 }}>
+                  {icon} {label.toUpperCase()}
                 </div>
-                <div style={{ flexShrink: 0, textAlign: "right" }}>
-                  <div style={{ fontSize: 13, fontWeight: 700, color: "#22c55e" }}>{a.impact}</div>
-                  <div style={{ fontSize: 11, color: "var(--text-3)", marginTop: 2 }}>{a.confidence}% conf.</div>
-                </div>
+                <div style={{ fontSize: 28, fontWeight: 800, color, letterSpacing: -1, lineHeight: 1 }}>{value}</div>
               </div>
             ))}
           </div>
 
-          {/* Activity Timeline */}
+          {/* AI Recommended Actions */}
+          {insights.recommended_actions?.length > 0 && (
+            <div style={{ background: "var(--bg-card)", border: "1px solid var(--border)",
+              borderRadius: 14, padding: "20px 24px", marginBottom: 20 }}>
+              <div style={{ fontSize: 11, fontWeight: 800, color: "var(--text-3)",
+                letterSpacing: "0.1em", marginBottom: 16, fontFamily: "var(--font-mono)" }}>
+                RECOMMENDED ACTIONS
+              </div>
+              {insights.recommended_actions.map((a, i) => (
+                <div key={i} style={{ display: "flex", gap: 16, padding: "16px 0",
+                  borderBottom: i < insights.recommended_actions.length - 1 ? "1px solid var(--border)" : "none" }}>
+                  <div style={{ width: 28, height: 28, borderRadius: "50%", flexShrink: 0,
+                    background: i === 0 ? "rgba(245,166,35,0.15)" : "var(--bg)",
+                    border: `1px solid ${i === 0 ? "rgba(245,166,35,0.4)" : "var(--border)"}`,
+                    display: "flex", alignItems: "center", justifyContent: "center",
+                    fontSize: 11, fontWeight: 800,
+                    color: i === 0 ? "#f5a623" : "var(--text-3)",
+                    fontFamily: "var(--font-mono)" }}>{i + 1}</div>
+                  <div style={{ flex: 1, minWidth: 0 }}>
+                    <div style={{ fontSize: 14, fontWeight: 600, color: "var(--text-1)",
+                      marginBottom: 4, lineHeight: 1.4 }}>{a.action}</div>
+                    {a.reasoning && (
+                      <div style={{ fontSize: 12, color: "var(--text-3)", lineHeight: 1.5 }}>{a.reasoning}</div>
+                    )}
+                  </div>
+                  {(a.impact || a.confidence) && (
+                    <div style={{ flexShrink: 0, textAlign: "right",
+                      display: "flex", flexDirection: "column", gap: 4 }}>
+                      {a.impact && (
+                        <span style={{ fontSize: 11, fontWeight: 700, color: "#22c55e",
+                          padding: "2px 8px", borderRadius: 20,
+                          background: "rgba(34,197,94,0.1)", border: "1px solid rgba(34,197,94,0.25)" }}>
+                          {a.impact}
+                        </span>
+                      )}
+                      {a.confidence && (
+                        <span style={{ fontSize: 10, color: "var(--text-3)",
+                          fontFamily: "var(--font-mono)" }}>{a.confidence}% conf</span>
+                      )}
+                    </div>
+                  )}
+                </div>
+              ))}
+            </div>
+          )}
+
+          {/* Relationship Timeline */}
           <div style={{ background: "var(--bg-card)", border: "1px solid var(--border)",
             borderRadius: 14, padding: "20px 24px", marginBottom: 20 }}>
-            <div style={{ fontSize: 12, fontWeight: 700, color: "var(--text-3)",
-              letterSpacing: "0.08em", marginBottom: 20 }}>🕐 RELATIONSHIP TIMELINE</div>
+            <div style={{ fontSize: 11, fontWeight: 800, color: "var(--text-3)",
+              letterSpacing: "0.1em", marginBottom: 20, fontFamily: "var(--font-mono)" }}>
+              RELATIONSHIP TIMELINE
+            </div>
             {events.length === 0 ? (
-              <div style={{ fontSize: 13, color: "var(--text-3)", textAlign: "center", padding: "20px 0" }}>
-                No events yet — sync Gmail and run analysis to populate the timeline
+              <div style={{ fontSize: 13, color: "var(--text-3)", textAlign: "center",
+                padding: "24px 0", lineHeight: 1.6 }}>
+                Sync Gmail or run an analysis to populate the relationship timeline
               </div>
             ) : (
               <div style={{ position: "relative" }}>
-                <div style={{ position: "absolute", left: 15, top: 0, bottom: 0,
-                  width: 2, background: "var(--border)" }} />
-                {events.map((ev) => {
-                  const icons = { created: "🎯", analyzed: "⚡", gmail_sync: "✉️",
-                    linkedin_sync: "💼", stage_change: "📋", signal: "📡", stale: "⏰" };
+                <div style={{ position: "absolute", left: 15, top: 4, bottom: 4,
+                  width: 1, background: "var(--border)" }} />
+                {events.map((ev, idx) => {
+                  const evConfig = {
+                    created:       { icon: "◎", color: "#3b82f6", bg: "rgba(59,130,246,0.12)" },
+                    analyzed:      { icon: "⚡", color: "#f5a623", bg: "rgba(245,166,35,0.12)" },
+                    gmail_sync:    { icon: "✉", color: "#22c55e", bg: "rgba(34,197,94,0.12)" },
+                    linkedin_sync: { icon: "in", color: "#0a66c2", bg: "rgba(10,102,194,0.12)" },
+                    stage_change:  { icon: "→", color: "#8b5cf6", bg: "rgba(139,92,246,0.12)" },
+                    signal:        { icon: "◈", color: "#f59e0b", bg: "rgba(245,158,11,0.12)" },
+                    stale:         { icon: "!", color: "#ef4444", bg: "rgba(239,68,68,0.12)" },
+                  };
+                  const { icon, color, bg } = evConfig[ev.event_type] || { icon: "·", color: "var(--text-3)", bg: "var(--bg-hover)" };
                   const timeStr = new Date(ev.created_at).toLocaleDateString("en-US",
                     { month: "short", day: "numeric" });
                   return (
-                    <div key={ev.id} style={{ display: "flex", gap: 16, marginBottom: 18, position: "relative" }}>
+                    <div key={ev.id} style={{ display: "flex", gap: 16,
+                      marginBottom: idx < events.length - 1 ? 18 : 0, position: "relative" }}>
                       <div style={{ width: 32, height: 32, borderRadius: "50%", flexShrink: 0,
-                        background: "var(--bg-card)", border: "2px solid var(--border)",
+                        background: bg, border: `1px solid ${color}40`,
                         display: "flex", alignItems: "center", justifyContent: "center",
-                        fontSize: 13, zIndex: 1 }}>
-                        {icons[ev.event_type] || "·"}
+                        fontSize: 11, fontWeight: 700, color, zIndex: 1,
+                        fontFamily: "var(--font-mono)" }}>
+                        {icon}
                       </div>
                       <div style={{ flex: 1, paddingTop: 5 }}>
                         <div style={{ fontSize: 13, color: "var(--text-1)", fontWeight: 500,
                           lineHeight: 1.5 }}>{ev.description}</div>
-                        <div style={{ fontSize: 11, color: "var(--text-3)",
-                          fontFamily: "var(--font-mono)", marginTop: 3 }}>{timeStr}</div>
+                        <div style={{ fontSize: 10, color: "var(--text-3)",
+                          fontFamily: "var(--font-mono)", marginTop: 3, letterSpacing: "0.04em" }}>
+                          {timeStr}
+                        </div>
                       </div>
                     </div>
                   );
@@ -1272,26 +1384,52 @@ function ContactProfile({ dealId, onBack }) {
             )}
           </div>
 
+          {/* Meeting Prep — Talking Points */}
+          {insights.talking_points?.length > 0 && (
+            <div style={{ background: "var(--bg-card)", border: "1px solid var(--border)",
+              borderRadius: 14, padding: "20px 24px", marginBottom: 20 }}>
+              <div style={{ fontSize: 11, fontWeight: 800, color: "var(--text-3)",
+                letterSpacing: "0.1em", marginBottom: 16, fontFamily: "var(--font-mono)" }}>
+                MEETING PREP · TALKING POINTS
+              </div>
+              <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
+                {insights.talking_points.map((tp, i) => (
+                  <div key={i} style={{ display: "flex", gap: 12, padding: "12px 14px",
+                    borderRadius: 8, background: "var(--bg)", border: "1px solid var(--border)" }}>
+                    <span style={{ color: "var(--blue)", fontWeight: 700, flexShrink: 0, fontSize: 12 }}>→</span>
+                    <span style={{ fontSize: 13, color: "var(--text-2)", lineHeight: 1.55 }}>{tp}</span>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
+
           {/* Competitor Intelligence */}
           {competitors.length > 0 && (
             <div style={{ background: "var(--bg-card)", border: "1px solid var(--border)",
               borderRadius: 14, padding: "20px 24px" }}>
-              <div style={{ fontSize: 12, fontWeight: 700, color: "var(--text-3)",
-                letterSpacing: "0.08em", marginBottom: 16 }}>🔎 COMPETITOR LANDSCAPE</div>
+              <div style={{ fontSize: 11, fontWeight: 800, color: "var(--text-3)",
+                letterSpacing: "0.1em", marginBottom: 16, fontFamily: "var(--font-mono)" }}>
+                COMPETITOR LANDSCAPE
+              </div>
               <div style={{ display: "flex", gap: 10, flexWrap: "wrap" }}>
                 {competitors.map(c => {
                   const col = c.threat_level === "high" ? "#ef4444" :
                               c.threat_level === "medium" ? "#f59e0b" : "#22c55e";
                   return (
-                    <div key={c.id} style={{ display: "flex", alignItems: "center", gap: 8,
-                      padding: "8px 14px", borderRadius: 8, background: "var(--bg)",
-                      border: `1px solid ${col}30` }}>
-                      <CompanyAvatar company={c.name} size={24}
+                    <div key={c.id} style={{ display: "flex", alignItems: "center", gap: 10,
+                      padding: "10px 14px", borderRadius: 10, background: "var(--bg)",
+                      border: `1px solid ${col}28` }}>
+                      <CompanyAvatar company={c.name} size={28}
                         contactEmail={`info@${c.name.toLowerCase().replace(/\s+/g,"")}.com`} />
                       <div>
                         <div style={{ fontSize: 13, fontWeight: 600, color: "var(--text-1)" }}>{c.name}</div>
-                        {c.threat_level && <div style={{ fontSize: 10, color: col, fontWeight: 700 }}>
-                          {c.threat_level.toUpperCase()} THREAT</div>}
+                        {c.threat_level && (
+                          <div style={{ fontSize: 10, color: col, fontWeight: 700,
+                            fontFamily: "var(--font-mono)", letterSpacing: "0.04em" }}>
+                            {c.threat_level.toUpperCase()} THREAT
+                          </div>
+                        )}
                       </div>
                     </div>
                   );
@@ -1301,54 +1439,109 @@ function ContactProfile({ dealId, onBack }) {
           )}
         </div>
 
-        {/* RIGHT column */}
-        <div>
+        {/* ── RIGHT SIDEBAR ──────────────────────────────────── */}
+        <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
+
+          {/* Profile Health */}
+          <div style={{ background: "var(--bg-card)", border: "1px solid var(--border)",
+            borderRadius: 14, padding: "20px" }}>
+            <div style={{ fontSize: 11, fontWeight: 800, color: "var(--text-3)",
+              letterSpacing: "0.1em", marginBottom: 18, fontFamily: "var(--font-mono)" }}>
+              PROFILE HEALTH
+            </div>
+            {[
+              { label: "Relationship Strength", value: insights.relationship_score || 0, color: "#3b82f6" },
+              { label: "Influence Level",        value: insights.influence_score    || 0, color: "#8b5cf6" },
+              { label: "Engagement Score",       value: insights.engagement_score   || 0, color: trendColor },
+            ].map(({ label, value, color }) => (
+              <div key={label} style={{ marginBottom: 16 }}>
+                <div style={{ display: "flex", justifyContent: "space-between",
+                  alignItems: "center", marginBottom: 6 }}>
+                  <span style={{ fontSize: 12, color: "var(--text-3)" }}>{label}</span>
+                  <span style={{ fontFamily: "var(--font-mono)", fontSize: 13,
+                    fontWeight: 800, color }}>{value}</span>
+                </div>
+                <div style={{ height: 5, background: "var(--border)", borderRadius: 3, overflow: "hidden" }}>
+                  <div style={{ height: "100%", borderRadius: 3, width: `${value}%`,
+                    background: `linear-gradient(90deg, ${color}99, ${color})`,
+                    transition: "width 1s ease" }} />
+                </div>
+              </div>
+            ))}
+            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center",
+              marginTop: 4, padding: "10px 12px", borderRadius: 8,
+              background: `${trendColor}0d`, border: `1px solid ${trendColor}28` }}>
+              <span style={{ fontSize: 11, color: "var(--text-3)" }}>30-day trend</span>
+              <span style={{ fontSize: 13, fontWeight: 800, color: trendColor }}>
+                {trendIcon} {(insights.engagement_trend || "stable").toUpperCase()}
+              </span>
+            </div>
+          </div>
+
           {/* Personality Insights */}
           <div style={{ background: "var(--bg-card)", border: "1px solid var(--border)",
-            borderRadius: 14, padding: "20px", marginBottom: 16 }}>
-            <div style={{ fontSize: 12, fontWeight: 700, color: "var(--text-3)",
-              letterSpacing: "0.08em", marginBottom: 16 }}>🧠 PERSONALITY INSIGHTS</div>
+            borderRadius: 14, padding: "20px" }}>
+            <div style={{ fontSize: 11, fontWeight: 800, color: "var(--text-3)",
+              letterSpacing: "0.1em", marginBottom: 16, fontFamily: "var(--font-mono)" }}>
+              AI PERSONALITY INSIGHTS
+            </div>
             {[
-              { label: "Communication", value: insights.communication_style, icon: "💬" },
-              { label: "Decision Style", value: insights.decision_style, icon: "🎯" },
-              { label: "Risk Tolerance", value: insights.risk_tolerance, icon: "⚖️" },
-              { label: "Buying Style",   value: insights.buying_style,   icon: "🛒" },
-              { label: "Best Channel",  value: insights.preferred_channel, icon: "📡" },
-            ].map(({ label, value, icon }) => (
-              <div key={label} style={{ display: "flex", justifyContent: "space-between",
-                alignItems: "center", padding: "10px 0",
-                borderBottom: "1px solid var(--border)" }}>
-                <div style={{ fontSize: 12, color: "var(--text-3)" }}>{icon} {label}</div>
-                <div style={{ fontSize: 12, fontWeight: 600, color: "var(--text-1)",
-                  textTransform: "capitalize" }}>{value || "—"}</div>
+              { label: "Communication", value: insights.communication_style, color: "#7dd3fc" },
+              { label: "Decision Style", value: insights.decision_style,     color: "#a78bfa" },
+              { label: "Risk Tolerance", value: insights.risk_tolerance,     color: "#f59e0b" },
+              { label: "Buying Style",   value: insights.buying_style,       color: "#22c55e" },
+              { label: "Best Channel",   value: insights.preferred_channel,  color: "#f472b6" },
+            ].map(({ label, value, color }) => (
+              <div key={label} style={{ marginBottom: 10, display: "flex",
+                justifyContent: "space-between", alignItems: "center",
+                padding: "9px 0", borderBottom: "1px solid var(--border)" }}>
+                <span style={{ fontSize: 11, color: "var(--text-3)" }}>{label}</span>
+                <span style={{ fontSize: 11, fontWeight: 600, padding: "2px 10px",
+                  borderRadius: 20, color, background: `${color}12`, border: `1px solid ${color}28`,
+                  textAlign: "right", textTransform: "capitalize" }}>{value || "—"}</span>
               </div>
             ))}
           </div>
 
           {/* Deal Involvement */}
           <div style={{ background: "var(--bg-card)", border: "1px solid var(--border)",
-            borderRadius: 14, padding: "20px", marginBottom: 16 }}>
-            <div style={{ fontSize: 12, fontWeight: 700, color: "var(--text-3)",
-              letterSpacing: "0.08em", marginBottom: 16 }}>💼 DEAL INVOLVEMENT</div>
-            <div style={{ fontSize: 13, fontWeight: 700, color: "var(--text-1)",
-              marginBottom: 4 }}>{deal.company}</div>
-            <div style={{ fontSize: 22, fontWeight: 800, color: "var(--accent)",
-              marginBottom: 4 }}>${Number(deal.value || 0).toLocaleString()}</div>
+            borderRadius: 14, padding: "20px" }}>
+            <div style={{ fontSize: 11, fontWeight: 800, color: "var(--text-3)",
+              letterSpacing: "0.1em", marginBottom: 16, fontFamily: "var(--font-mono)" }}>
+              DEAL INVOLVEMENT
+            </div>
+            <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 12 }}>
+              <CompanyAvatar company={deal.company} contactEmail={deal.contact_email} size={36} />
+              <div>
+                <div style={{ fontSize: 14, fontWeight: 700, color: "var(--text-1)" }}>{deal.company}</div>
+                <div style={{ fontSize: 11, color: "var(--text-3)" }}>{deal.contact_role}</div>
+              </div>
+            </div>
+            <div style={{ fontSize: 24, fontWeight: 900, color: "var(--accent)",
+              letterSpacing: -0.5, marginBottom: 4 }}>
+              ${Number(deal.value || 0).toLocaleString()}
+            </div>
             <div style={{ fontSize: 12, color: "var(--text-3)", marginBottom: 12 }}>
-              {deal.stage} · {deal.days_stale}d stale
+              {deal.stage}
+              {deal.days_stale > 0 && (
+                <span style={{ marginLeft: 8,
+                  color: deal.days_stale > 30 ? "#ef4444" : deal.days_stale > 14 ? "#f59e0b" : "var(--text-3)" }}>
+                  · {deal.days_stale}d stale
+                </span>
+              )}
             </div>
             {latest && (
               <>
-                <div style={{ display: "flex", justifyContent: "space-between",
-                  fontSize: 12, marginBottom: 6 }}>
+                <div style={{ display: "flex", justifyContent: "space-between", fontSize: 12, marginBottom: 5 }}>
                   <span style={{ color: "var(--text-3)" }}>Close Score</span>
-                  <span style={{ fontWeight: 700, color: RISK[latest.risk_level]?.color }}>
+                  <span style={{ fontWeight: 800, color: riskColors[latest.risk_level]?.color || "var(--text-2)" }}>
                     {latest.close_score}/100
                   </span>
                 </div>
-                <div style={{ height: 5, background: "var(--border)", borderRadius: 3, overflow: "hidden" }}>
+                <div style={{ height: 4, background: "var(--border)", borderRadius: 2, overflow: "hidden" }}>
                   <div style={{ height: "100%", width: `${latest.close_score}%`,
-                    background: RISK[latest.risk_level]?.color, borderRadius: 3 }} />
+                    background: riskColors[latest.risk_level]?.color || "var(--blue)",
+                    borderRadius: 2, transition: "width 1s ease" }} />
                 </div>
               </>
             )}
@@ -1356,37 +1549,30 @@ function ContactProfile({ dealId, onBack }) {
 
           {/* Signal Summary */}
           <div style={{ background: "var(--bg-card)", border: "1px solid var(--border)",
-            borderRadius: 14, padding: "20px", marginBottom: 16 }}>
-            <div style={{ fontSize: 12, fontWeight: 700, color: "var(--text-3)",
-              letterSpacing: "0.08em", marginBottom: 16 }}>📡 SIGNAL SUMMARY</div>
-            {[
-              { label: "Total Signals", value: signals.length, color: "var(--blue)" },
-              { label: "Positive", value: insights.positive_signals, color: "#22c55e" },
-              { label: "Negative", value: insights.negative_signals, color: "#ef4444" },
-              { label: "Email Threads", value: insights.email_count, color: "var(--text-2)" },
-            ].map(({ label, value, color }) => (
-              <div key={label} style={{ display: "flex", justifyContent: "space-between",
-                alignItems: "center", padding: "8px 0", borderBottom: "1px solid var(--border)" }}>
-                <div style={{ fontSize: 12, color: "var(--text-3)" }}>{label}</div>
-                <div style={{ fontSize: 16, fontWeight: 800, color }}>{value}</div>
-              </div>
-            ))}
-          </div>
-
-          {/* Talking Points */}
-          {insights.talking_points?.length > 0 && (
-            <div style={{ background: "var(--bg-card)", border: "1px solid var(--border)",
-              borderRadius: 14, padding: "20px" }}>
-              <div style={{ fontSize: 12, fontWeight: 700, color: "var(--text-3)",
-                letterSpacing: "0.08em", marginBottom: 14 }}>💡 TALKING POINTS</div>
-              {insights.talking_points.map((tp, i) => (
-                <div key={i} style={{ display: "flex", gap: 10, marginBottom: 10,
-                  fontSize: 13, color: "var(--text-2)", lineHeight: 1.5 }}>
-                  <span style={{ color: "var(--blue)", fontWeight: 700, flexShrink: 0 }}>→</span>{tp}
+            borderRadius: 14, padding: "20px" }}>
+            <div style={{ fontSize: 11, fontWeight: 800, color: "var(--text-3)",
+              letterSpacing: "0.1em", marginBottom: 14, fontFamily: "var(--font-mono)" }}>
+              SIGNAL SUMMARY
+            </div>
+            <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 10 }}>
+              {[
+                { label: "Total Signals", value: signals.length,                  color: "#7dd3fc" },
+                { label: "Positive",      value: insights.positive_signals || 0,  color: "#22c55e" },
+                { label: "Negative",      value: insights.negative_signals || 0,  color: "#ef4444" },
+                { label: "Email Threads", value: insights.email_count || 0,       color: "var(--text-2)" },
+              ].map(({ label, value, color }) => (
+                <div key={label} style={{ padding: "12px", borderRadius: 8, textAlign: "center",
+                  background: "var(--bg)", border: "1px solid var(--border)" }}>
+                  <div style={{ fontSize: 20, fontWeight: 900, color, marginBottom: 2 }}>{value}</div>
+                  <div style={{ fontSize: 10, color: "var(--text-3)",
+                    fontFamily: "var(--font-mono)", letterSpacing: "0.04em" }}>
+                    {label.toUpperCase()}
+                  </div>
                 </div>
               ))}
             </div>
-          )}
+          </div>
+
         </div>
       </div>
     </div>
