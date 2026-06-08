@@ -222,7 +222,224 @@ function Logo({ size = 36, showWordmark = true }) {
 }
 
 // ── LOGIN PAGE ───────────────────────────────────────────────
-function LoginPage({ onLogin }) {
+// ── LANDING PAGE ─────────────────────────────────────────────
+function LandingPage({ onGetStarted, theme, onToggleTheme }) {
+  const FEATURES = [
+    { icon: "⚡", color: "#f59e0b", title: "AI Deal Analysis", desc: "Claude AI analyzes every signal and tells you exactly why a deal is at risk — not just that it is." },
+    { icon: "📡", color: "#3b82f6", title: "Signal Detection", desc: "Sync Gmail and LinkedIn to pull real email patterns, news events, and engagement signals automatically." },
+    { icon: "🔎", color: "#8b5cf6", title: "Competitor Intel", desc: "Automatically detect when prospects mention competitors. Get counter-messaging tailored to your deal." },
+    { icon: "🎯", color: "#22c55e", title: "Next Best Action", desc: "Every deal surfaces one clear action with expected impact. No more guessing what to do next." },
+    { icon: "📋", color: "#06b6d4", title: "Meeting Prep", desc: "One click to get a full pre-call brief: talking points, questions, objections, and an opening line." },
+    { icon: "🕐", color: "#ec4899", title: "Deal Timeline", desc: "Every sync, analysis, and stage change logged automatically. Know exactly why a score changed." },
+  ];
+
+  const STATS = [
+    { value: "22%", label: "Average close score increase" },
+    { value: "3×", label: "Faster deal qualification" },
+    { value: "68%", label: "Reduction in stalled deals" },
+  ];
+
+  return (
+    <div style={{ minHeight: "100vh", background: "#080f1a", color: "#f0f4f8",
+      fontFamily: "'Inter', sans-serif" }}>
+
+      {/* Nav */}
+      <nav style={{ position: "fixed", top: 0, left: 0, right: 0, zIndex: 100,
+        display: "flex", alignItems: "center", justifyContent: "space-between",
+        padding: "0 48px", height: 64,
+        background: "rgba(8,15,26,0.85)", backdropFilter: "blur(16px)",
+        borderBottom: "1px solid rgba(255,255,255,0.06)" }}>
+        <Logo size={36} />
+        <div style={{ display: "flex", gap: 12, alignItems: "center" }}>
+          <button onClick={onToggleTheme} style={{ background: "none", border: "none",
+            cursor: "pointer", fontSize: 16, padding: "6px" }}>
+            {theme === "dark" ? "☀️" : "🌙"}
+          </button>
+          <button onClick={onGetStarted} className="btn-sm btn-ghost"
+            style={{ border: "1px solid rgba(255,255,255,0.15)", color: "#f0f4f8",
+              padding: "8px 20px", borderRadius: 8, cursor: "pointer", fontSize: 13, fontWeight: 500 }}>
+            Sign in
+          </button>
+          <button onClick={onGetStarted}
+            style={{ background: "#f5a623", color: "#080f1a", border: "none",
+              padding: "9px 22px", borderRadius: 8, cursor: "pointer",
+              fontSize: 13, fontWeight: 700 }}>
+            Get started free →
+          </button>
+        </div>
+      </nav>
+
+      {/* Hero */}
+      <div style={{ paddingTop: 140, paddingBottom: 100, textAlign: "center",
+        maxWidth: 860, margin: "0 auto", padding: "140px 24px 100px",
+        position: "relative" }}>
+        {/* Glow */}
+        <div style={{ position: "absolute", top: 80, left: "50%", transform: "translateX(-50%)",
+          width: 600, height: 300, borderRadius: "50%", pointerEvents: "none",
+          background: "radial-gradient(ellipse, rgba(59,130,246,0.15) 0%, transparent 70%)" }} />
+
+        <div style={{ display: "inline-flex", alignItems: "center", gap: 8,
+          padding: "5px 14px", borderRadius: 20, marginBottom: 28,
+          background: "rgba(59,130,246,0.1)", border: "1px solid rgba(59,130,246,0.25)",
+          fontSize: 12, fontWeight: 600, color: "#60a5fa", letterSpacing: "0.04em" }}>
+          ⚡ AI-POWERED SALES INTELLIGENCE
+        </div>
+
+        <h1 style={{ fontSize: 62, fontWeight: 900, lineHeight: 1.08,
+          letterSpacing: -2, margin: "0 0 24px",
+          background: "linear-gradient(135deg, #f0f4f8 30%, #94a3b8)",
+          WebkitBackgroundClip: "text", WebkitTextFillColor: "transparent",
+          backgroundClip: "text" }}>
+          Know which deals<br />will close.
+        </h1>
+
+        <p style={{ fontSize: 20, color: "#8fa3b8", lineHeight: 1.6,
+          maxWidth: 560, margin: "0 auto 44px", fontWeight: 400 }}>
+          DealIQ monitors every deal for risk signals, analyzes them with AI,
+          and tells your team exactly what to do next — before deals go cold.
+        </p>
+
+        <div style={{ display: "flex", gap: 12, justifyContent: "center", flexWrap: "wrap" }}>
+          <button onClick={onGetStarted}
+            style={{ background: "#f5a623", color: "#080f1a", border: "none",
+              padding: "14px 32px", borderRadius: 10, cursor: "pointer",
+              fontSize: 15, fontWeight: 700, letterSpacing: -0.2 }}>
+            Start for free →
+          </button>
+          <button onClick={onGetStarted}
+            style={{ background: "rgba(255,255,255,0.06)", color: "#f0f4f8",
+              border: "1px solid rgba(255,255,255,0.12)", padding: "14px 32px",
+              borderRadius: 10, cursor: "pointer", fontSize: 15, fontWeight: 500 }}>
+            Sign in
+          </button>
+        </div>
+
+        <div style={{ marginTop: 20, fontSize: 12, color: "#4a6070" }}>
+          No credit card required · Free to start
+        </div>
+      </div>
+
+      {/* Stats bar */}
+      <div style={{ borderTop: "1px solid rgba(255,255,255,0.06)",
+        borderBottom: "1px solid rgba(255,255,255,0.06)",
+        background: "rgba(255,255,255,0.02)", padding: "32px 48px" }}>
+        <div style={{ maxWidth: 900, margin: "0 auto", display: "flex",
+          justifyContent: "space-around", gap: 24, flexWrap: "wrap" }}>
+          {STATS.map(({ value, label }) => (
+            <div key={label} style={{ textAlign: "center" }}>
+              <div style={{ fontSize: 40, fontWeight: 900, color: "#f5a623",
+                letterSpacing: -1, lineHeight: 1 }}>{value}</div>
+              <div style={{ fontSize: 13, color: "#5a7080", marginTop: 6 }}>{label}</div>
+            </div>
+          ))}
+        </div>
+      </div>
+
+      {/* Features */}
+      <div style={{ maxWidth: 1100, margin: "0 auto", padding: "96px 48px" }}>
+        <div style={{ textAlign: "center", marginBottom: 64 }}>
+          <div style={{ fontSize: 11, fontWeight: 700, letterSpacing: "0.12em",
+            color: "#3b82f6", marginBottom: 14 }}>WHAT DEALIQ DOES</div>
+          <h2 style={{ fontSize: 42, fontWeight: 800, letterSpacing: -1,
+            margin: 0, color: "#f0f4f8" }}>
+            Every feature answers one question:<br />
+            <span style={{ color: "#f5a623" }}>what should I do next?</span>
+          </h2>
+        </div>
+        <div style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: 20 }}>
+          {FEATURES.map(({ icon, color, title, desc }) => (
+            <div key={title} style={{ padding: "28px", borderRadius: 16,
+              background: "rgba(255,255,255,0.03)", border: "1px solid rgba(255,255,255,0.07)",
+              transition: "border-color 0.2s" }}
+              onMouseOver={e => e.currentTarget.style.borderColor = `${color}40`}
+              onMouseOut={e => e.currentTarget.style.borderColor = "rgba(255,255,255,0.07)"}>
+              <div style={{ width: 44, height: 44, borderRadius: 12, marginBottom: 18,
+                background: `${color}15`, border: `1px solid ${color}30`,
+                display: "flex", alignItems: "center", justifyContent: "center", fontSize: 20 }}>
+                {icon}
+              </div>
+              <div style={{ fontSize: 16, fontWeight: 700, color: "#f0f4f8", marginBottom: 8 }}>
+                {title}
+              </div>
+              <div style={{ fontSize: 14, color: "#5a7080", lineHeight: 1.6 }}>
+                {desc}
+              </div>
+            </div>
+          ))}
+        </div>
+      </div>
+
+      {/* How it works */}
+      <div style={{ borderTop: "1px solid rgba(255,255,255,0.06)",
+        background: "rgba(255,255,255,0.015)", padding: "96px 48px" }}>
+        <div style={{ maxWidth: 800, margin: "0 auto", textAlign: "center" }}>
+          <div style={{ fontSize: 11, fontWeight: 700, letterSpacing: "0.12em",
+            color: "#3b82f6", marginBottom: 14 }}>HOW IT WORKS</div>
+          <h2 style={{ fontSize: 40, fontWeight: 800, letterSpacing: -1,
+            marginBottom: 64, color: "#f0f4f8" }}>Up and running in minutes</h2>
+          <div style={{ display: "flex", gap: 0, position: "relative" }}>
+            <div style={{ position: "absolute", top: 22, left: "16.6%", right: "16.6%",
+              height: 1, background: "rgba(255,255,255,0.08)" }} />
+            {[
+              { step: "1", title: "Add your deals", desc: "Import from CSV or add manually. Takes 2 minutes." },
+              { step: "2", title: "Connect signals", desc: "Link Gmail and LinkedIn. DealIQ syncs automatically." },
+              { step: "3", title: "Get intelligence", desc: "AI analyzes every deal and tells you exactly what to do." },
+            ].map(({ step, title, desc }) => (
+              <div key={step} style={{ flex: 1, textAlign: "center", padding: "0 24px" }}>
+                <div style={{ width: 44, height: 44, borderRadius: "50%", margin: "0 auto 20px",
+                  background: "#f5a623", color: "#080f1a", display: "flex",
+                  alignItems: "center", justifyContent: "center",
+                  fontSize: 16, fontWeight: 900, position: "relative", zIndex: 1 }}>
+                  {step}
+                </div>
+                <div style={{ fontSize: 16, fontWeight: 700, color: "#f0f4f8", marginBottom: 8 }}>
+                  {title}
+                </div>
+                <div style={{ fontSize: 14, color: "#5a7080", lineHeight: 1.6 }}>{desc}</div>
+              </div>
+            ))}
+          </div>
+        </div>
+      </div>
+
+      {/* CTA */}
+      <div style={{ padding: "96px 48px", textAlign: "center" }}>
+        <div style={{ maxWidth: 600, margin: "0 auto" }}>
+          <h2 style={{ fontSize: 44, fontWeight: 900, letterSpacing: -1.5,
+            marginBottom: 20, color: "#f0f4f8", lineHeight: 1.1 }}>
+            Stop losing deals<br />
+            <span style={{ color: "#f5a623" }}>you should have won.</span>
+          </h2>
+          <p style={{ fontSize: 17, color: "#5a7080", marginBottom: 36, lineHeight: 1.6 }}>
+            Join sales teams using DealIQ to catch risk early,
+            move faster, and close more.
+          </p>
+          <button onClick={onGetStarted}
+            style={{ background: "#f5a623", color: "#080f1a", border: "none",
+              padding: "16px 40px", borderRadius: 10, cursor: "pointer",
+              fontSize: 16, fontWeight: 700, letterSpacing: -0.2 }}>
+            Get started free →
+          </button>
+          <div style={{ marginTop: 16, fontSize: 12, color: "#2d4258" }}>
+            No credit card · No setup fee · Cancel anytime
+          </div>
+        </div>
+      </div>
+
+      {/* Footer */}
+      <div style={{ borderTop: "1px solid rgba(255,255,255,0.06)",
+        padding: "24px 48px", display: "flex",
+        justifyContent: "space-between", alignItems: "center" }}>
+        <Logo size={28} />
+        <div style={{ fontSize: 12, color: "#2d4258" }}>
+          © 2026 DealIQ · AI-powered sales intelligence
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function LoginPage({ onLogin, onBack }) {
   const [form, setForm]       = useState({ email: "", password: "" });
   const [mode, setMode]       = useState("login");
   const [name, setName]       = useState("");
@@ -320,6 +537,13 @@ function LoginPage({ onLogin }) {
         background: "rgba(4,10,22,0.6)", backdropFilter: "blur(24px)" }}
         className="login-right">
 
+        {onBack && (
+          <button onClick={onBack} style={{ background: "none", border: "none",
+            color: "var(--text-3)", fontSize: 12, cursor: "pointer",
+            marginBottom: 24, padding: 0, display: "flex", alignItems: "center", gap: 4 }}>
+            ← Back to home
+          </button>
+        )}
         <div style={{ fontFamily: "var(--font-mono)", fontSize: 9, letterSpacing: "0.2em",
           color: "var(--text-muted)", marginBottom: 28, textTransform: "uppercase" }}>
           {mode === "login" ? "→ Welcome back" : "→ Get started free"}
@@ -2585,6 +2809,7 @@ export default function App() {
   const [checking, setChecking] = useState(true);
   const [oauthResult, setOauthResult] = useState(null);
   const [theme, setTheme] = useState(() => localStorage.getItem("dealiq_theme") || "dark");
+  const [showLogin, setShowLogin] = useState(false);
 
   useEffect(() => {
     document.documentElement.setAttribute("data-theme", theme);
@@ -2644,7 +2869,9 @@ export default function App() {
     </div>
   );
 
-  if (!user) return <LoginPage onLogin={setUser} />;
+  if (!user) return showLogin
+    ? <LoginPage onLogin={setUser} onBack={() => setShowLogin(false)} />
+    : <LandingPage onGetStarted={() => setShowLogin(true)} theme={theme} onToggleTheme={() => setTheme(t => t === "dark" ? "light" : "dark")} />;
   return <Dashboard user={user} onLogout={handleLogout}
     openSettings={!!oauthResult}
     slackChannel={oauthResult?.type === "slack" ? oauthResult.value : ""}
