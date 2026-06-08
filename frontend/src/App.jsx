@@ -10,6 +10,17 @@ function getDaysStale(deal) {
   return deal.days_stale || 0;
 }
 
+// Strip emojis, bullets, leading dashes from AI-generated text
+function cleanAI(text) {
+  if (!text) return text;
+  return text
+    .replace(/[\u{1F000}-\u{1FFFF}\u{2600}-\u{27FF}\u{2B00}-\u{2BFF}]/gu, "")
+    .replace(/^[\s\-–—•*#]+/, "")
+    .replace(/\s*[•*]\s*/g, " ")
+    .replace(/\s{2,}/g, " ")
+    .trim();
+}
+
 const ERROR_MAP = {
   "Failed to fetch": "Unable to connect to server. Please try again.",
   "Load failed":     "Unable to connect to server. Please try again.",
@@ -604,7 +615,7 @@ function LoginPage({ onLogin, onBack }) {
 // ── ADD DEAL MODAL ───────────────────────────────────────────
 function AddDealModal({ onClose, onAdd }) {
   const [form, setForm]   = useState({ company: "", contact_name: "", contact_email: "",
-    contact_role: "", linkedin_url: "", value: "", stage: "Discovery", notes: "" });
+    contact_role: "", linkedin_url: "", value: "", stage: "Discovery", close_timeline: "", notes: "" });
   const [loading, setLoading] = useState(false);
   const [error, setError]     = useState("");
 
@@ -681,6 +692,21 @@ function AddDealModal({ onClose, onAdd }) {
             </select>
           </div>
 
+          <div style={{ marginBottom: 14 }}>
+            <div style={{ fontFamily: "var(--font-mono)", fontSize: 10,
+              color: "var(--text-3)", letterSpacing: "0.08em",
+              textTransform: "uppercase", marginBottom: 5 }}>Expected Close</div>
+            <select className="field-input" value={form.close_timeline}
+              onChange={e => setForm(f => ({ ...f, close_timeline: e.target.value }))}
+              style={{ marginBottom: 0 }}>
+              <option value="">Unknown</option>
+              <option value="this_week">This week</option>
+              <option value="this_month">This month</option>
+              <option value="next_month">Next month</option>
+              <option value="this_quarter">This quarter</option>
+            </select>
+          </div>
+
           <div style={{ marginBottom: 24 }}>
             <div style={{ fontFamily: "var(--font-mono)", fontSize: 10,
               color: "var(--text-3)", letterSpacing: "0.08em",
@@ -711,10 +737,11 @@ function EditDealModal({ deal, onClose, onSave }) {
     contact_name:  deal.contact_name  || "",
     contact_email: deal.contact_email || "",
     contact_role:  deal.contact_role  || "",
-    linkedin_url:  deal.linkedin_url  || "",
-    value:         deal.value         || "",
-    stage:         deal.stage         || "Discovery",
-    notes:         deal.notes         || "",
+    linkedin_url:    deal.linkedin_url    || "",
+    value:           deal.value           || "",
+    stage:           deal.stage           || "Discovery",
+    close_timeline:  deal.close_timeline  || "",
+    notes:           deal.notes           || "",
   });
   const [loading, setLoading] = useState(false);
   const [error, setError]     = useState("");
@@ -791,6 +818,21 @@ function EditDealModal({ deal, onClose, onSave }) {
               {["Discovery","Proposal Sent","Negotiation","Closing","Won","Lost"].map(s => (
                 <option key={s} value={s}>{s}</option>
               ))}
+            </select>
+          </div>
+
+          <div style={{ marginBottom: 14 }}>
+            <div style={{ fontFamily: "var(--font-mono)", fontSize: 10,
+              color: "var(--text-3)", letterSpacing: "0.08em",
+              textTransform: "uppercase", marginBottom: 5 }}>Expected Close</div>
+            <select className="field-input" value={form.close_timeline}
+              onChange={e => setForm(f => ({ ...f, close_timeline: e.target.value }))}
+              style={{ marginBottom: 0 }}>
+              <option value="">Unknown</option>
+              <option value="this_week">This week</option>
+              <option value="this_month">This month</option>
+              <option value="next_month">Next month</option>
+              <option value="this_quarter">This quarter</option>
             </select>
           </div>
 
@@ -1487,8 +1529,16 @@ function DealDetail({ dealId, onBack, onUpdate, onDelete }) {
             </span>
             {getDaysStale(deal) > 0 && (
               <span style={{ fontFamily: "var(--font-mono)", fontSize: 11,
-                color: getDaysStale(deal) > 14 ? "var(--risk-high)" : getDaysStale(deal) > 7 ? "var(--risk-med)" : "var(--text-3)" }}>
-                {getDaysStale(deal)}d stale
+                color: getDaysStale(deal) > 30 ? "var(--risk-high)" : getDaysStale(deal) > 14 ? "var(--risk-high)" : getDaysStale(deal) > 7 ? "var(--risk-med)" : "var(--text-3)" }}>
+                {getDaysStale(deal) > 30 ? "zombie deal" : `${getDaysStale(deal)}d stale`}
+              </span>
+            )}
+            {deal.close_timeline && (
+              <span style={{ fontFamily: "var(--font-mono)", fontSize: 11, padding: "1px 8px",
+                borderRadius: 4,
+                background: deal.close_timeline === "this_week" ? "rgba(34,197,94,0.12)" : "rgba(59,130,246,0.1)",
+                color: deal.close_timeline === "this_week" ? "var(--risk-low)" : "var(--blue)" }}>
+                closes {deal.close_timeline.replace(/_/g, " ")}
               </span>
             )}
           </div>
@@ -1545,7 +1595,7 @@ function DealDetail({ dealId, onBack, onUpdate, onDelete }) {
                   background: r?.color, transition: "width 1.2s cubic-bezier(0.4,0,0.2,1)" }} />
               </div>
               <div style={{ fontSize: 13, color: "var(--text-2)", lineHeight: 1.6, fontWeight: 500 }}>
-                {analysis.stall_reason}
+                {cleanAI(analysis.stall_reason)}
               </div>
               {analyzedAgo && (
                 <div style={{ fontSize: 11, color: "var(--text-muted)", fontFamily: "var(--font-mono)", marginTop: 8 }}>
@@ -1667,7 +1717,7 @@ function DealDetail({ dealId, onBack, onUpdate, onDelete }) {
             <div style={{ fontSize: 11, fontWeight: 700, color: "var(--blue)",
               letterSpacing: "0.06em", marginBottom: 6 }}>NEXT BEST ACTION</div>
             <div style={{ fontSize: 14, fontWeight: 600, color: "var(--text-1)",
-              lineHeight: 1.5 }}>{analysis.recommended_action}</div>
+              lineHeight: 1.5 }}>{cleanAI(analysis.recommended_action)}</div>
           </div>
           <button onClick={() => setTab("draft")}
             style={{ flexShrink: 0, padding: "7px 14px", borderRadius: 7,
@@ -1799,10 +1849,10 @@ function DealDetail({ dealId, onBack, onUpdate, onDelete }) {
                   <div style={{ fontSize: 11, fontWeight: 600, color: "var(--blue)",
                     letterSpacing: "0.06em", marginBottom: 8 }}>🎯 AI RECOMMENDATION</div>
                   <div style={{ fontSize: 15, fontWeight: 700, color: "var(--text-1)", marginBottom: 6 }}>
-                    {analysis.recommended_action}
+                    {cleanAI(analysis.recommended_action)}
                   </div>
                   <div style={{ fontSize: 13, color: "var(--text-2)", lineHeight: 1.6 }}>
-                    {analysis.insight}
+                    {cleanAI(analysis.insight)}
                   </div>
                 </div>
                 {/* 2×2 scannable cards */}
@@ -1810,7 +1860,7 @@ function DealDetail({ dealId, onBack, onUpdate, onDelete }) {
                   <div className="insight-card">
                     <div className="insight-card-icon">⚠️</div>
                     <div className="insight-card-label">Risk Factor</div>
-                    <div className="insight-card-value">{analysis.stall_reason}</div>
+                    <div className="insight-card-value">{cleanAI(analysis.stall_reason)}</div>
                   </div>
                   <div className="insight-card">
                     <div className="insight-card-icon">📈</div>
@@ -1849,7 +1899,7 @@ function DealDetail({ dealId, onBack, onUpdate, onDelete }) {
                   <div style={{ fontSize: 11, fontWeight: 600, color: "var(--blue)",
                     letterSpacing: "0.06em", marginBottom: 8 }}>🎯 NEXT ACTION</div>
                   <div style={{ fontSize: 15, fontWeight: 600, color: "var(--text-1)", lineHeight: 1.7 }}>
-                    {analysis.recommended_action}
+                    {cleanAI(analysis.recommended_action)}
                   </div>
                 </div>
               </div>
@@ -1965,12 +2015,12 @@ function DealDetail({ dealId, onBack, onUpdate, onDelete }) {
                       SUBJECT
                     </div>
                     <div style={{ fontSize: 14, fontWeight: 600, color: "var(--text-1)" }}>
-                      {analysis.draft_email_subject}
+                      {cleanAI(analysis.draft_email_subject)}
                     </div>
                   </div>
                   <button onClick={() => {
                     navigator.clipboard.writeText(
-                      `Subject: ${analysis.draft_email_subject}\n\n${analysis.draft_email_body}`
+                      `Subject: ${cleanAI(analysis.draft_email_subject)}\n\n${cleanAI(analysis.draft_email_body)}`
                     );
                     setCopied(true); setTimeout(() => setCopied(false), 2000);
                   }} className="btn-sm"
@@ -1990,7 +2040,7 @@ function DealDetail({ dealId, onBack, onUpdate, onDelete }) {
                     letterSpacing: "0.1em", color: "var(--blue)", marginBottom: 10 }}>BODY</div>
                   <div style={{ fontSize: 13, lineHeight: 1.8, color: "var(--text-2)",
                     whiteSpace: "pre-wrap" }}>
-                    {analysis.draft_email_body}
+                    {cleanAI(analysis.draft_email_body)}
                   </div>
                 </div>
               </div>
@@ -2296,7 +2346,7 @@ function Section({ label, content, last = false }) {
         <div style={{ fontFamily: "var(--font-mono)", fontSize: 10, letterSpacing: "0.12em",
           color: "var(--blue-light)", textTransform: "uppercase", fontWeight: 700 }}>{label}</div>
       </div>
-      <div style={{ fontSize: 14, lineHeight: 1.8, color: "var(--text-2)", paddingLeft: 11 }}>{content}</div>
+      <div style={{ fontSize: 14, lineHeight: 1.8, color: "var(--text-2)", paddingLeft: 11 }}>{cleanAI(content)}</div>
     </div>
   );
 }
@@ -2570,7 +2620,11 @@ function Dashboard({ user, onLogout, openSettings = false, slackChannel = "", gm
       d.contact_name.toLowerCase().includes(q) ||
       (d.contact_email || "").toLowerCase().includes(q) ||
       (d.stage || "").toLowerCase().includes(q);
-    const matchesStage = stageFilter === "All" || d.stage === stageFilter;
+    const matchesStage = stageFilter === "All"
+      ? true
+      : stageFilter === "Zombies"
+      ? getDaysStale(d) >= 30
+      : d.stage === stageFilter;
     return matchesQuery && matchesStage;
   });
 
@@ -2676,7 +2730,7 @@ function Dashboard({ user, onLogout, openSettings = false, slackChannel = "", gm
 
             {/* Stage filter pills */}
             <div style={{ display: "flex", gap: 5, flexWrap: "wrap" }}>
-              {["All", "Discovery", "Proposal Sent", "Negotiation", "Closing"].map(s => (
+              {["All", "Discovery", "Proposal Sent", "Negotiation", "Closing", "Zombies"].map(s => (
                 <button key={s} onClick={() => setStageFilter(s)}
                   style={{
                     fontFamily: "var(--font-mono)", fontSize: 9, letterSpacing: "0.05em",
@@ -2743,8 +2797,13 @@ function Dashboard({ user, onLogout, openSettings = false, slackChannel = "", gm
                     <div style={{ fontSize: 11, color: "var(--text-3)" }}>
                       {deal.contact_name}
                       {getDaysStale(deal) > 0 && (
-                        <span style={{ marginLeft: 6, color: getDaysStale(deal) > 14 ? "var(--risk-high)" : getDaysStale(deal) > 7 ? "var(--risk-med)" : "var(--text-3)" }}>
-                          · {getDaysStale(deal)}d stale
+                        <span style={{ marginLeft: 6, color: getDaysStale(deal) > 30 ? "var(--risk-high)" : getDaysStale(deal) > 14 ? "var(--risk-high)" : getDaysStale(deal) > 7 ? "var(--risk-med)" : "var(--text-3)" }}>
+                          · {getDaysStale(deal) > 30 ? "🧟 zombie" : `${getDaysStale(deal)}d stale`}
+                        </span>
+                      )}
+                      {deal.close_timeline && (
+                        <span style={{ marginLeft: 6, color: deal.close_timeline === "this_week" ? "var(--risk-low)" : "var(--blue)" }}>
+                          · {deal.close_timeline.replace("_", " ")}
                         </span>
                       )}
                     </div>

@@ -48,6 +48,8 @@ Rules:
 - Never be generic. Every field must be specific to this deal.
 - Draft email must NOT sound like a follow-up template.
 - Weight negative signals more heavily — deals die quietly.
+- NO emojis, bullet points, dashes, or markdown in any text field. Plain prose sentences only.
+- recommended_action must be a single clear sentence starting with a verb. No lists.
 `;
 
 async function analyzeDeal(deal, signals) {

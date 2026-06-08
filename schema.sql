@@ -31,6 +31,7 @@ create table deals (
   stage text default 'Discovery',
   notes text,
   days_stale integer default 0,
+  close_timeline text, -- this_week | this_month | next_month | this_quarter
   last_activity_at timestamptz default now(),
   created_at timestamptz default now(),
   updated_at timestamptz default now()
