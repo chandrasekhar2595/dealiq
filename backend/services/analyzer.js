@@ -48,8 +48,10 @@ Rules:
 - Never be generic. Every field must be specific to this deal.
 - Draft email must NOT sound like a follow-up template.
 - Weight negative signals more heavily — deals die quietly.
-- NO emojis, bullet points, dashes, or markdown in any text field. Plain prose sentences only.
-- recommended_action must be a single clear sentence starting with a verb. No lists.
+- NO emojis, bullet points, dashes, markdown, or parentheses in any text field. Plain prose only.
+- recommended_action: ONE sentence, max 15 words, starts with a verb. Example: "Call Sarah this week and reference her board nomination directly."
+- stall_reason: 1-2 sentences max. No em dashes.
+- insight: 2-3 sentences max. No em dashes.
 `;
 
 async function analyzeDeal(deal, signals) {
