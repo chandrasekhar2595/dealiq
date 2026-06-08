@@ -1832,44 +1832,33 @@ function DealDetail({ dealId, onBack, onUpdate, onDelete }) {
                   {(analysis.urgency || "").replace("_", " ")}
                 </span>
               </div>
-              <div style={{ fontSize: 20, fontWeight: 700, color: r?.color, marginBottom: 12, letterSpacing: -0.3 }}>
-                {analysis.close_score >= 70 ? "Strong position" :
-                 analysis.close_score >= 50 ? "Needs attention" : "At risk of stalling"}
+              {/* Forecast narrative */}
+              <div style={{ marginBottom: 10 }}>
+                <span style={{ fontSize: 20, fontWeight: 700, color: r?.color, letterSpacing: -0.3 }}>
+                  {analysis.close_score}% likely to close
+                  {deal.close_timeline ? ` ${deal.close_timeline.replace(/_/g, " ")}` : ""}
+                </span>
+                {analysis.forecast_confidence && (
+                  <span style={{ fontSize: 13, fontWeight: 500, color: "var(--text-3)", marginLeft: 8 }}>
+                    — {analysis.forecast_confidence} confidence
+                  </span>
+                )}
               </div>
               {/* Progress bar */}
-              <div style={{ height: 6, background: "var(--border)", borderRadius: 3, overflow: "hidden", marginBottom: 8 }}>
+              <div style={{ height: 5, background: "var(--border)", borderRadius: 3, overflow: "hidden", marginBottom: 10 }}>
                 <div style={{ height: "100%", borderRadius: 3, width: `${analysis.close_score}%`,
                   background: r?.color, transition: "width 1.2s cubic-bezier(0.4,0,0.2,1)" }} />
               </div>
-              <div style={{ fontSize: 13, color: "var(--text-2)", lineHeight: 1.6, fontWeight: 500, marginBottom: 12 }}>
-                {cleanAI(analysis.stall_reason)}
-              </div>
-
-              {/* Supporting signals + forecast confidence */}
+              {/* Because: supporting signals */}
               {analysis.supporting_signals?.length > 0 && (
-                <div style={{ marginBottom: 10 }}>
-                  <div style={{ display: "flex", gap: 6, flexWrap: "wrap" }}>
-                    {analysis.supporting_signals.map((sig, i) => (
-                      <span key={i} style={{ fontSize: 11, padding: "2px 10px", borderRadius: 20,
-                        background: "var(--bg-hover)", border: "1px solid var(--border)",
-                        color: "var(--text-2)", fontWeight: 500 }}>
-                        {sig}
-                      </span>
-                    ))}
-                    {analysis.forecast_confidence && (
-                      <span style={{ fontSize: 11, padding: "2px 10px", borderRadius: 20, fontWeight: 700,
-                        background: analysis.forecast_confidence === "high" ? "rgba(34,197,94,0.1)" :
-                                    analysis.forecast_confidence === "medium" ? "rgba(245,158,11,0.1)" : "rgba(239,68,68,0.1)",
-                        border: `1px solid ${analysis.forecast_confidence === "high" ? "rgba(34,197,94,0.3)" :
-                                             analysis.forecast_confidence === "medium" ? "rgba(245,158,11,0.3)" : "rgba(239,68,68,0.3)"}`,
-                        color: analysis.forecast_confidence === "high" ? "var(--risk-low)" :
-                               analysis.forecast_confidence === "medium" ? "var(--risk-med)" : "var(--risk-high)" }}>
-                        {analysis.forecast_confidence} confidence
-                      </span>
-                    )}
-                  </div>
+                <div style={{ fontSize: 12, color: "var(--text-3)", marginBottom: 10, lineHeight: 1.5 }}>
+                  <span style={{ fontWeight: 600, color: "var(--text-2)" }}>Because: </span>
+                  {analysis.supporting_signals.join(" · ")}
                 </div>
               )}
+              <div style={{ fontSize: 13, color: "var(--text-2)", lineHeight: 1.6, fontWeight: 500, marginBottom: 8 }}>
+                {cleanAI(analysis.stall_reason)}
+              </div>
 
               {analyzedAgo && (
                 <div style={{ fontSize: 11, color: "var(--text-muted)", fontFamily: "var(--font-mono)", marginTop: 4 }}>
@@ -3209,15 +3198,26 @@ function Dashboard({ user, onLogout, openSettings = false, slackChannel = "", gm
                       {deal.contact_name}
                       {getDaysStale(deal) > 0 && (
                         <span style={{ marginLeft: 6, color: getDaysStale(deal) > 30 ? "var(--risk-high)" : getDaysStale(deal) > 14 ? "var(--risk-high)" : getDaysStale(deal) > 7 ? "var(--risk-med)" : "var(--text-3)" }}>
-                          · {getDaysStale(deal) > 30 ? "🧟 zombie" : `${getDaysStale(deal)}d stale`}
-                        </span>
-                      )}
-                      {deal.close_timeline && (
-                        <span style={{ marginLeft: 6, color: deal.close_timeline === "this_week" ? "var(--risk-low)" : "var(--blue)" }}>
-                          · {deal.close_timeline.replace("_", " ")}
+                          · {getDaysStale(deal) > 30 ? "zombie" : `${getDaysStale(deal)}d stale`}
                         </span>
                       )}
                     </div>
+                    {a && (
+                      <div style={{ fontSize: 11, marginTop: 3, fontWeight: 600,
+                        color: rk === "high" ? "var(--risk-high)" : rk === "low" ? "var(--risk-low)" : "var(--risk-med)" }}>
+                        {a.close_score}% likely
+                        {deal.close_timeline && (
+                          <span style={{ fontWeight: 400, color: deal.close_timeline === "this_week" ? "var(--risk-low)" : "var(--blue)" }}>
+                            {" · "}{deal.close_timeline.replace(/_/g, " ")}
+                          </span>
+                        )}
+                        {a.forecast_confidence && (
+                          <span style={{ fontWeight: 400, color: "var(--text-3)" }}>
+                            {" · "}{a.forecast_confidence} conf
+                          </span>
+                        )}
+                      </div>
+                    )}
                   </div>
                   <div style={{ display: "flex", flexDirection: "column", alignItems: "flex-end", gap: 6, flexShrink: 0 }}>
                     {rk && (
