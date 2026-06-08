@@ -32,6 +32,7 @@ create table deals (
   notes text,
   days_stale integer default 0,
   close_timeline text, -- this_week | this_month | next_month | this_quarter
+  lead_source text,   -- website | sdr | cold_call | inbound | referral | event | partner
   last_activity_at timestamptz default now(),
   created_at timestamptz default now(),
   updated_at timestamptz default now()
@@ -93,6 +94,8 @@ create table analyses (
   draft_email_subject text,
   draft_email_body text,
   signal_count integer default 0,
+  forecast_confidence text,
+  supporting_signals jsonb,
   analyzed_at timestamptz default now()
 );
 

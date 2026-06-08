@@ -636,7 +636,7 @@ function LoginPage({ onLogin, onBack }) {
 // ── ADD DEAL MODAL ───────────────────────────────────────────
 function AddDealModal({ onClose, onAdd }) {
   const [form, setForm]   = useState({ company: "", contact_name: "", contact_email: "",
-    contact_role: "", linkedin_url: "", value: "", stage: "Discovery", close_timeline: "", notes: "" });
+    contact_role: "", linkedin_url: "", value: "", stage: "Discovery", close_timeline: "", lead_source: "", notes: "" });
   const [loading, setLoading] = useState(false);
   const [error, setError]     = useState("");
 
@@ -713,19 +713,38 @@ function AddDealModal({ onClose, onAdd }) {
             </select>
           </div>
 
-          <div style={{ marginBottom: 14 }}>
-            <div style={{ fontFamily: "var(--font-mono)", fontSize: 10,
-              color: "var(--text-3)", letterSpacing: "0.08em",
-              textTransform: "uppercase", marginBottom: 5 }}>Expected Close</div>
-            <select className="field-input" value={form.close_timeline}
-              onChange={e => setForm(f => ({ ...f, close_timeline: e.target.value }))}
-              style={{ marginBottom: 0 }}>
-              <option value="">Unknown</option>
-              <option value="this_week">This week</option>
-              <option value="this_month">This month</option>
-              <option value="next_month">Next month</option>
-              <option value="this_quarter">This quarter</option>
-            </select>
+          <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 10, marginBottom: 14 }}>
+            <div>
+              <div style={{ fontFamily: "var(--font-mono)", fontSize: 10,
+                color: "var(--text-3)", letterSpacing: "0.08em",
+                textTransform: "uppercase", marginBottom: 5 }}>Expected Close</div>
+              <select className="field-input" value={form.close_timeline}
+                onChange={e => setForm(f => ({ ...f, close_timeline: e.target.value }))}
+                style={{ marginBottom: 0 }}>
+                <option value="">Unknown</option>
+                <option value="this_week">This week</option>
+                <option value="this_month">This month</option>
+                <option value="next_month">Next month</option>
+                <option value="this_quarter">This quarter</option>
+              </select>
+            </div>
+            <div>
+              <div style={{ fontFamily: "var(--font-mono)", fontSize: 10,
+                color: "var(--text-3)", letterSpacing: "0.08em",
+                textTransform: "uppercase", marginBottom: 5 }}>Lead Source</div>
+              <select className="field-input" value={form.lead_source}
+                onChange={e => setForm(f => ({ ...f, lead_source: e.target.value }))}
+                style={{ marginBottom: 0 }}>
+                <option value="">Unknown</option>
+                <option value="inbound">Inbound</option>
+                <option value="website">Website</option>
+                <option value="sdr">SDR Outreach</option>
+                <option value="cold_call">Cold Call</option>
+                <option value="referral">Referral</option>
+                <option value="event">Event</option>
+                <option value="partner">Partner</option>
+              </select>
+            </div>
           </div>
 
           <div style={{ marginBottom: 24 }}>
@@ -762,6 +781,7 @@ function EditDealModal({ deal, onClose, onSave }) {
     value:           deal.value           || "",
     stage:           deal.stage           || "Discovery",
     close_timeline:  deal.close_timeline  || "",
+    lead_source:     deal.lead_source     || "",
     notes:           deal.notes           || "",
   });
   const [loading, setLoading] = useState(false);
@@ -842,19 +862,38 @@ function EditDealModal({ deal, onClose, onSave }) {
             </select>
           </div>
 
-          <div style={{ marginBottom: 14 }}>
-            <div style={{ fontFamily: "var(--font-mono)", fontSize: 10,
-              color: "var(--text-3)", letterSpacing: "0.08em",
-              textTransform: "uppercase", marginBottom: 5 }}>Expected Close</div>
-            <select className="field-input" value={form.close_timeline}
-              onChange={e => setForm(f => ({ ...f, close_timeline: e.target.value }))}
-              style={{ marginBottom: 0 }}>
-              <option value="">Unknown</option>
-              <option value="this_week">This week</option>
-              <option value="this_month">This month</option>
-              <option value="next_month">Next month</option>
-              <option value="this_quarter">This quarter</option>
-            </select>
+          <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 10, marginBottom: 14 }}>
+            <div>
+              <div style={{ fontFamily: "var(--font-mono)", fontSize: 10,
+                color: "var(--text-3)", letterSpacing: "0.08em",
+                textTransform: "uppercase", marginBottom: 5 }}>Expected Close</div>
+              <select className="field-input" value={form.close_timeline}
+                onChange={e => setForm(f => ({ ...f, close_timeline: e.target.value }))}
+                style={{ marginBottom: 0 }}>
+                <option value="">Unknown</option>
+                <option value="this_week">This week</option>
+                <option value="this_month">This month</option>
+                <option value="next_month">Next month</option>
+                <option value="this_quarter">This quarter</option>
+              </select>
+            </div>
+            <div>
+              <div style={{ fontFamily: "var(--font-mono)", fontSize: 10,
+                color: "var(--text-3)", letterSpacing: "0.08em",
+                textTransform: "uppercase", marginBottom: 5 }}>Lead Source</div>
+              <select className="field-input" value={form.lead_source}
+                onChange={e => setForm(f => ({ ...f, lead_source: e.target.value }))}
+                style={{ marginBottom: 0 }}>
+                <option value="">Unknown</option>
+                <option value="inbound">Inbound</option>
+                <option value="website">Website</option>
+                <option value="sdr">SDR Outreach</option>
+                <option value="cold_call">Cold Call</option>
+                <option value="referral">Referral</option>
+                <option value="event">Event</option>
+                <option value="partner">Partner</option>
+              </select>
+            </div>
           </div>
 
           <div style={{ marginBottom: 24 }}>
@@ -1615,11 +1654,38 @@ function DealDetail({ dealId, onBack, onUpdate, onDelete }) {
                 <div style={{ height: "100%", borderRadius: 3, width: `${analysis.close_score}%`,
                   background: r?.color, transition: "width 1.2s cubic-bezier(0.4,0,0.2,1)" }} />
               </div>
-              <div style={{ fontSize: 13, color: "var(--text-2)", lineHeight: 1.6, fontWeight: 500 }}>
+              <div style={{ fontSize: 13, color: "var(--text-2)", lineHeight: 1.6, fontWeight: 500, marginBottom: 12 }}>
                 {cleanAI(analysis.stall_reason)}
               </div>
+
+              {/* Supporting signals + forecast confidence */}
+              {analysis.supporting_signals?.length > 0 && (
+                <div style={{ marginBottom: 10 }}>
+                  <div style={{ display: "flex", gap: 6, flexWrap: "wrap" }}>
+                    {analysis.supporting_signals.map((sig, i) => (
+                      <span key={i} style={{ fontSize: 11, padding: "2px 10px", borderRadius: 20,
+                        background: "var(--bg-hover)", border: "1px solid var(--border)",
+                        color: "var(--text-2)", fontWeight: 500 }}>
+                        {sig}
+                      </span>
+                    ))}
+                    {analysis.forecast_confidence && (
+                      <span style={{ fontSize: 11, padding: "2px 10px", borderRadius: 20, fontWeight: 700,
+                        background: analysis.forecast_confidence === "high" ? "rgba(34,197,94,0.1)" :
+                                    analysis.forecast_confidence === "medium" ? "rgba(245,158,11,0.1)" : "rgba(239,68,68,0.1)",
+                        border: `1px solid ${analysis.forecast_confidence === "high" ? "rgba(34,197,94,0.3)" :
+                                             analysis.forecast_confidence === "medium" ? "rgba(245,158,11,0.3)" : "rgba(239,68,68,0.3)"}`,
+                        color: analysis.forecast_confidence === "high" ? "var(--risk-low)" :
+                               analysis.forecast_confidence === "medium" ? "var(--risk-med)" : "var(--risk-high)" }}>
+                        {analysis.forecast_confidence} confidence
+                      </span>
+                    )}
+                  </div>
+                </div>
+              )}
+
               {analyzedAgo && (
-                <div style={{ fontSize: 11, color: "var(--text-muted)", fontFamily: "var(--font-mono)", marginTop: 8 }}>
+                <div style={{ fontSize: 11, color: "var(--text-muted)", fontFamily: "var(--font-mono)", marginTop: 4 }}>
                   Last analyzed {analyzedAgo}
                 </div>
               )}
@@ -2610,11 +2676,142 @@ function SettingsModal({ user, onClose, slackChannel, gmailEmail, justConnected 
 }
 
 // ── MAIN DASHBOARD ───────────────────────────────────────────
+// ── ANALYTICS DASHBOARD ──────────────────────────────────────
+function AnalyticsDashboard({ deals, onBack }) {
+  const analyzed = deals.filter(d => d.latest_analysis);
+  const won       = deals.filter(d => d.stage === "Won");
+  const lost      = deals.filter(d => d.stage === "Lost");
+  const closed    = won.length + lost.length;
+  const winRate   = closed > 0 ? Math.round((won.length / closed) * 100) : null;
+  const zombies   = deals.filter(d => getDaysStale(d) >= 30 && d.stage !== "Won" && d.stage !== "Lost");
+  const highRisk  = deals.filter(d => d.latest_analysis?.risk_level === "high");
+  const avgScore  = analyzed.length > 0
+    ? Math.round(analyzed.reduce((s, d) => s + (d.latest_analysis?.close_score || 0), 0) / analyzed.length)
+    : null;
+  const totalPipeline = deals.reduce((s, d) => s + Number(d.value || 0), 0);
+  const forecast = deals.reduce((s, d) => {
+    const score = d.latest_analysis?.close_score;
+    return s + (score ? Number(d.value || 0) * score / 100 : 0);
+  }, 0);
+  const forecastAccuracy = totalPipeline > 0 ? Math.round((forecast / totalPipeline) * 100) : 0;
+
+  const stageBreakdown = ["Discovery","Proposal Sent","Negotiation","Closing","Won","Lost"].map(stage => ({
+    stage,
+    count: deals.filter(d => d.stage === stage).length,
+    value: deals.filter(d => d.stage === stage).reduce((s, d) => s + Number(d.value || 0), 0),
+  })).filter(s => s.count > 0);
+
+  const maxStageValue = Math.max(...stageBreakdown.map(s => s.value), 1);
+
+  const KPICard = ({ label, value, sub, color = "var(--text-1)", icon }) => (
+    <div style={{ background: "var(--bg-card)", border: "1px solid var(--border)",
+      borderRadius: 14, padding: "24px" }}>
+      <div style={{ fontSize: 28, marginBottom: 8 }}>{icon}</div>
+      <div style={{ fontSize: 32, fontWeight: 900, color, letterSpacing: -1, lineHeight: 1 }}>{value ?? "—"}</div>
+      <div style={{ fontSize: 13, fontWeight: 600, color: "var(--text-2)", marginTop: 6 }}>{label}</div>
+      {sub && <div style={{ fontSize: 12, color: "var(--text-3)", marginTop: 4 }}>{sub}</div>}
+    </div>
+  );
+
+  return (
+    <div className="main-panel" style={{ flex: 1, padding: "32px 40px", overflowY: "auto" }}>
+      <div style={{ display: "flex", alignItems: "center", gap: 16, marginBottom: 32 }}>
+        <button onClick={onBack} className="btn-sm btn-ghost">← Back</button>
+        <div>
+          <div style={{ fontSize: 24, fontWeight: 800, color: "var(--text-1)", letterSpacing: -0.5 }}>
+            Pipeline Analytics
+          </div>
+          <div style={{ fontSize: 13, color: "var(--text-3)", marginTop: 2 }}>
+            {deals.length} deals · {analyzed.length} analyzed
+          </div>
+        </div>
+      </div>
+
+      {/* KPI grid */}
+      <div style={{ display: "grid", gridTemplateColumns: "repeat(4, 1fr)", gap: 16, marginBottom: 28 }}>
+        <KPICard icon="💰" label="Total Pipeline" value={`$${totalPipeline >= 1000 ? (totalPipeline/1000).toFixed(0)+"K" : totalPipeline}`} color="var(--text-1)" />
+        <KPICard icon="🎯" label="Weighted Forecast" value={`$${forecast >= 1000 ? (forecast/1000).toFixed(0)+"K" : Math.round(forecast)}`}
+          sub={`${forecastAccuracy}% of pipeline`} color="var(--risk-low)" />
+        <KPICard icon="📈" label="Win Rate" value={winRate !== null ? `${winRate}%` : "—"}
+          sub={closed > 0 ? `${won.length} won / ${lost.length} lost` : "No closed deals yet"} color={winRate >= 50 ? "var(--risk-low)" : winRate !== null ? "var(--risk-med)" : "var(--text-3)"} />
+        <KPICard icon="⚡" label="Avg Close Score" value={avgScore !== null ? `${avgScore}` : "—"}
+          sub={`${analyzed.length} deals analyzed`} color={avgScore >= 60 ? "var(--risk-low)" : avgScore >= 40 ? "var(--risk-med)" : "var(--risk-high)"} />
+      </div>
+      <div style={{ display: "grid", gridTemplateColumns: "repeat(4, 1fr)", gap: 16, marginBottom: 32 }}>
+        <KPICard icon="🚨" label="High Risk Deals" value={highRisk.length}
+          sub={highRisk.length > 0 ? highRisk.map(d => d.company).join(", ") : "No high risk deals"} color={highRisk.length > 0 ? "var(--risk-high)" : "var(--risk-low)"} />
+        <KPICard icon="🧟" label="Zombie Deals" value={zombies.length}
+          sub={zombies.length > 0 ? "30+ days no activity" : "Pipeline is healthy"} color={zombies.length > 0 ? "var(--risk-high)" : "var(--risk-low)"} />
+        <KPICard icon="🔍" label="Unanalyzed" value={deals.length - analyzed.length}
+          sub="Need AI analysis" color={deals.length - analyzed.length > 0 ? "var(--risk-med)" : "var(--risk-low)"} />
+        <KPICard icon="📊" label="Active Deals" value={deals.filter(d => d.stage !== "Won" && d.stage !== "Lost").length}
+          sub="Excluding won/lost" color="var(--blue)" />
+      </div>
+
+      {/* Pipeline by stage */}
+      <div style={{ background: "var(--bg-card)", border: "1px solid var(--border)",
+        borderRadius: 14, padding: "24px", marginBottom: 24 }}>
+        <div style={{ fontSize: 14, fontWeight: 700, color: "var(--text-1)", marginBottom: 20 }}>
+          Pipeline by Stage
+        </div>
+        {stageBreakdown.map(({ stage, count, value }) => {
+          const col = STAGE_COLOR[stage] || "var(--blue)";
+          const pct = Math.round((value / maxStageValue) * 100);
+          return (
+            <div key={stage} style={{ display: "flex", alignItems: "center", gap: 14, marginBottom: 14 }}>
+              <div style={{ width: 110, fontSize: 12, fontWeight: 600, color: "var(--text-2)",
+                flexShrink: 0 }}>{stage}</div>
+              <div style={{ flex: 1, height: 8, background: "var(--border)", borderRadius: 4, overflow: "hidden" }}>
+                <div style={{ height: "100%", width: `${pct}%`, background: col,
+                  borderRadius: 4, transition: "width 0.8s ease" }} />
+              </div>
+              <div style={{ width: 70, textAlign: "right", fontSize: 12, color: "var(--text-2)", flexShrink: 0 }}>
+                ${value >= 1000 ? (value/1000).toFixed(0)+"K" : value} ({count})
+              </div>
+            </div>
+          );
+        })}
+      </div>
+
+      {/* High risk deals table */}
+      {highRisk.length > 0 && (
+        <div style={{ background: "var(--bg-card)", border: "1px solid var(--border)",
+          borderRadius: 14, padding: "24px" }}>
+          <div style={{ fontSize: 14, fontWeight: 700, color: "var(--text-1)", marginBottom: 16 }}>
+            Deals Requiring Immediate Action
+          </div>
+          {highRisk.map(deal => (
+            <div key={deal.id} style={{ display: "flex", justifyContent: "space-between",
+              alignItems: "center", padding: "12px 0",
+              borderBottom: "1px solid var(--border)" }}>
+              <div>
+                <div style={{ fontSize: 14, fontWeight: 600, color: "var(--text-1)" }}>{deal.company}</div>
+                <div style={{ fontSize: 12, color: "var(--text-3)", marginTop: 2 }}>
+                  {deal.contact_name} · {deal.stage} · {getDaysStale(deal)}d stale
+                </div>
+              </div>
+              <div style={{ textAlign: "right" }}>
+                <div style={{ fontSize: 14, fontWeight: 700, color: "var(--accent)" }}>
+                  ${Number(deal.value||0).toLocaleString()}
+                </div>
+                <div style={{ fontSize: 11, color: "var(--risk-high)", fontWeight: 700, marginTop: 2 }}>
+                  {deal.latest_analysis?.close_score}/100 · HIGH RISK
+                </div>
+              </div>
+            </div>
+          ))}
+        </div>
+      )}
+    </div>
+  );
+}
+
 function Dashboard({ user, onLogout, openSettings = false, slackChannel = "", gmailEmail = "", justConnected = "", theme = "dark", onToggleTheme }) {
   const [deals, setDeals]           = useState([]);
   const [selectedId, setSelectedId] = useState(null);
   const [showAddDeal, setShowAddDeal] = useState(false);
   const [showSettings, setShowSettings] = useState(openSettings);
+  const [showAnalytics, setShowAnalytics] = useState(false);
   const [loading, setLoading]       = useState(true);
   const [query, setQuery]           = useState("");
   const [stageFilter, setStageFilter] = useState("All");
@@ -2696,6 +2893,11 @@ function Dashboard({ user, onLogout, openSettings = false, slackChannel = "", gm
             title="Toggle light/dark mode"
             style={{ padding: "6px 10px", fontSize: 15 }}>
             {theme === "dark" ? "☀️" : "🌙"}
+          </button>
+          <button onClick={() => { setShowAnalytics(true); setSelectedId(null); }}
+            className="btn-sm btn-ghost"
+            style={{ fontSize: 12, fontWeight: 600, color: "var(--text-2)" }}>
+            📊 Analytics
           </button>
           <button onClick={() => setShowSettings(true)}
             className="btn-sm btn-ghost"
@@ -2849,7 +3051,9 @@ function Dashboard({ user, onLogout, openSettings = false, slackChannel = "", gm
         </div>
 
         {/* Main panel */}
-        {selectedId
+        {showAnalytics
+          ? <AnalyticsDashboard deals={deals} onBack={() => setShowAnalytics(false)} />
+          : selectedId
           ? <DealDetail
               dealId={selectedId}
               onBack={() => setSelectedId(null)}

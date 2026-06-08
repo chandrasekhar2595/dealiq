@@ -34,6 +34,8 @@ Engagement signals:
 {
   "risk_level": "high" | "medium" | "low",
   "close_score": <integer 0-100>,
+  "forecast_confidence": "high" | "medium" | "low",
+  "supporting_signals": ["<3-5 word phrase explaining why>", "<phrase 2>", "<phrase 3>"],
   "stall_reason": "<1-2 sentence specific diagnosis>",
   "insight": "<2-3 sentence deeper analysis>",
   "recommended_action": "<1-2 sentences, be specific>",
@@ -52,6 +54,7 @@ Rules:
 - recommended_action: ONE sentence, max 15 words, starts with a verb. Example: "Call Sarah this week and reference her board nomination directly."
 - stall_reason: 1-2 sentences max. No em dashes.
 - insight: 2-3 sentences max. No em dashes.
+- supporting_signals: 2-4 short phrases (3-6 words each) that explain WHY the score is what it is. Examples: "champion engaged this week", "pricing discussed", "no response 20 days", "procurement not started". Be specific to THIS deal.
 `;
 
 async function analyzeDeal(deal, signals) {
@@ -67,6 +70,8 @@ Contact: ${deal.contact_name} (${deal.contact_role || "Unknown role"})
 Value: $${Number(deal.value || 0).toLocaleString()}
 Stage: ${deal.stage}
 Days stale: ${deal.days_stale}
+Lead Source: ${deal.lead_source || "Unknown"}
+Expected Close: ${deal.close_timeline?.replace(/_/g, " ") || "Unknown"}
 Notes: ${deal.notes || "None"}
 
 Signals (${signals.length} total):

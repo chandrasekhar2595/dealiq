@@ -185,6 +185,8 @@ router.post("/:id/analyze", async (req, res) => {
         deal_id: id,
         risk_level: result.risk_level,
         close_score: result.close_score,
+        forecast_confidence: result.forecast_confidence || null,
+        supporting_signals: result.supporting_signals || null,
         stall_reason: result.stall_reason,
         insight: result.insight,
         recommended_action: result.recommended_action,
