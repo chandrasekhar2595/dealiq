@@ -223,7 +223,7 @@ function Logo({ size = 36, showWordmark = true }) {
 
 // ── LOGIN PAGE ───────────────────────────────────────────────
 // ── LANDING PAGE ─────────────────────────────────────────────
-function LandingPage({ onGetStarted, theme, onToggleTheme }) {
+function LandingPage({ onGetStarted }) {
   const FEATURES = [
     { icon: "⚡", color: "#f59e0b", title: "AI Deal Analysis", desc: "Claude AI analyzes every signal and tells you exactly why a deal is at risk — not just that it is." },
     { icon: "📡", color: "#3b82f6", title: "Signal Detection", desc: "Sync Gmail and LinkedIn to pull real email patterns, news events, and engagement signals automatically." },
@@ -251,10 +251,6 @@ function LandingPage({ onGetStarted, theme, onToggleTheme }) {
         borderBottom: "1px solid rgba(255,255,255,0.06)" }}>
         <Logo size={36} />
         <div style={{ display: "flex", gap: 12, alignItems: "center" }}>
-          <button onClick={onToggleTheme} style={{ background: "none", border: "none",
-            cursor: "pointer", fontSize: 16, padding: "6px" }}>
-            {theme === "dark" ? "☀️" : "🌙"}
-          </button>
           <button onClick={onGetStarted} className="btn-sm btn-ghost"
             style={{ border: "1px solid rgba(255,255,255,0.15)", color: "#f0f4f8",
               padding: "8px 20px", borderRadius: 8, cursor: "pointer", fontSize: 13, fontWeight: 500 }}>
@@ -2871,7 +2867,7 @@ export default function App() {
 
   if (!user) return showLogin
     ? <LoginPage onLogin={setUser} onBack={() => setShowLogin(false)} />
-    : <LandingPage onGetStarted={() => setShowLogin(true)} theme={theme} onToggleTheme={() => setTheme(t => t === "dark" ? "light" : "dark")} />;
+    : <LandingPage onGetStarted={() => setShowLogin(true)} />;
   return <Dashboard user={user} onLogout={handleLogout}
     openSettings={!!oauthResult}
     slackChannel={oauthResult?.type === "slack" ? oauthResult.value : ""}
