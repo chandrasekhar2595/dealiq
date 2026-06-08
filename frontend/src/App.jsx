@@ -1582,7 +1582,6 @@ function ContactProfile({ dealId, onBack }) {
 // ── DEAL DETAIL PANEL ────────────────────────────────────────
 function DealDetail({ dealId, onBack, onUpdate, onDelete }) {
   const [showProfile, setShowProfile] = useState(false);
-  if (showProfile) return <ContactProfile dealId={dealId} onBack={() => setShowProfile(false)} />;
   const [deal, setDeal]           = useState(null);
   const [signals, setSignals]     = useState([]);
   const [analysis, setAnalysis]   = useState(null);
@@ -1709,6 +1708,8 @@ function DealDetail({ dealId, onBack, onUpdate, onDelete }) {
       if (suggestion?.should_update) setStageSuggestion(suggestion);
     } catch (err) { /* silent */ }
   }
+
+  if (showProfile) return <ContactProfile dealId={dealId} onBack={() => setShowProfile(false)} />;
 
   if (loading) return (
     <div className="main-panel" style={{ flex: 1, padding: "32px 36px", overflowY: "auto" }}>
