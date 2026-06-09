@@ -1806,23 +1806,100 @@ function DealDetail({ dealId, onBack, onUpdate, onDelete }) {
         const isZombie   = stale >= 30;
         const isCritical = stale >= 21;
         const isAtRisk   = stale >= 14;
-        const col = (isZombie || isCritical) ? "#ef4444" : "#f59e0b";
-        const label = isZombie   ? "ZOMBIE DEAL — ACT NOW"
-                    : isCritical ? "DEAL AT RISK"
-                    : isAtRisk   ? "DEAL LOSING MOMENTUM"
-                    :              "DEAL NEEDS A NUDGE";
+
+        // ── ZOMBIE: completely separate treatment ──────────────
+        if (isZombie) {
+          return (
+            <div style={{ marginBottom: 16, borderRadius: 14,
+              border: "1px solid rgba(239,68,68,0.4)",
+              background: "linear-gradient(135deg, rgba(239,68,68,0.1), rgba(239,68,68,0.05))",
+              overflow: "hidden" }}>
+              {/* Top bar */}
+              <div style={{ padding: "10px 20px", background: "rgba(239,68,68,0.15)",
+                borderBottom: "1px solid rgba(239,68,68,0.25)",
+                display: "flex", alignItems: "center", justifyContent: "space-between" }}>
+                <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+                  <div className="risk-badge-high"
+                    style={{ width: 8, height: 8, borderRadius: "50%", background: "#ef4444",
+                      boxShadow: "0 0 0 3px rgba(239,68,68,0.3)" }} />
+                  <span style={{ fontSize: 11, fontWeight: 800, color: "#ef4444",
+                    fontFamily: "var(--font-mono)", letterSpacing: "0.1em" }}>
+                    ZOMBIE DEAL
+                  </span>
+                </div>
+                <span style={{ fontSize: 11, fontFamily: "var(--font-mono)",
+                  color: "#ef4444", fontWeight: 700 }}>{stale} days without a response</span>
+              </div>
+
+              {/* Warning message */}
+              <div style={{ padding: "18px 20px 14px" }}>
+                <div style={{ fontSize: 16, fontWeight: 700, color: "var(--text-1)",
+                  lineHeight: 1.55, marginBottom: 8 }}>
+                  {deal.contact_name} has not responded in {stale} days.
+                  You are spending time on a deal that has likely already been decided internally.
+                </div>
+                <div style={{ fontSize: 13, color: "var(--text-3)", lineHeight: 1.6, marginBottom: 18 }}>
+                  Every hour on this deal is time not spent on opportunities that can still close.
+                  Send one final email to force a clear yes or no — then move on.
+                </div>
+
+                {/* Two-path decision */}
+                <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 10 }}>
+                  <div style={{ padding: "14px 16px", borderRadius: 10,
+                    background: "rgba(239,68,68,0.1)", border: "1px solid rgba(239,68,68,0.3)" }}>
+                    <div style={{ fontSize: 11, fontWeight: 800, color: "#ef4444",
+                      fontFamily: "var(--font-mono)", letterSpacing: "0.07em", marginBottom: 6 }}>
+                      OPTION A — FORCE A DECISION
+                    </div>
+                    <div style={{ fontSize: 12, color: "var(--text-2)", lineHeight: 1.5, marginBottom: 12 }}>
+                      Send a break-up email. Give them one last chance to respond.
+                      If they don't reply, you have your answer.
+                    </div>
+                    <button onClick={() => setTab("draft")}
+                      style={{ width: "100%", padding: "9px 0", borderRadius: 8, border: "none",
+                        background: "#ef4444", color: "#fff", fontSize: 13, fontWeight: 700,
+                        cursor: "pointer" }}>
+                      Draft Final Email →
+                    </button>
+                  </div>
+
+                  <div style={{ padding: "14px 16px", borderRadius: 10,
+                    background: "rgba(255,255,255,0.03)", border: "1px solid var(--border)" }}>
+                    <div style={{ fontSize: 11, fontWeight: 800, color: "var(--text-3)",
+                      fontFamily: "var(--font-mono)", letterSpacing: "0.07em", marginBottom: 6 }}>
+                      OPTION B — CLEAN YOUR PIPELINE
+                    </div>
+                    <div style={{ fontSize: 12, color: "var(--text-2)", lineHeight: 1.5, marginBottom: 12 }}>
+                      Mark this deal as Lost, free up your forecast, and redirect
+                      your energy to deals that are still alive.
+                    </div>
+                    <button onClick={() => setShowConfirm(true)}
+                      style={{ width: "100%", padding: "9px 0", borderRadius: 8, cursor: "pointer",
+                        border: "1px solid var(--border-hi)", background: "transparent",
+                        color: "var(--text-2)", fontSize: 13, fontWeight: 600 }}>
+                      Mark as Lost
+                    </button>
+                  </div>
+                </div>
+              </div>
+            </div>
+          );
+        }
+
+        // ── Regular stale tiers (7–29 days) ───────────────────
+        const col = isCritical ? "#ef4444" : "#f59e0b";
+        const label = isCritical ? "DEAL AT RISK" : isAtRisk ? "DEAL LOSING MOMENTUM" : "DEAL NEEDS A NUDGE";
         const action = analysis
           ? cleanAI(analysis.recommended_action)
           : `Reach out to ${deal.contact_name} immediately to re-engage.`;
         return (
           <div style={{ marginBottom: 16, borderRadius: 12,
             border: `1px solid ${col}35`, background: `${col}07`, overflow: "hidden" }}>
-            {/* Header bar */}
             <div style={{ padding: "9px 18px", background: `${col}10`,
               borderBottom: `1px solid ${col}20`,
               display: "flex", alignItems: "center", justifyContent: "space-between" }}>
               <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
-                <div className={isZombie || isCritical ? "risk-badge-high" : ""}
+                <div className={isCritical ? "risk-badge-high" : ""}
                   style={{ width: 8, height: 8, borderRadius: "50%", background: col,
                     boxShadow: `0 0 0 3px ${col}25` }} />
                 <span style={{ fontSize: 11, fontWeight: 800, color: col,
@@ -1831,9 +1908,7 @@ function DealDetail({ dealId, onBack, onUpdate, onDelete }) {
               <span style={{ fontSize: 11, fontFamily: "var(--font-mono)",
                 color: col, fontWeight: 700 }}>{stale} days without activity</span>
             </div>
-            {/* Body */}
-            <div style={{ padding: "14px 18px", display: "flex",
-              alignItems: "center", gap: 16 }}>
+            <div style={{ padding: "14px 18px", display: "flex", alignItems: "center", gap: 16 }}>
               <div style={{ flex: 1, minWidth: 0 }}>
                 <div style={{ fontSize: 10, fontWeight: 700, color: "var(--text-3)",
                   fontFamily: "var(--font-mono)", letterSpacing: "0.08em", marginBottom: 6 }}>
