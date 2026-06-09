@@ -1799,6 +1799,68 @@ function DealDetail({ dealId, onBack, onUpdate, onDelete }) {
         </div>
       </div>
 
+      {/* ── Stale Deal Intervention ─────────────────────────── */}
+      {(() => {
+        const stale = getDaysStale(deal);
+        if (stale < 7) return null;
+        const isZombie   = stale >= 30;
+        const isCritical = stale >= 21;
+        const isAtRisk   = stale >= 14;
+        const col = (isZombie || isCritical) ? "#ef4444" : "#f59e0b";
+        const label = isZombie   ? "ZOMBIE DEAL — ACT NOW"
+                    : isCritical ? "DEAL AT RISK"
+                    : isAtRisk   ? "DEAL LOSING MOMENTUM"
+                    :              "DEAL NEEDS A NUDGE";
+        const action = analysis
+          ? cleanAI(analysis.recommended_action)
+          : `Reach out to ${deal.contact_name} immediately to re-engage.`;
+        return (
+          <div style={{ marginBottom: 16, borderRadius: 12,
+            border: `1px solid ${col}35`, background: `${col}07`, overflow: "hidden" }}>
+            {/* Header bar */}
+            <div style={{ padding: "9px 18px", background: `${col}10`,
+              borderBottom: `1px solid ${col}20`,
+              display: "flex", alignItems: "center", justifyContent: "space-between" }}>
+              <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+                <div className={isZombie || isCritical ? "risk-badge-high" : ""}
+                  style={{ width: 8, height: 8, borderRadius: "50%", background: col,
+                    boxShadow: `0 0 0 3px ${col}25` }} />
+                <span style={{ fontSize: 11, fontWeight: 800, color: col,
+                  fontFamily: "var(--font-mono)", letterSpacing: "0.08em" }}>{label}</span>
+              </div>
+              <span style={{ fontSize: 11, fontFamily: "var(--font-mono)",
+                color: col, fontWeight: 700 }}>{stale} days without activity</span>
+            </div>
+            {/* Body */}
+            <div style={{ padding: "14px 18px", display: "flex",
+              alignItems: "center", gap: 16 }}>
+              <div style={{ flex: 1, minWidth: 0 }}>
+                <div style={{ fontSize: 10, fontWeight: 700, color: "var(--text-3)",
+                  fontFamily: "var(--font-mono)", letterSpacing: "0.08em", marginBottom: 6 }}>
+                  WHAT TO DO RIGHT NOW
+                </div>
+                <div style={{ fontSize: 15, fontWeight: 600, color: "var(--text-1)",
+                  lineHeight: 1.5 }}>{action}</div>
+              </div>
+              <div style={{ display: "flex", gap: 8, flexShrink: 0 }}>
+                <button onClick={() => setTab("draft")}
+                  style={{ padding: "9px 18px", borderRadius: 8, border: "none",
+                    background: col, color: "#fff", fontSize: 13, fontWeight: 700,
+                    cursor: "pointer", whiteSpace: "nowrap" }}>
+                  Draft Rescue Email →
+                </button>
+                <button onClick={getMeetingPrep}
+                  style={{ padding: "9px 14px", borderRadius: 8, cursor: "pointer",
+                    border: `1px solid ${col}35`, background: "transparent",
+                    color: col, fontSize: 12, fontWeight: 600, whiteSpace: "nowrap" }}>
+                  Meeting Prep
+                </button>
+              </div>
+            </div>
+          </div>
+        );
+      })()}
+
       {/* Score hero — redesigned */}
       {analysis && (
         <div className="score-hero" style={{
