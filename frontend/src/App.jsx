@@ -10,6 +10,26 @@ function getDaysStale(deal) {
   return deal.days_stale || 0;
 }
 
+function getContactAuthority(role) {
+  if (!role) return null;
+  const r = role.toLowerCase();
+  if (/\b(ceo|cfo|coo|cro|cto|ciso|chief|president|founder|owner|managing.partner|general.partner)\b/.test(r))
+    return { tier: "executive", label: "C-Suite / Executive",  color: "#22c55e",
+      forecast: "Can approve this deal directly. No additional sign-off needed.",
+      action: null };
+  if (/\b(vp|svp|evp|vice.president|head of|global head|director|managing.director)\b/.test(r))
+    return { tier: "senior",    label: "VP / Director",        color: "#3b82f6",
+      forecast: "Likely has budget authority or direct access to the economic buyer.",
+      action: "Confirm they have sign-off authority for this deal size." };
+  if (/\b(manager|senior manager|principal|lead|team lead|group lead)\b/.test(r))
+    return { tier: "manager",   label: "Manager / Team Lead",  color: "#f59e0b",
+      forecast: "Probably a champion, not the final decision maker. Deal needs executive sponsorship to close.",
+      action: "Ask them directly: who else needs to approve this?" };
+  return { tier: "individual", label: "Individual Contributor", color: "#ef4444",
+    forecast: "This contact likely cannot approve the budget. You may be building rapport with the wrong person.",
+    action: "Identify and engage the economic buyer immediately or this deal will stall at approval." };
+}
+
 // Strip emojis, bullets, dashes from AI-generated text
 function cleanAI(text) {
   if (!text) return text;
@@ -1799,6 +1819,46 @@ function DealDetail({ dealId, onBack, onUpdate, onDelete }) {
         </div>
       </div>
 
+      {/* ── Contact Authority Insight ────────────────────────── */}
+      {(() => {
+        const auth = getContactAuthority(deal.contact_role);
+        if (!auth) return null;
+        const icons = { executive: "C", senior: "VP", manager: "M", individual: "IC" };
+        return (
+          <div style={{ marginBottom: 12, padding: "12px 16px", borderRadius: 10,
+            background: `${auth.color}08`, border: `1px solid ${auth.color}28`,
+            display: "flex", alignItems: "flex-start", gap: 12 }}>
+            <div style={{ width: 32, height: 32, borderRadius: 8, flexShrink: 0,
+              background: `${auth.color}18`, border: `1px solid ${auth.color}30`,
+              display: "flex", alignItems: "center", justifyContent: "center",
+              fontSize: 9, fontWeight: 900, color: auth.color,
+              fontFamily: "var(--font-mono)", letterSpacing: 0 }}>
+              {icons[auth.tier]}
+            </div>
+            <div style={{ flex: 1, minWidth: 0 }}>
+              <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 3 }}>
+                <span style={{ fontSize: 11, fontWeight: 800, color: auth.color,
+                  fontFamily: "var(--font-mono)", letterSpacing: "0.07em" }}>
+                  {auth.label.toUpperCase()}
+                </span>
+                <span style={{ fontSize: 11, color: "var(--text-3)" }}>
+                  · {deal.contact_name}{deal.contact_role ? `, ${deal.contact_role}` : ""}
+                </span>
+              </div>
+              <div style={{ fontSize: 13, color: "var(--text-2)", lineHeight: 1.5 }}>
+                {auth.forecast}
+              </div>
+              {auth.action && (
+                <div style={{ fontSize: 12, fontWeight: 600, color: auth.color,
+                  marginTop: 5 }}>
+                  {auth.action}
+                </div>
+              )}
+            </div>
+          </div>
+        );
+      })()}
+
       {/* ── Stale Deal Intervention ─────────────────────────── */}
       {(() => {
         const stale = getDaysStale(deal);
@@ -3550,6 +3610,21 @@ function Dashboard({ user, onLogout, openSettings = false, slackChannel = "", gm
                     </div>
                     <div style={{ fontSize: 11, color: "var(--text-3)" }}>
                       {deal.contact_name}
+                      {(() => {
+                        const auth = getContactAuthority(deal.contact_role);
+                        if (!auth) return null;
+                        return (
+                          <span style={{ marginLeft: 6, fontSize: 10, fontWeight: 700,
+                            fontFamily: "var(--font-mono)", color: auth.color,
+                            padding: "1px 5px", borderRadius: 3,
+                            background: `${auth.color}15` }}>
+                            {auth.tier === "executive" ? "C-Suite"
+                             : auth.tier === "senior"    ? "VP/Dir"
+                             : auth.tier === "manager"   ? "Mgr"
+                             :                            "IC"}
+                          </span>
+                        );
+                      })()}
                       {getDaysStale(deal) > 0 && (
                         <span style={{ marginLeft: 6, color: getDaysStale(deal) > 30 ? "var(--risk-high)" : getDaysStale(deal) > 14 ? "var(--risk-high)" : getDaysStale(deal) > 7 ? "var(--risk-med)" : "var(--text-3)" }}>
                           · {getDaysStale(deal) > 30 ? "zombie" : `${getDaysStale(deal)}d stale`}
