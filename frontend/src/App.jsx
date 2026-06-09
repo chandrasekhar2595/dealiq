@@ -2854,6 +2854,214 @@ function SettingsModal({ user, onClose, slackChannel, gmailEmail, justConnected 
   );
 }
 
+// ── FORECAST DASHBOARD ───────────────────────────────────────
+function ForecastDashboard({ deals, onBack }) {
+  const PERIODS = [
+    { key: "this_week",    label: "This Week",    color: "#22c55e" },
+    { key: "this_month",   label: "This Month",   color: "#3b82f6" },
+    { key: "next_month",   label: "Next Month",   color: "#8b5cf6" },
+    { key: "this_quarter", label: "This Quarter", color: "#f59e0b" },
+  ];
+
+  const fmt = v => v >= 1000 ? `$${(v / 1000).toFixed(0)}K` : `$${Math.round(v).toLocaleString()}`;
+
+  const totalPipeline = deals.reduce((s, d) => s + Number(d.value || 0), 0);
+  const totalForecast = deals.reduce((s, d) => {
+    const score = d.latest_analysis?.close_score || 0;
+    return s + Number(d.value || 0) * score / 100;
+  }, 0);
+  const coveragePct = totalPipeline > 0 ? Math.round((totalForecast / totalPipeline) * 100) : 0;
+
+  function getGroup(key) {
+    return deals.filter(d => (d.close_timeline || "") === key);
+  }
+  function groupForecast(group) {
+    return group.reduce((s, d) => s + Number(d.value || 0) * (d.latest_analysis?.close_score || 0) / 100, 0);
+  }
+
+  const unscheduled = deals.filter(d => !d.close_timeline);
+  const unanalyzed  = deals.filter(d => !d.latest_analysis);
+
+  return (
+    <div className="main-panel" style={{ flex: 1, overflowY: "auto", background: "var(--bg)" }}>
+
+      {/* Header */}
+      <div style={{ padding: "24px 40px 22px", background: "var(--bg-card)",
+        borderBottom: "1px solid var(--border)", position: "relative", overflow: "hidden" }}>
+        <div style={{ position: "absolute", top: -40, right: 0, width: 300, height: 220,
+          borderRadius: "50%", pointerEvents: "none",
+          background: "radial-gradient(ellipse, rgba(34,197,94,0.06) 0%, transparent 70%)" }} />
+        <button onClick={onBack} className="btn-sm btn-ghost" style={{ marginBottom: 18 }}>← Back</button>
+        <div style={{ display: "flex", alignItems: "flex-end", justifyContent: "space-between" }}>
+          <div>
+            <div style={{ fontFamily: "var(--font-mono)", fontSize: 10, color: "var(--text-3)",
+              letterSpacing: "0.12em", marginBottom: 8 }}>REVENUE FORECAST</div>
+            <div style={{ fontSize: 44, fontWeight: 900, color: "var(--risk-low)",
+              letterSpacing: -2, lineHeight: 1 }}>{fmt(totalForecast)}</div>
+            <div style={{ fontSize: 13, color: "var(--text-3)", marginTop: 8 }}>
+              weighted from {fmt(totalPipeline)} pipeline · {deals.length} deals
+            </div>
+          </div>
+          <div style={{ display: "flex", gap: 32, alignItems: "flex-end" }}>
+            <div style={{ textAlign: "right" }}>
+              <div style={{ fontFamily: "var(--font-mono)", fontSize: 9, color: "var(--text-3)",
+                letterSpacing: "0.1em", marginBottom: 4 }}>PIPELINE COVERAGE</div>
+              <div style={{ fontSize: 32, fontWeight: 900, color: "var(--accent)" }}>{coveragePct}%</div>
+            </div>
+            <div style={{ textAlign: "right" }}>
+              <div style={{ fontFamily: "var(--font-mono)", fontSize: 9, color: "var(--text-3)",
+                letterSpacing: "0.1em", marginBottom: 4 }}>SCHEDULED</div>
+              <div style={{ fontSize: 32, fontWeight: 900, color: "var(--text-1)" }}>
+                {deals.length - unscheduled.length}/{deals.length}
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div style={{ padding: "24px 40px" }}>
+
+        {/* Period summary cards */}
+        <div style={{ display: "grid", gridTemplateColumns: "repeat(4, 1fr)", gap: 14, marginBottom: 32 }}>
+          {PERIODS.map(({ key, label, color }) => {
+            const group = getGroup(key);
+            const fc    = groupForecast(group);
+            const pct   = totalPipeline > 0 ? (fc / totalPipeline) * 100 : 0;
+            const highConf = group.filter(d => d.latest_analysis?.forecast_confidence === "high").length;
+            return (
+              <div key={key} style={{ background: "var(--bg-card)", border: "1px solid var(--border)",
+                borderRadius: 14, padding: "20px", position: "relative", overflow: "hidden" }}>
+                <div style={{ position: "absolute", bottom: -12, right: -12, width: 80, height: 80,
+                  borderRadius: "50%", background: `${color}08`, pointerEvents: "none" }} />
+                <div style={{ fontFamily: "var(--font-mono)", fontSize: 9, color: "var(--text-3)",
+                  letterSpacing: "0.1em", marginBottom: 12, fontWeight: 700 }}>{label.toUpperCase()}</div>
+                <div style={{ fontSize: 28, fontWeight: 900, color: group.length > 0 ? color : "var(--text-muted)",
+                  letterSpacing: -0.5, marginBottom: 2, lineHeight: 1 }}>
+                  {group.length > 0 ? fmt(fc) : "—"}
+                </div>
+                <div style={{ fontSize: 11, color: "var(--text-3)", marginBottom: 14 }}>
+                  {group.length} deal{group.length !== 1 ? "s" : ""}
+                  {highConf > 0 && (
+                    <span style={{ marginLeft: 6, color: "#22c55e", fontWeight: 600 }}>
+                      · {highConf} high conf
+                    </span>
+                  )}
+                </div>
+                <div style={{ height: 4, background: "var(--border)", borderRadius: 2, overflow: "hidden", marginBottom: 5 }}>
+                  <div style={{ height: "100%", width: `${Math.min(pct, 100)}%`,
+                    background: group.length > 0 ? color : "var(--border)",
+                    borderRadius: 2, transition: "width 1s ease" }} />
+                </div>
+                <div style={{ fontSize: 10, color: "var(--text-3)",
+                  fontFamily: "var(--font-mono)" }}>{Math.round(pct)}% of pipeline</div>
+              </div>
+            );
+          })}
+        </div>
+
+        {/* Deal list by period */}
+        {[...PERIODS, { key: "", label: "No Close Date Set", color: "#4a6070" }].map(({ key, label, color }) => {
+          const group = key === "" ? unscheduled : getGroup(key);
+          if (group.length === 0) return null;
+          const fc = groupForecast(group);
+          return (
+            <div key={key} style={{ marginBottom: 28 }}>
+              <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 12 }}>
+                <div style={{ width: 8, height: 8, borderRadius: "50%",
+                  background: color, flexShrink: 0 }} />
+                <span style={{ fontFamily: "var(--font-mono)", fontSize: 10,
+                  color: "var(--text-3)", letterSpacing: "0.1em", fontWeight: 700 }}>
+                  {label.toUpperCase()}
+                </span>
+                {key !== "" && (
+                  <span style={{ fontFamily: "var(--font-mono)", fontSize: 11,
+                    color, fontWeight: 800 }}>{fmt(fc)}</span>
+                )}
+              </div>
+              <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
+                {group.map(deal => {
+                  const a  = deal.latest_analysis;
+                  const rk = a?.risk_level;
+                  const rColor = rk === "high" ? "#ef4444" : rk === "low" ? "#22c55e" : "#f59e0b";
+                  const weighted = Number(deal.value || 0) * (a?.close_score || 0) / 100;
+                  return (
+                    <div key={deal.id} style={{ background: "var(--bg-card)",
+                      border: "1px solid var(--border)", borderLeft: `3px solid ${a ? rColor : "var(--border)"}`,
+                      borderRadius: 10, padding: "14px 18px",
+                      display: "flex", alignItems: "center", gap: 16 }}>
+                      <CompanyAvatar company={deal.company} contactEmail={deal.contact_email} size={36} />
+                      <div style={{ flex: 1, minWidth: 0 }}>
+                        <div style={{ fontSize: 14, fontWeight: 700, color: "var(--text-1)", marginBottom: 2 }}>
+                          {deal.company}
+                        </div>
+                        <div style={{ fontSize: 12, color: "var(--text-3)" }}>
+                          {deal.contact_name}
+                          {deal.contact_role && <span> · {deal.contact_role}</span>}
+                          <span style={{ marginLeft: 8, padding: "1px 7px", borderRadius: 4,
+                            background: "var(--bg-hover)", fontSize: 11 }}>{deal.stage}</span>
+                        </div>
+                        {a?.supporting_signals?.length > 0 && (
+                          <div style={{ fontSize: 11, color: "var(--text-3)", marginTop: 5 }}>
+                            <span style={{ color: "var(--text-2)", fontWeight: 600 }}>Because: </span>
+                            {a.supporting_signals.slice(0, 3).join(" · ")}
+                          </div>
+                        )}
+                      </div>
+                      <div style={{ textAlign: "right", flexShrink: 0 }}>
+                        <div style={{ fontSize: 16, fontWeight: 800, color: "var(--accent)", marginBottom: 2 }}>
+                          ${Number(deal.value || 0).toLocaleString()}
+                        </div>
+                        {a && (
+                          <div style={{ fontSize: 11, color: "var(--text-3)", marginBottom: 6 }}>
+                            → {fmt(weighted)} forecast
+                          </div>
+                        )}
+                        {a && (
+                          <div style={{ display: "flex", gap: 5, justifyContent: "flex-end" }}>
+                            {rk && (
+                              <span style={{ fontSize: 10, fontWeight: 700, padding: "2px 8px",
+                                borderRadius: 4, background: `${rColor}18`, color: rColor }}>
+                                {rk.toUpperCase()}
+                              </span>
+                            )}
+                            {a.forecast_confidence && (
+                              <span style={{ fontSize: 10, fontWeight: 600, padding: "2px 8px",
+                                borderRadius: 4, background: "var(--bg-hover)", color: "var(--text-3)" }}>
+                                {a.forecast_confidence} conf
+                              </span>
+                            )}
+                          </div>
+                        )}
+                      </div>
+                      {a
+                        ? <ScoreRing score={a.close_score} size={52} riskLevel={a.risk_level} />
+                        : <div style={{ fontSize: 10, color: "var(--text-muted)",
+                            fontFamily: "var(--font-mono)", width: 52, textAlign: "center" }}>
+                            NO SCORE
+                          </div>
+                      }
+                    </div>
+                  );
+                })}
+              </div>
+            </div>
+          );
+        })}
+
+        {/* Unanalyzed notice */}
+        {unanalyzed.length > 0 && (
+          <div style={{ padding: "14px 18px", borderRadius: 10,
+            background: "var(--bg-card)", border: "1px solid var(--border)",
+            fontSize: 13, color: "var(--text-3)" }}>
+            {unanalyzed.length} deal{unanalyzed.length !== 1 ? "s" : ""} not yet analyzed —
+            run Deal Intelligence on each to include them in the forecast.
+          </div>
+        )}
+      </div>
+    </div>
+  );
+}
+
 // ── MAIN DASHBOARD ───────────────────────────────────────────
 // ── ANALYTICS DASHBOARD ──────────────────────────────────────
 function AnalyticsDashboard({ deals, onBack }) {
@@ -2991,6 +3199,7 @@ function Dashboard({ user, onLogout, openSettings = false, slackChannel = "", gm
   const [showAddDeal, setShowAddDeal] = useState(false);
   const [showSettings, setShowSettings] = useState(openSettings);
   const [showAnalytics, setShowAnalytics] = useState(false);
+  const [showForecast, setShowForecast]   = useState(false);
   const [loading, setLoading]       = useState(true);
   const [query, setQuery]           = useState("");
   const [stageFilter, setStageFilter] = useState("All");
@@ -3073,10 +3282,15 @@ function Dashboard({ user, onLogout, openSettings = false, slackChannel = "", gm
             style={{ padding: "6px 10px", fontSize: 15 }}>
             {theme === "dark" ? "☀️" : "🌙"}
           </button>
-          <button onClick={() => { setShowAnalytics(true); setSelectedId(null); }}
+          <button onClick={() => { setShowForecast(true); setShowAnalytics(false); setSelectedId(null); }}
+            className="btn-sm btn-ghost"
+            style={{ fontSize: 12, fontWeight: 600, color: showForecast ? "var(--risk-low)" : "var(--text-2)" }}>
+            Forecast
+          </button>
+          <button onClick={() => { setShowAnalytics(true); setShowForecast(false); setSelectedId(null); }}
             className="btn-sm btn-ghost"
             style={{ fontSize: 12, fontWeight: 600, color: "var(--text-2)" }}>
-            📊 Analytics
+            Analytics
           </button>
           <button onClick={() => setShowSettings(true)}
             className="btn-sm btn-ghost"
@@ -3237,7 +3451,9 @@ function Dashboard({ user, onLogout, openSettings = false, slackChannel = "", gm
         </div>
 
         {/* Main panel */}
-        {showAnalytics
+        {showForecast
+          ? <ForecastDashboard deals={deals} onBack={() => setShowForecast(false)} />
+          : showAnalytics
           ? <AnalyticsDashboard deals={deals} onBack={() => setShowAnalytics(false)} />
           : selectedId
           ? <DealDetail
