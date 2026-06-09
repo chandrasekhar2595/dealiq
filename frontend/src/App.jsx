@@ -1088,85 +1088,94 @@ function ConfirmDialog({ message, onConfirm, onCancel, danger = false }) {
   );
 }
 
-// ── PIPELINE SUMMARY (empty state) ───────────────────────────
+// ── PIPELINE SUMMARY ─────────────────────────────────────────
 function PipelineSummary({ deals }) {
-  const total = deals.reduce((s, d) => s + Number(d.value || 0), 0);
-  const atRisk = deals.filter(d => d.latest_analysis?.risk_level === "high").length;
+  const fmt = v => v >= 1000000 ? `$${(v/1000000).toFixed(1)}M` : v >= 1000 ? `$${(v/1000).toFixed(0)}K` : `$${v}`;
+
+  const totalValue    = deals.reduce((s, d) => s + Number(d.value || 0), 0);
+  const atRiskValue   = deals.filter(d => d.latest_analysis?.risk_level === "high")
+                             .reduce((s, d) => s + Number(d.value || 0), 0);
+  const closingValue  = deals.filter(d => d.close_timeline === "this_month" || d.close_timeline === "this_week")
+                             .reduce((s, d) => s + Number(d.value || 0), 0);
+  const weightedFc    = deals.reduce((s, d) => s + Number(d.value || 0) * (d.latest_analysis?.close_score || 0) / 100, 0);
+  const coverage      = totalValue > 0 ? Math.round((weightedFc / totalValue) * 100) : 0;
+
   const byStage = ["Discovery","Proposal Sent","Negotiation","Closing"]
     .map(s => ({ stage: s, count: deals.filter(d => d.stage === s).length }))
     .filter(s => s.count > 0);
 
-  return (
+  if (deals.length === 0) return (
     <div style={{ flex: 1, display: "flex", alignItems: "center", justifyContent: "center",
-      flexDirection: "column", gap: 32, padding: 40 }}>
-      <div style={{ textAlign: "center" }}>
-        <div style={{ fontFamily: "var(--font-mono)", fontSize: 10,
-          color: "var(--text-muted)", letterSpacing: "0.12em", marginBottom: 8 }}>
-          TOTAL PIPELINE VALUE
-        </div>
-        <div style={{ fontFamily: "var(--font-mono)", fontSize: 40, fontWeight: 900,
-          color: "var(--blue-light)", letterSpacing: -1 }}>
-          ${total.toLocaleString()}
-        </div>
+      flexDirection: "column", gap: 16, padding: 40, textAlign: "center" }}>
+      <div style={{ fontSize: 14, color: "var(--text-3)", marginBottom: 4 }}>No deals yet</div>
+      <div style={{ fontSize: 13, color: "var(--text-muted)" }}>Add your first deal to get started.</div>
+    </div>
+  );
+
+  return (
+    <div style={{ flex: 1, overflowY: "auto", padding: "32px 40px" }}>
+
+      {/* Social proof banner */}
+      <div style={{ marginBottom: 28, padding: "12px 20px", borderRadius: 10,
+        background: "linear-gradient(135deg, rgba(34,197,94,0.08), rgba(34,197,94,0.04))",
+        border: "1px solid rgba(34,197,94,0.2)",
+        display: "flex", alignItems: "center", gap: 12 }}>
+        <div style={{ width: 8, height: 8, borderRadius: "50%", background: "#22c55e",
+          flexShrink: 0, boxShadow: "0 0 0 3px rgba(34,197,94,0.2)" }} />
+        <span style={{ fontSize: 13, color: "var(--text-2)", lineHeight: 1.5 }}>
+          Sales teams using DealIQ recover an average of{" "}
+          <strong style={{ color: "var(--text-1)" }}>2.3 deals per month</strong> they would have otherwise lost.
+        </span>
       </div>
 
-      {deals.length > 0 ? (
-        <>
-          <div style={{ display: "flex", gap: 24 }}>
-            {[
-              { label: "Active Deals", value: deals.length, color: "var(--text-2)" },
-              { label: "At High Risk", value: atRisk, color: atRisk > 0 ? "var(--risk-high)" : "var(--text-3)" },
-              { label: "Unanalyzed", value: deals.filter(d => !d.latest_analysis).length, color: "var(--text-3)" },
-            ].map(({ label, value, color }) => (
-              <div key={label} style={{ textAlign: "center" }}>
-                <div style={{ fontFamily: "var(--font-mono)", fontSize: 28,
-                  fontWeight: 700, color }}>{value}</div>
-                <div style={{ fontSize: 11, color: "var(--text-3)", marginTop: 4 }}>{label}</div>
-              </div>
-            ))}
+      {/* 4 CRO numbers */}
+      <div style={{ display: "grid", gridTemplateColumns: "repeat(4, 1fr)", gap: 14, marginBottom: 28 }}>
+        {[
+          { label: "Total Pipeline",         value: fmt(totalValue),   color: "var(--text-1)",   sub: `${deals.length} deals` },
+          { label: "At Risk",                value: fmt(atRiskValue),  color: "#ef4444",          sub: `${deals.filter(d => d.latest_analysis?.risk_level === "high").length} high-risk deals` },
+          { label: "Closing This Month",     value: fmt(closingValue), color: "#22c55e",          sub: `${deals.filter(d => d.close_timeline === "this_month" || d.close_timeline === "this_week").length} deals scheduled` },
+          { label: "Forecast Coverage",      value: `${coverage}%`,   color: "var(--accent)",    sub: `${fmt(weightedFc)} weighted` },
+        ].map(({ label, value, color, sub }) => (
+          <div key={label} style={{ padding: "20px", borderRadius: 12,
+            background: "var(--bg-card)", border: "1px solid var(--border)" }}>
+            <div style={{ fontFamily: "var(--font-mono)", fontSize: 9, color: "var(--text-3)",
+              letterSpacing: "0.1em", marginBottom: 10, fontWeight: 700 }}>{label.toUpperCase()}</div>
+            <div style={{ fontSize: 28, fontWeight: 900, color, letterSpacing: -0.5,
+              lineHeight: 1, marginBottom: 6 }}>{value}</div>
+            <div style={{ fontSize: 11, color: "var(--text-3)" }}>{sub}</div>
           </div>
+        ))}
+      </div>
 
-          {byStage.length > 0 && (
-            <div style={{ width: "100%", maxWidth: 360 }}>
-              <div style={{ fontFamily: "var(--font-mono)", fontSize: 10,
-                color: "var(--text-muted)", letterSpacing: "0.1em", marginBottom: 12 }}>
-                PIPELINE BY STAGE
+      {/* Stage breakdown */}
+      {byStage.length > 0 && (
+        <div style={{ background: "var(--bg-card)", border: "1px solid var(--border)",
+          borderRadius: 12, padding: "20px 24px", marginBottom: 20 }}>
+          <div style={{ fontFamily: "var(--font-mono)", fontSize: 9, color: "var(--text-3)",
+            letterSpacing: "0.1em", marginBottom: 16, fontWeight: 700 }}>PIPELINE BY STAGE</div>
+          {byStage.map(({ stage, count }) => (
+            <div key={stage} style={{ marginBottom: 12 }}>
+              <div style={{ display: "flex", justifyContent: "space-between",
+                fontSize: 12, marginBottom: 5 }}>
+                <span style={{ color: "var(--text-2)" }}>{stage}</span>
+                <span style={{ fontFamily: "var(--font-mono)", fontSize: 11,
+                  color: STAGE_COLOR[stage] || "var(--text-3)" }}>{count}</span>
               </div>
-              {byStage.map(({ stage, count }) => (
-                <div key={stage} style={{ marginBottom: 10 }}>
-                  <div style={{ display: "flex", justifyContent: "space-between",
-                    fontSize: 12, marginBottom: 4 }}>
-                    <span style={{ color: "var(--text-2)" }}>{stage}</span>
-                    <span style={{ fontFamily: "var(--font-mono)", fontSize: 11,
-                      color: STAGE_COLOR[stage] || "var(--text-3)" }}>{count}</span>
-                  </div>
-                  <div style={{ height: 4, background: "var(--border)", borderRadius: 2 }}>
-                    <div style={{ height: "100%", borderRadius: 2,
-                      width: `${(count / deals.length) * 100}%`,
-                      background: STAGE_COLOR[stage] || "var(--blue)",
-                      transition: "width 0.6s ease" }} />
-                  </div>
-                </div>
-              ))}
+              <div style={{ height: 4, background: "var(--border)", borderRadius: 2 }}>
+                <div style={{ height: "100%", borderRadius: 2,
+                  width: `${(count / deals.length) * 100}%`,
+                  background: STAGE_COLOR[stage] || "var(--blue)",
+                  transition: "width 0.6s ease" }} />
+              </div>
             </div>
-          )}
-
-          <div style={{ fontFamily: "var(--font-mono)", fontSize: 10,
-            color: "var(--text-muted)", letterSpacing: "0.1em" }}>
-            ← SELECT A DEAL TO ANALYZE
-          </div>
-        </>
-      ) : (
-        <div style={{ textAlign: "center", color: "var(--text-muted)" }}>
-          <div style={{ fontSize: 40, marginBottom: 16 }}>⚡</div>
-          <div style={{ fontSize: 14, color: "var(--text-3)", marginBottom: 8 }}>
-            No deals yet
-          </div>
-          <div style={{ fontSize: 13, color: "var(--text-muted)" }}>
-            Add your first deal to get started.
-          </div>
+          ))}
         </div>
       )}
+
+      <div style={{ fontFamily: "var(--font-mono)", fontSize: 10,
+        color: "var(--text-muted)", letterSpacing: "0.1em", textAlign: "center" }}>
+        SELECT A DEAL TO ANALYZE
+      </div>
     </div>
   );
 }
