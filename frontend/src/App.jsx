@@ -456,6 +456,118 @@ function LandingPage({ onGetStarted }) {
 
 
 
+      {/* What sets us apart */}
+      <div style={{ borderTop: "1px solid rgba(255,255,255,0.06)", padding: "96px 48px" }}>
+        <div style={{ maxWidth: 1100, margin: "0 auto" }}>
+
+          {/* Header */}
+          <div style={{ textAlign: "center", marginBottom: 64 }}>
+            <div style={{ fontSize: 11, fontWeight: 700, letterSpacing: "0.12em",
+              color: "#f5a623", marginBottom: 14 }}>WHY DEALIQ</div>
+            <h2 style={{ fontSize: 42, fontWeight: 800, letterSpacing: -1,
+              margin: "0 0 16px", color: "#f0f4f8" }}>
+              Other tools show you data.<br />
+              <span style={{ color: "#f5a623" }}>We tell you what to do.</span>
+            </h2>
+            <p style={{ fontSize: 16, color: "#5a7080", margin: "0 auto", maxWidth: 540 }}>
+              Most sales AI stops at insights. DealIQ goes further — it gives every rep
+              a specific action for every deal, every day.
+            </p>
+          </div>
+
+          {/* Differentiator cards */}
+          <div style={{ display: "grid", gridTemplateColumns: "repeat(2, 1fr)", gap: 16, marginBottom: 64 }}>
+            {[
+              { title: "We tell reps what to do, not just what's happening",
+                body: "Every deal surfaces one clear action — call this person, send this email, involve this stakeholder. Not a dashboard. A directive.",
+                color: "#f5a623" },
+              { title: "We catch zombie deals before they waste another quarter",
+                body: "When a deal goes 30 days cold, we stop encouraging reps to nurture it. We tell them to force a decision or move on. Time is the only resource that does not come back.",
+                color: "#ef4444" },
+              { title: "We know if your contact can actually close the deal",
+                body: "A manager-level contact on a six-figure deal is a warning sign, not a win. DealIQ scores contact authority and flags when you are building rapport with the wrong person.",
+                color: "#3b82f6" },
+              { title: "We work in minutes, not months",
+                body: "No implementation project. No Salesforce prerequisite. No consultant required. Connect Gmail, add your deals, get intelligence the same day.",
+                color: "#22c55e" },
+            ].map(({ title, body, color }) => (
+              <div key={title} style={{ padding: "28px 32px", borderRadius: 16,
+                background: "rgba(255,255,255,0.03)", border: "1px solid rgba(255,255,255,0.07)",
+                borderLeft: `3px solid ${color}` }}>
+                <div style={{ fontSize: 16, fontWeight: 700, color: "#f0f4f8",
+                  marginBottom: 10, lineHeight: 1.4 }}>{title}</div>
+                <div style={{ fontSize: 14, color: "#5a7080", lineHeight: 1.7 }}>{body}</div>
+              </div>
+            ))}
+          </div>
+
+          {/* Comparison table */}
+          <div style={{ borderRadius: 16, overflow: "hidden",
+            border: "1px solid rgba(255,255,255,0.08)" }}>
+            <div style={{ padding: "18px 28px", background: "rgba(255,255,255,0.03)",
+              borderBottom: "1px solid rgba(255,255,255,0.06)",
+              display: "flex", alignItems: "center", justifyContent: "space-between" }}>
+              <div style={{ fontSize: 13, fontWeight: 700, color: "#f0f4f8" }}>
+                DealIQ vs. the alternatives
+              </div>
+              <div style={{ fontSize: 11, color: "#5a7080" }}>
+                CRM AI includes Salesforce Einstein and HubSpot Breeze.
+                Revenue intelligence includes Clari and Gong.
+              </div>
+            </div>
+            <div style={{ overflowX: "auto" }}>
+              <table style={{ width: "100%", borderCollapse: "collapse" }}>
+                <thead>
+                  <tr style={{ background: "rgba(255,255,255,0.02)" }}>
+                    {[
+                      { label: "",              align: "left",   color: "#5a7080" },
+                      { label: "CRM AI",        align: "center", color: "#5a7080" },
+                      { label: "Revenue Intel", align: "center", color: "#5a7080" },
+                      { label: "DealIQ",        align: "center", color: "#f5a623" },
+                    ].map(({ label, align, color }) => (
+                      <th key={label} style={{ padding: "14px 24px", textAlign: align,
+                        fontSize: 12, fontWeight: 700, color,
+                        borderBottom: "1px solid rgba(255,255,255,0.06)",
+                        letterSpacing: "0.05em" }}>{label}</th>
+                    ))}
+                  </tr>
+                </thead>
+                <tbody>
+                  {[
+                    ["Tells reps what to do next",         "No",       "Partially", "Yes"],
+                    ["Works without a CRM",                "No",       "No",        "Yes"],
+                    ["Contact authority scoring",          "No",       "No",        "Yes"],
+                    ["Zombie deal detection",              "No",       "Partially", "Yes"],
+                    ["Stale deal rescue with exact action","No",       "No",        "Yes"],
+                    ["Gmail + LinkedIn signals",           "Limited",  "Limited",   "Yes"],
+                    ["Forecast accuracy improvement",      "15–20%",   "15–25%",    "25%+"],
+                    ["Setup time",                         "Months",   "Weeks",     "Minutes"],
+                    ["Requires enterprise contract",       "Yes",      "Yes",       "No"],
+                  ].map(([label, crm, ri, diq], i) => {
+                    const colColor = v => v === "Yes" || v === "Minutes" || v === "No" && label === "Requires enterprise contract"
+                      ? "#22c55e"
+                      : v === "No" || v === "Limited" ? "#ef444466"
+                      : v === "Partially" ? "#f59e0b"
+                      : "#f5a623";
+                    return (
+                      <tr key={label} style={{ borderBottom: "1px solid rgba(255,255,255,0.04)",
+                        background: i % 2 === 0 ? "transparent" : "rgba(255,255,255,0.01)" }}>
+                        <td style={{ padding: "13px 24px", fontSize: 13, color: "#8fa3b8" }}>{label}</td>
+                        <td style={{ padding: "13px 24px", fontSize: 13, color: "#4a6070", textAlign: "center" }}>{crm}</td>
+                        <td style={{ padding: "13px 24px", fontSize: 13, color: "#4a6070", textAlign: "center" }}>{ri}</td>
+                        <td style={{ padding: "13px 24px", fontSize: 13, fontWeight: 700,
+                          color: "#f5a623", textAlign: "center" }}>{diq}</td>
+                      </tr>
+                    );
+                  })}
+                </tbody>
+              </table>
+            </div>
+          </div>
+
+        </div>
+      </div>
+
       {/* CTA */}
       <div style={{ padding: "96px 48px", textAlign: "center" }}>
         <div style={{ maxWidth: 600, margin: "0 auto" }}>
