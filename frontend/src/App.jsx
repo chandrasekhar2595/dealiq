@@ -277,7 +277,7 @@ function Logo({ size = 36, showWordmark = true }) {
 // ── LANDING PAGE ─────────────────────────────────────────────
 function LandingPage({ onGetStarted }) {
   const FEATURES = [
-    { icon: "⚡", color: "#f59e0b", title: "AI Deal Analysis", desc: "Claude AI analyzes every signal and tells you exactly why a deal is at risk — not just that it is." },
+    { icon: "⚡", color: "#f59e0b", title: "AI Deal Analysis", desc: "Claude AI analyzes every signal and tells you exactly why a deal is at risk. Not just that it is." },
     { icon: "📡", color: "#3b82f6", title: "Signal Detection", desc: "Sync Gmail and LinkedIn to pull real email patterns, news events, and engagement signals automatically." },
     { icon: "🔎", color: "#8b5cf6", title: "Competitor Intel", desc: "Automatically detect when prospects mention competitors. Get counter-messaging tailored to your deal." },
     { icon: "🎯", color: "#22c55e", title: "Next Best Action", desc: "Every deal surfaces one clear action with expected impact. No more guessing what to do next." },
@@ -347,7 +347,7 @@ function LandingPage({ onGetStarted }) {
         <p style={{ fontSize: 20, color: "#8fa3b8", lineHeight: 1.65,
           maxWidth: 580, margin: "0 auto 44px", fontWeight: 400 }}>
           DealIQ scores every deal, surfaces what is at risk, and tells each rep
-          exactly what to do — so your pipeline reflects reality and your CFO
+          exactly what to do. So your pipeline reflects reality and your CFO
           stops second-guessing the number.
         </p>
 
@@ -670,14 +670,14 @@ function LoginPage({ onLogin, onBack }) {
             </span>
           </div>
           <div style={{ fontSize: 15, color: "var(--text-3)", lineHeight: 1.6, maxWidth: 340 }}>
-            AI-powered deal intelligence that tells you which deals are stalling — and exactly what to do about it.
+            AI-powered deal intelligence that tells you which deals are stalling and exactly what to do about it.
           </div>
         </div>
 
         {/* Feature list */}
         <div style={{ display: "flex", flexDirection: "column", gap: 16, marginBottom: 48 }}>
           {[
-            { icon: "◎", color: "#7dd3fc", label: "Signal Detection", desc: "Gmail, Slack, CRM — all signals in one place" },
+            { icon: "◎", color: "#7dd3fc", label: "Signal Detection", desc: "Gmail, Slack, CRM. All signals in one place." },
             { icon: "◈", color: "#f59e0b", label: "Risk Scoring",     desc: "AI scores every deal from 0–100 in seconds" },
             { icon: "✦", color: "#a78bfa", label: "AI Follow-ups",   desc: "Draft the perfect email for every stalled deal" },
           ].map(({ icon, color, label, desc }) => (
@@ -2024,7 +2024,7 @@ function DealDetail({ dealId, onBack, onUpdate, onDelete }) {
                 </div>
                 <div style={{ fontSize: 13, color: "var(--text-3)", lineHeight: 1.6, marginBottom: 18 }}>
                   Every hour on this deal is time not spent on opportunities that can still close.
-                  Send one final email to force a clear yes or no — then move on.
+                  Send one final email to force a clear yes or no. Then move on.
                 </div>
 
                 {/* Two-path decision */}
@@ -2146,7 +2146,6 @@ function DealDetail({ dealId, onBack, onUpdate, onDelete }) {
                   style={{ fontSize: 11, fontWeight: 700, padding: "4px 12px",
                   borderRadius: 6, background: r?.bg, color: r?.color,
                   border: `1px solid ${r?.border}`, letterSpacing: "0.04em" }}>
-                  {analysis.risk_level === "high" ? "⚠ " : analysis.risk_level === "medium" ? "⚡ " : "✓ "}
                   {analysis.risk_level.toUpperCase()} RISK
                 </div>
                 <span style={{ fontSize: 11, color: "var(--text-3)", fontFamily: "var(--font-mono)" }}>
@@ -2164,7 +2163,7 @@ function DealDetail({ dealId, onBack, onUpdate, onDelete }) {
                 </span>
                 {analysis.forecast_confidence && (
                   <span style={{ fontSize: 13, fontWeight: 500, color: "var(--text-3)", marginLeft: 8 }}>
-                    — {analysis.forecast_confidence} confidence
+                    · {analysis.forecast_confidence} confidence
                   </span>
                 )}
               </div>
@@ -2199,7 +2198,7 @@ function DealDetail({ dealId, onBack, onUpdate, onDelete }) {
         <div className="signal-card featured" style={{ marginBottom: 16 }}>
           <div style={{ flex: 1 }}>
             <div style={{ fontFamily: "var(--font-mono)", fontSize: 9, color: "#f59e0b",
-              letterSpacing: "0.12em", marginBottom: 5 }}>⚡ INTELLIGENCE SIGNAL</div>
+              letterSpacing: "0.12em", marginBottom: 5 }}>INTELLIGENCE SIGNAL</div>
             <div style={{ fontSize: 13, color: "var(--text-1)", fontWeight: 600,
               lineHeight: 1.5 }}>{featuredSignal.summary}</div>
           </div>
@@ -2299,7 +2298,6 @@ function DealDetail({ dealId, onBack, onUpdate, onDelete }) {
           background: "linear-gradient(135deg, rgba(59,130,246,0.07), rgba(59,130,246,0.03))",
           border: "1px solid rgba(59,130,246,0.18)", display: "flex",
           alignItems: "flex-start", gap: 14 }}>
-          <div style={{ fontSize: 22, flexShrink: 0, marginTop: 1 }}>🎯</div>
           <div style={{ flex: 1 }}>
             <div style={{ fontSize: 11, fontWeight: 700, color: "var(--blue)",
               letterSpacing: "0.06em", marginBottom: 6 }}>NEXT BEST ACTION</div>
@@ -2320,7 +2318,7 @@ function DealDetail({ dealId, onBack, onUpdate, onDelete }) {
         alignItems: "center", borderBottom: "1px solid var(--border)", marginBottom: 16 }}>
         {/* Primary tabs — always visible */}
         <div style={{ display: "flex", alignItems: "center" }}>
-          {[["insights","💡","Insights"],["action","🎯","Next Action"],["draft","✉️","Draft Email"],["prep","📋","Meeting Prep"]].map(([t, icon, label]) => (
+          {[["insights","","Insights"],["action","","Next Action"],["draft","","Draft Email"],["prep","","Meeting Prep"]].map(([t, icon, label]) => (
             <button key={t} className={`tab-btn ${tab === t ? "active" : ""}`}
               onClick={() => setTab(t)}>
               <span className="tab-icon">{icon}</span>{label}
@@ -2340,7 +2338,7 @@ function DealDetail({ dealId, onBack, onUpdate, onDelete }) {
                 background: "var(--bg-card)", border: "1px solid var(--border)",
                 borderRadius: 10, padding: "6px", minWidth: 170,
                 boxShadow: "0 8px 24px rgba(0,0,0,0.3)" }}>
-                {[["objection","🛡️","Objections"],["intel","🔎","Competitor Intel"],["timeline","🕐","Timeline"]].map(([t, icon, label]) => (
+                {[["objection","","Objections"],["intel","","Competitor Intel"],["timeline","","Timeline"]].map(([t, icon, label]) => (
                   <button key={t}
                     onClick={() => { setTab(t); setShowMoreTabs(false); }}
                     style={{ display: "flex", alignItems: "center", gap: 8, width: "100%",
@@ -2362,7 +2360,7 @@ function DealDetail({ dealId, onBack, onUpdate, onDelete }) {
               ? <span style={{ display: "flex", alignItems: "center", gap: 6 }}>
                   <span className="dot"/><span className="dot"/><span className="dot"/>
                 </span>
-              : "⚡ Analyze Deal"}
+              : "Analyze Deal"}
           </button>
         </div>
       </div>
@@ -2434,7 +2432,7 @@ function DealDetail({ dealId, onBack, onUpdate, onDelete }) {
                 {/* AI Recommendation callout */}
                 <div className="ai-rec">
                   <div style={{ fontSize: 11, fontWeight: 600, color: "var(--blue)",
-                    letterSpacing: "0.06em", marginBottom: 8 }}>🎯 AI RECOMMENDATION</div>
+                    letterSpacing: "0.06em", marginBottom: 8 }}>AI RECOMMENDATION</div>
                   <div style={{ fontSize: 15, fontWeight: 700, color: "var(--text-1)", marginBottom: 6 }}>
                     {cleanAI(analysis.recommended_action)}
                   </div>
@@ -2463,7 +2461,6 @@ function DealDetail({ dealId, onBack, onUpdate, onDelete }) {
                     </div>
                   </div>
                   <div className="insight-card">
-                    <div className="insight-card-icon">⚡</div>
                     <div className="insight-card-label">Urgency</div>
                     <div className="insight-card-value" style={{ fontWeight: 700, color: r?.color }}>
                       {analysis.urgency === "immediate" ? "Act today" :
@@ -2471,7 +2468,6 @@ function DealDetail({ dealId, onBack, onUpdate, onDelete }) {
                     </div>
                   </div>
                   <div className="insight-card">
-                    <div className="insight-card-icon">📡</div>
                     <div className="insight-card-label">Signals Detected</div>
                     <div className="insight-card-value" style={{ fontSize: 24, fontWeight: 800, color: "var(--blue)" }}>
                       {signals.length}<span style={{ fontSize: 13, fontWeight: 400, color: "var(--text-3)", marginLeft: 4 }}>signals</span>
@@ -2484,7 +2480,7 @@ function DealDetail({ dealId, onBack, onUpdate, onDelete }) {
               <div>
                 <div className="ai-rec" style={{ marginBottom: 0 }}>
                   <div style={{ fontSize: 11, fontWeight: 600, color: "var(--blue)",
-                    letterSpacing: "0.06em", marginBottom: 8 }}>🎯 NEXT ACTION</div>
+                    letterSpacing: "0.06em", marginBottom: 8 }}>NEXT ACTION</div>
                   <div style={{ fontSize: 15, fontWeight: 600, color: "var(--text-1)", lineHeight: 1.7 }}>
                     {cleanAI(analysis.recommended_action)}
                   </div>
@@ -3437,22 +3433,22 @@ function AnalyticsDashboard({ deals, onBack }) {
 
       {/* KPI grid */}
       <div style={{ display: "grid", gridTemplateColumns: "repeat(4, 1fr)", gap: 16, marginBottom: 28 }}>
-        <KPICard icon="💰" label="Total Pipeline" value={`$${totalPipeline >= 1000 ? (totalPipeline/1000).toFixed(0)+"K" : totalPipeline}`} color="var(--text-1)" />
-        <KPICard icon="🎯" label="Weighted Forecast" value={`$${forecast >= 1000 ? (forecast/1000).toFixed(0)+"K" : Math.round(forecast)}`}
+        <KPICard icon="" label="Total Pipeline" value={`$${totalPipeline >= 1000 ? (totalPipeline/1000).toFixed(0)+"K" : totalPipeline}`} color="var(--text-1)" />
+        <KPICard icon="" label="Weighted Forecast" value={`$${forecast >= 1000 ? (forecast/1000).toFixed(0)+"K" : Math.round(forecast)}`}
           sub={`${forecastAccuracy}% of pipeline`} color="var(--risk-low)" />
-        <KPICard icon="📈" label="Win Rate" value={winRate !== null ? `${winRate}%` : "—"}
+        <KPICard icon="" label="Win Rate" value={winRate !== null ? `${winRate}%` : "—"}
           sub={closed > 0 ? `${won.length} won / ${lost.length} lost` : "No closed deals yet"} color={winRate >= 50 ? "var(--risk-low)" : winRate !== null ? "var(--risk-med)" : "var(--text-3)"} />
-        <KPICard icon="⚡" label="Avg Close Score" value={avgScore !== null ? `${avgScore}` : "—"}
+        <KPICard icon="" label="Avg Close Score" value={avgScore !== null ? `${avgScore}` : "—"}
           sub={`${analyzed.length} deals analyzed`} color={avgScore >= 60 ? "var(--risk-low)" : avgScore >= 40 ? "var(--risk-med)" : "var(--risk-high)"} />
       </div>
       <div style={{ display: "grid", gridTemplateColumns: "repeat(4, 1fr)", gap: 16, marginBottom: 32 }}>
-        <KPICard icon="🚨" label="High Risk Deals" value={highRisk.length}
+        <KPICard icon="" label="High Risk Deals" value={highRisk.length}
           sub={highRisk.length > 0 ? highRisk.map(d => d.company).join(", ") : "No high risk deals"} color={highRisk.length > 0 ? "var(--risk-high)" : "var(--risk-low)"} />
-        <KPICard icon="🧟" label="Zombie Deals" value={zombies.length}
+        <KPICard icon="" label="Zombie Deals" value={zombies.length}
           sub={zombies.length > 0 ? "30+ days no activity" : "Pipeline is healthy"} color={zombies.length > 0 ? "var(--risk-high)" : "var(--risk-low)"} />
-        <KPICard icon="🔍" label="Unanalyzed" value={deals.length - analyzed.length}
+        <KPICard icon="" label="Unanalyzed" value={deals.length - analyzed.length}
           sub="Need AI analysis" color={deals.length - analyzed.length > 0 ? "var(--risk-med)" : "var(--risk-low)"} />
-        <KPICard icon="📊" label="Active Deals" value={deals.filter(d => d.stage !== "Won" && d.stage !== "Lost").length}
+        <KPICard icon="" label="Active Deals" value={deals.filter(d => d.stage !== "Won" && d.stage !== "Lost").length}
           sub="Excluding won/lost" color="var(--blue)" />
       </div>
 
@@ -3615,11 +3611,9 @@ function Dashboard({ user, onLogout, openSettings = false, slackChannel = "", gm
           </button>
           <button onClick={() => setShowSettings(true)}
             className="btn-sm btn-ghost"
-            style={{ padding: "6px 10px", fontSize: 14, display: "flex",
-              alignItems: "center", gap: 6, color: "var(--text-2)",
-              borderColor: "var(--border-hi)" }}>
-            ⚙ <span style={{ fontSize: 10, fontFamily: "var(--font-mono)",
-              letterSpacing: "0.07em" }}>Settings</span>
+            style={{ padding: "6px 14px", fontSize: 12, fontWeight: 600,
+              color: "var(--text-2)", borderColor: "var(--border-hi)" }}>
+            Settings
           </button>
           <button onClick={onLogout} className="btn-sm btn-ghost">Sign out</button>
         </div>
