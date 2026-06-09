@@ -286,9 +286,9 @@ function LandingPage({ onGetStarted }) {
   ];
 
   const STATS = [
-    { value: "22%", label: "Average close score increase" },
-    { value: "3×", label: "Faster deal qualification" },
-    { value: "68%", label: "Reduction in stalled deals" },
+    { value: "+25%", label: "Forecast accuracy improvement" },
+    { value: "3×",   label: "Faster deal qualification" },
+    { value: "68%",  label: "Reduction in zombie deals" },
   ];
 
   return (
@@ -328,23 +328,27 @@ function LandingPage({ onGetStarted }) {
 
         <div style={{ display: "inline-flex", alignItems: "center", gap: 8,
           padding: "5px 14px", borderRadius: 20, marginBottom: 28,
-          background: "rgba(59,130,246,0.1)", border: "1px solid rgba(59,130,246,0.25)",
-          fontSize: 12, fontWeight: 600, color: "#60a5fa", letterSpacing: "0.04em" }}>
-          ⚡ AI-POWERED SALES INTELLIGENCE
+          background: "rgba(34,197,94,0.1)", border: "1px solid rgba(34,197,94,0.25)",
+          fontSize: 12, fontWeight: 700, color: "#4ade80", letterSpacing: "0.06em" }}>
+          FORECAST ACCURACY PLATFORM
         </div>
 
-        <h1 style={{ fontSize: 62, fontWeight: 900, lineHeight: 1.08,
-          letterSpacing: -2, margin: "0 0 24px",
-          background: "linear-gradient(135deg, #f0f4f8 30%, #94a3b8)",
-          WebkitBackgroundClip: "text", WebkitTextFillColor: "transparent",
-          backgroundClip: "text" }}>
-          Know which deals<br />will close.
+        <h1 style={{ fontSize: 64, fontWeight: 900, lineHeight: 1.06,
+          letterSpacing: -2.5, margin: "0 0 24px" }}>
+          <span style={{ background: "linear-gradient(135deg, #f0f4f8 30%, #94a3b8)",
+            WebkitBackgroundClip: "text", WebkitTextFillColor: "transparent",
+            backgroundClip: "text" }}>Your forecast is wrong.</span>
+          <br />
+          <span style={{ background: "linear-gradient(135deg, #f5a623, #ff6b35)",
+            WebkitBackgroundClip: "text", WebkitTextFillColor: "transparent",
+            backgroundClip: "text" }}>DealIQ fixes it.</span>
         </h1>
 
-        <p style={{ fontSize: 20, color: "#8fa3b8", lineHeight: 1.6,
-          maxWidth: 560, margin: "0 auto 44px", fontWeight: 400 }}>
-          DealIQ monitors every deal for risk signals, analyzes them with AI,
-          and tells your team exactly what to do next — before deals go cold.
+        <p style={{ fontSize: 20, color: "#8fa3b8", lineHeight: 1.65,
+          maxWidth: 580, margin: "0 auto 44px", fontWeight: 400 }}>
+          DealIQ scores every deal, surfaces what is at risk, and tells each rep
+          exactly what to do — so your pipeline reflects reality and your CFO
+          stops second-guessing the number.
         </p>
 
         <div style={{ display: "flex", gap: 12, justifyContent: "center", flexWrap: "wrap" }}>
@@ -450,17 +454,137 @@ function LandingPage({ onGetStarted }) {
         </div>
       </div>
 
+      {/* Pricing */}
+      <div style={{ borderTop: "1px solid rgba(255,255,255,0.06)", padding: "96px 48px" }}>
+        <div style={{ maxWidth: 1100, margin: "0 auto" }}>
+          <div style={{ textAlign: "center", marginBottom: 64 }}>
+            <div style={{ fontSize: 11, fontWeight: 700, letterSpacing: "0.12em",
+              color: "#f5a623", marginBottom: 14 }}>PRICING</div>
+            <h2 style={{ fontSize: 42, fontWeight: 800, letterSpacing: -1,
+              margin: "0 0 16px", color: "#f0f4f8" }}>
+              A fraction of the cost.<br />Better results.
+            </h2>
+            <p style={{ fontSize: 16, color: "#5a7080", margin: 0 }}>
+              No 6-month implementation. No Salesforce required. Up in 2 minutes.
+            </p>
+          </div>
+
+          {/* Pricing tiers */}
+          <div style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: 20, marginBottom: 64 }}>
+            {[
+              { name: "Starter", price: "$29", period: "/seat/month", color: "#7dd3fc",
+                desc: "For small sales teams getting started with AI forecasting.",
+                features: ["Up to 5 reps", "AI deal scoring", "Forecast dashboard", "Stale deal alerts", "Gmail signals"] },
+              { name: "Growth", price: "$59", period: "/seat/month", color: "#f5a623", highlight: true,
+                desc: "For growing teams that need the full signal picture.",
+                features: ["Unlimited reps", "Gmail + LinkedIn signals", "Contact authority scoring", "Competitor intelligence", "Meeting prep + objections", "Slack alerts"] },
+              { name: "Performance", price: "Custom", period: "", color: "#a78bfa",
+                desc: "For teams that want pricing tied to revenue uplift.",
+                features: ["Everything in Growth", "Base fee + % of revenue uplift", "Dedicated onboarding", "CRO-level reporting", "Custom integrations"] },
+            ].map(({ name, price, period, color, highlight, desc, features }) => (
+              <div key={name} style={{ padding: "32px", borderRadius: 20,
+                background: highlight ? "rgba(245,166,35,0.06)" : "rgba(255,255,255,0.03)",
+                border: highlight ? "1px solid rgba(245,166,35,0.35)" : "1px solid rgba(255,255,255,0.07)",
+                position: "relative" }}>
+                {highlight && (
+                  <div style={{ position: "absolute", top: -12, left: "50%", transform: "translateX(-50%)",
+                    background: "#f5a623", color: "#080f1a", fontSize: 10, fontWeight: 800,
+                    padding: "3px 14px", borderRadius: 20, letterSpacing: "0.08em",
+                    whiteSpace: "nowrap" }}>MOST POPULAR</div>
+                )}
+                <div style={{ fontSize: 13, fontWeight: 700, color, marginBottom: 12,
+                  letterSpacing: "0.05em" }}>{name.toUpperCase()}</div>
+                <div style={{ marginBottom: 6 }}>
+                  <span style={{ fontSize: 40, fontWeight: 900, color: "#f0f4f8",
+                    letterSpacing: -1 }}>{price}</span>
+                  <span style={{ fontSize: 14, color: "#5a7080", marginLeft: 4 }}>{period}</span>
+                </div>
+                <div style={{ fontSize: 13, color: "#5a7080", marginBottom: 24,
+                  lineHeight: 1.6 }}>{desc}</div>
+                <div style={{ display: "flex", flexDirection: "column", gap: 10, marginBottom: 28 }}>
+                  {features.map(f => (
+                    <div key={f} style={{ display: "flex", alignItems: "center", gap: 10,
+                      fontSize: 13, color: "#8fa3b8" }}>
+                      <span style={{ color, fontWeight: 700, flexShrink: 0 }}>✓</span>{f}
+                    </div>
+                  ))}
+                </div>
+                <button onClick={onGetStarted}
+                  style={{ width: "100%", padding: "12px 0", borderRadius: 10, cursor: "pointer",
+                    fontSize: 14, fontWeight: 700,
+                    background: highlight ? "#f5a623" : "transparent",
+                    color: highlight ? "#080f1a" : "#f0f4f8",
+                    border: highlight ? "none" : "1px solid rgba(255,255,255,0.15)" }}>
+                  {name === "Performance" ? "Talk to us →" : "Get started free →"}
+                </button>
+              </div>
+            ))}
+          </div>
+
+          {/* Einstein comparison */}
+          <div style={{ borderRadius: 20, overflow: "hidden",
+            border: "1px solid rgba(255,255,255,0.08)" }}>
+            <div style={{ padding: "20px 32px", background: "rgba(255,255,255,0.03)",
+              borderBottom: "1px solid rgba(255,255,255,0.06)",
+              display: "flex", alignItems: "center", justifyContent: "space-between" }}>
+              <div style={{ fontSize: 13, fontWeight: 700, color: "#f0f4f8" }}>
+                How DealIQ compares to Salesforce Einstein
+              </div>
+              <div style={{ fontSize: 11, color: "#5a7080" }}>
+                Independent comparison · June 2026
+              </div>
+            </div>
+            <div style={{ overflowX: "auto" }}>
+              <table style={{ width: "100%", borderCollapse: "collapse" }}>
+                <thead>
+                  <tr style={{ background: "rgba(255,255,255,0.02)" }}>
+                    {["", "Salesforce Einstein", "DealIQ"].map((h, i) => (
+                      <th key={h} style={{ padding: "14px 24px", textAlign: i === 0 ? "left" : "center",
+                        fontSize: 12, fontWeight: 700, color: i === 2 ? "#f5a623" : "#5a7080",
+                        borderBottom: "1px solid rgba(255,255,255,0.06)",
+                        letterSpacing: "0.04em" }}>{h}</th>
+                    ))}
+                  </tr>
+                </thead>
+                <tbody>
+                  {[
+                    ["Setup time",                     "6–12 months",    "2 minutes"],
+                    ["Price",                          "$75+/seat/month (Enterprise)", "$29/seat/month"],
+                    ["Requires Salesforce CRM",        "Yes",            "No"],
+                    ["Tells reps what to do next",     "No",             "Yes"],
+                    ["Forecast accuracy improvement",  "15–20%",         "25%+"],
+                    ["Zombie deal detection",          "No",             "Yes"],
+                    ["Contact authority scoring",      "No",             "Yes"],
+                    ["Gmail + LinkedIn signals",       "Limited",        "Yes"],
+                    ["Time to first insight",         "Weeks",          "Same day"],
+                  ].map(([label, einstein, dealiq], i) => (
+                    <tr key={label} style={{ borderBottom: "1px solid rgba(255,255,255,0.04)",
+                      background: i % 2 === 0 ? "transparent" : "rgba(255,255,255,0.01)" }}>
+                      <td style={{ padding: "13px 24px", fontSize: 13, color: "#8fa3b8" }}>{label}</td>
+                      <td style={{ padding: "13px 24px", fontSize: 13, color: "#4a6070",
+                        textAlign: "center" }}>{einstein}</td>
+                      <td style={{ padding: "13px 24px", fontSize: 13, fontWeight: 600,
+                        color: "#f5a623", textAlign: "center" }}>{dealiq}</td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+      </div>
+
       {/* CTA */}
       <div style={{ padding: "96px 48px", textAlign: "center" }}>
         <div style={{ maxWidth: 600, margin: "0 auto" }}>
           <h2 style={{ fontSize: 44, fontWeight: 900, letterSpacing: -1.5,
             marginBottom: 20, color: "#f0f4f8", lineHeight: 1.1 }}>
-            Stop losing deals<br />
-            <span style={{ color: "#f5a623" }}>you should have won.</span>
+            Stop guessing.<br />
+            <span style={{ color: "#f5a623" }}>Start forecasting.</span>
           </h2>
           <p style={{ fontSize: 17, color: "#5a7080", marginBottom: 36, lineHeight: 1.6 }}>
-            Join sales teams using DealIQ to catch risk early,
-            move faster, and close more.
+            Join sales teams using DealIQ to make their pipeline accurate,
+            their reps more effective, and their forecast defensible.
           </p>
           <button onClick={onGetStarted}
             style={{ background: "#f5a623", color: "#080f1a", border: "none",
